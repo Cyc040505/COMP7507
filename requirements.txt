@@ -1,0 +1,12 @@
+# Core app (required to run `python app.py` — the framework skeleton)
+dash>=2.18
+plotly>=5.24
+pandas>=2.2
+numpy>=1.26
+
+# Needed once modules are wired to real data / built out (installed lazily by module authors)
+dash-cytoscape>=1.0     # M3 force-directed trade network
+duckdb>=1.1             # offline pre-aggregation (scripts/build_analytics.py)
+pyarrow>=16             # read/write parquet analysis tables
+openpyxl>=3.1           # read GeoDist .xls
+xlrd>=2.0               # legacy .xls fallback
