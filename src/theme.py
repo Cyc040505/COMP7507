@@ -6,6 +6,8 @@ Colours are ported from the report's section-4 UI
 
 from __future__ import annotations
 
+from textwrap import wrap
+
 import plotly.graph_objects as go
 
 # --- Palette (report section 4) ------------------------------------------------
@@ -35,6 +37,15 @@ def empty_figure(message: str = _EMPTY_MSG, height: int = 420) -> go.Figure:
     Every graph starts as one of these and every "not ready" branch returns one,
     so the skeleton never shows a blank/broken panel before the data layer exists.
     """
+    # Presentation only: wrap plain annotations without dropping any content.
+    # Preserve callers' existing Plotly HTML markup unchanged.
+    annotation = message
+    if isinstance(message, str) and "<" not in message:
+        annotation = "<br>".join(
+            line for paragraph in message.splitlines()
+            for line in (wrap(paragraph, width=40, break_long_words=False,
+                              break_on_hyphens=False) or [""])
+        )
     fig = go.Figure()
     fig.update_layout(
         template=PLOT_TEMPLATE,
@@ -44,7 +55,7 @@ def empty_figure(message: str = _EMPTY_MSG, height: int = 420) -> go.Figure:
         yaxis=dict(visible=False),
         annotations=[
             dict(
-                text=message,
+                text=annotation,
                 x=0.5,
                 y=0.5,
                 xref="paper",
