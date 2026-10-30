@@ -27,7 +27,7 @@ DEFAULT_YEAR = YEAR_MAX
 # Flip to True once ``scripts/build_analytics.py`` has produced
 # ``data/processed/*.parquet``. While False the loaders fall back to deterministic
 # demo data and the UI labels itself accordingly.
-DATA_READY = False
+DATA_READY = True
 
 DEMO_TAG = "Demo data"
 ANALYTIC_TAG = "Analysis tables"

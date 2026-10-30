@@ -80,10 +80,41 @@ def verification_panel(
     )
 
 
-def placeholder_graph(graph_id: str, message: str | None = None) -> dcc.Graph:
-    """A graph that starts life as an ``empty_figure`` placeholder."""
+def placeholder_graph(
+    graph_id: str,
+    message: str | None = None,
+    *,
+    animate: bool = False,
+    animation_options: dict | None = None,
+    initial_figure: "go.Figure | None" = None,
+) -> dcc.Graph:
+    """A graph that starts life as an ``empty_figure`` placeholder.
+
+    Pass ``animate=True`` to have Plotly.js tween the figure between updates
+    (e.g. a ranking chart morphs 0.6T → 0.9T instead of jumping). With
+    ``animate=True`` you should also pass a non-empty ``initial_figure`` —
+    Plotly.js's tween needs a real first frame to interpolate from, and an
+    empty ``empty_figure`` starts the animation off a blank frame. Animate
+    graphs get a ``graph-animate`` class so the shell's resize/lock callback
+    can skip them (a ``Plotly.update(uirevision)`` onto an animate plot would
+    reset its categorical tick labels).
+    """
+    kwargs = {}
+    if animate:
+        kwargs["animate"] = True
+        kwargs["animation_options"] = animation_options or {
+            "frame": {"redraw": False},
+            "transition": {"duration": 750, "ease": "cubic-in-out"},
+        }
+        kwargs["className"] = "graph-animate"
+    figure = (
+        initial_figure
+        if initial_figure is not None
+        else theme.empty_figure(message) if message else theme.empty_figure()
+    )
     return dcc.Graph(
         id=graph_id,
-        figure=theme.empty_figure(message) if message else theme.empty_figure(),
+        figure=figure,
         config={"displayModeBar": False, "responsive": True},
+        **kwargs,
     )

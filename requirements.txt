@@ -1,12 +1,19 @@
 # Core app (required to run `python app.py` — the framework skeleton)
-dash>=2.18
-plotly>=5.24
-pandas>=2.2
-numpy>=1.26
+dash>=4.4            # Dash 4.x: `from dash import ...` API, built-in server
+plotly>=7.1
+pandas>=3.0
+numpy>=2.4
 
 # Needed once modules are wired to real data / built out (installed lazily by module authors)
 dash-cytoscape>=1.0     # M3 force-directed trade network
 duckdb>=1.1             # offline pre-aggregation (scripts/build_analytics.py)
-pyarrow>=16             # read/write parquet analysis tables
+pyarrow>=26             # read/write parquet analysis tables
 openpyxl>=3.1           # read GeoDist .xls
 xlrd>=2.0               # legacy .xls fallback
+
+# Transitive server deps pulled in by Dash 4.x (installed automatically with dash)
+flask>=3.1
+werkzeug>=3.1
+blinker>=1.9
+click>=8.5
+itsdangerous>=2.2

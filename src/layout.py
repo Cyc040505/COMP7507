@@ -198,16 +198,40 @@ def register_shell_callbacks(app) -> None:
             "indicator": indicator,
         }
 
-    # Resize Plotly graphs in the newly-shown panel (hidden graphs lay out at 0×0).
+    # Resize Plotly graphs in the newly-shown panel (hidden graphs lay out at 0×0),
+    # and re-lock their interactions. Dash applies a graph's ``config`` client-side
+    # only on re-render, so on initial mount Plotly falls back to its default
+    # box-zoom / drag-zoom / pan. Re-issuing the locked config through the Plotly JS
+    # API (after the graph is visible) disables those gestures while leaving the
+    # per-point hover layer untouched.
     app.clientside_callback(
         """
         function(active) {
             window.setTimeout(function() {
                 var panel = document.getElementById(active + '-panel');
                 if (!panel) { return; }
+                var locked = {
+                    zoom: false, pan: false, scrollZoom: false,
+                    dragmode: false, selectable: false,
+                    displayModeBar: false, responsive: true
+                };
                 panel.querySelectorAll('.js-plotly-plot').forEach(function(gd) {
-                    if (window.Plotly && window.Plotly.Plots) {
-                        window.Plotly.Plots.resize(gd);
+                    if (!window.Plotly) { return; }
+                    // The ranking graph (M0 share) uses dcc.Graph(animate=True) and
+                    // drives its own frame tweens via Plotly.animate(). A
+                    // Plotly.update(uirevision) onto it resets the categorical tick
+                    // labels (country names vanish). It carries a .graph-animate
+                    // class — skip it; lock only the static graphs.
+                    var wrap = gd.closest ? gd.closest('.dash-graph') : null;
+                    if (wrap && wrap.classList && wrap.classList.contains('graph-animate')) {
+                        return;
+                    }
+                    if (window.Plotly.Plots) { window.Plotly.Plots.resize(gd); }
+                    if (gd.locked !== true) {
+                        Plotly.update(gd, {}, locked, {
+                            layout: { uirevision: 'locked', dragmode:false }
+                        });
+                        gd.locked = true;
                     }
                 });
             }, 80);

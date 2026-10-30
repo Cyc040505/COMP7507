@@ -31,6 +31,59 @@ PLOT_TEMPLATE = "plotly_white"
 _EMPTY_MSG = "Awaiting data · real results appear here once the data pipeline is built"
 
 
+# --- Units --------------------------------------------------------------------
+# BACI's ``v`` (export_value) is stored in THOUSANDS of US dollars. To convert a
+# stored value to *trillions* of USD, divide by ``T_UNITS`` (= 1e9 thousand-USD per
+# trillion). To convert to *dollars*, multiply by ``EXPORT_VALUE_UNIT`` (= 1000).
+EXPORT_VALUE_UNIT = 1000                # thousand-USD → USD
+T_UNITS = 1e9                           # thousand-USD → trillion USD (1e9 × 1000 = 1e12 USD)
+
+
+def stored_to_trillions(value_stored: float) -> float:
+    """Convert a BACI stored value (thousand USD) to trillions of USD."""
+    return value_stored / T_UNITS
+
+
+def fmt_usd(value_stored: float, sig: int = 3) -> str:
+    """Render a stored BACI value (thousand USD) as a compact USD string."""
+    dollars = value_stored * EXPORT_VALUE_UNIT
+    for unit, div in (("T", 1e12), ("B", 1e9), ("M", 1e6), ("K", 1e3)):
+        if abs(dollars) >= div:
+            return f"${dollars / div:,.{sig}f}".rstrip("0").rstrip(".") + unit
+    return f"${dollars:,.0f}"
+
+
+# --- Categorical country palette (M0 ranking) ----------------------------------
+# 8 distinct identities, assigned in the reference palette's validated categorical
+# order (CVD-safe, see the dataviz skill). Color follows the *country*, never its
+# rank, so a country keeps its hue as it climbs the ranking. The tail of the
+# ever-Top-10 set folds into a desaturated "Other" gray (the sanctioned exception
+# for a low-chroma bucket); every bar also carries a direct country label so
+# identity is never colour-alone (relief for the sub-3:1 slots).
+COUNTRY_COLORS: dict[str, str] = {
+    "CHN": "#2a78d6",  # blue
+    "USA": "#eb6834",  # orange
+    "DEU": "#1baf7a",  # aqua
+    "KOR": "#eda100",  # yellow
+    "JPN": "#e87ba4",  # magenta
+    "MEX": "#008300",  # green
+    "ITA": "#6250d6",  # violet
+    "FRA": "#e34948",  # red
+    "GBR": "#0d9488",  # teal
+    "CAN": "#8d5524",  # brown
+    "NLD": "#0e7490",  # cyan
+    "BEL": "#7c3aed",  # purple
+    "RUS": "#b45309",  # amber-brown
+    "S19": "#6b7280",  # slate
+}
+OTHER_COLOR = "#6b7280"  # fallback for any top-10 member not in the table above
+
+
+def country_color(iso3: str) -> str:
+    """Stable per-country hue; unknown top-10 members fold into the 'Other' gray."""
+    return COUNTRY_COLORS.get(iso3, OTHER_COLOR)
+
+
 def empty_figure(message: str = _EMPTY_MSG, height: int = 420) -> go.Figure:
     """A real, renderable figure carrying a centred explanatory annotation.
 

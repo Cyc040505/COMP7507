@@ -205,6 +205,51 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* Year scrubber (M0 country-share ranking) */
+.year-slider { margin: 6px 0 2px; }
+.year-slider .rc-slider-track,
+.year-slider .rc-slider-rail { height: 6px; border-radius: 3px; }
+.year-slider .rc-slider-rail { background: var(--line); }
+.year-slider .rc-slider-track { background: var(--accent); }
+.year-slider .rc-slider-handle {
+    width: 16px; height: 16px; margin-top: -5px;
+    border: 2px solid var(--accent); background: #fff;
+    box-shadow: 0 1px 4px rgba(29,78,216,.35);
+}
+.year-slider .rc-slider-handle::after {
+    width: 8px; height: 8px; background: var(--accent);
+}
+.year-slider .rc-slider-dot { width: 1px; height: 1px; }
+.year-slider .rc-slider-tick {
+    width: 2px; height: 6px; background: var(--line);
+}
+.year-slider .rc-slider-tooltip .rc-slider-tooltip-text {
+    font: 600 12px/1 "Segoe UI", system-ui, sans-serif;
+    color: #fff; background: var(--accent);
+    padding: 3px 8px; border-radius: 5px;
+}
+.year-slider .rc-slider-tooltip .rc-slider-tooltip-inner {
+    background: transparent; color: #fff;
+}
+
+/* M0 two-graph host: both the Total and Country-share cards are always shown,
+   stacked top-to-bottom. They stay independently mounted so repainting the
+   ranking graph never disturbs the total graph. */
+.view-host { display: grid; gap: 18px; }
+
+.play-btn {
+    font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--accent); background: var(--accent-soft);
+    border: 1px solid var(--accent-line); border-radius: 6px;
+    padding: 6px 14px; cursor: pointer; margin-right: 10px;
+    transition: background .12s ease, color .12s ease;
+}
+.play-btn:hover { background: var(--accent); color: #fff; }
+.year-display {
+    font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums;
+    font-weight: 600; min-width: 88px; display: inline-block;
+}
+
 .kpi-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -311,6 +356,19 @@ button:focus-visible, input:focus-visible {
 /* Dash Graph uses height:100%; its grid row excludes the card title. */
 .graph-card { display: grid; grid-template-rows: auto minmax(420px, auto); align-content: start; }
 .graph-card .dash-graph { min-height: 420px; width: 100%; }
+/* The share card nests the year title above the graph in a single wrapper so the
+   grid row (>=420px) still lands on the graph; the wrapper stretches to fill it. */
+.graph-card-share .share-view { min-height: 420px; display: grid; grid-template-rows: auto 1fr; }
+
+/* Year title that sits above the ranking graph (kept outside the Plotly figure
+   so it updates with the selected year, since animate() only tweens traces). */
+.graph-title {
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--ink);
+    margin: 0 0 10px 0;
+    letter-spacing: -0.01em;
+}
 .verify-list li {
     grid-template-columns: 92px minmax(0, 1fr);
     gap: 16px; background: transparent; border: 0; border-top: 1px solid var(--line);
@@ -320,7 +378,7 @@ button:focus-visible, input:focus-visible {
 .vtag { font-size: 10px; padding: 4px 6px; }
 @media (min-width: 1100px) {
     .module-inner { grid-template-columns: minmax(240px, 0.62fr) minmax(0, 1fr); }
-    .module-controls, .graph-card { grid-column: 1 / -1; }
+    .module-controls, .graph-card, .view-host { grid-column: 1 / -1; }
 }
 @media (max-width: 900px) {
     .page-shell { padding: 20px; }
