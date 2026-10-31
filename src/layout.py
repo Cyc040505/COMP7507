@@ -6,7 +6,7 @@ items and panels. It owns the two global stores and is their *sole writer*.
 
 from __future__ import annotations
 
-from dash import Input, Output, dcc, html, callback_context
+from dash import Input, Output, State, dcc, html, callback_context
 
 from src import components, config, data_loader
 from src.ids import ACTIVE_MODULE, GLOBAL_FILTERS, RESIZE_TOKEN, nav_id
@@ -197,6 +197,34 @@ def register_shell_callbacks(app) -> None:
             "product": product,
             "indicator": indicator,
         }
+
+    # Modules publish a small intent; only the shell writes console values and
+    # global-filters. This keeps a guided case's context available to other modules.
+    @app.callback(
+        Output("global-year", "value"),
+        Output("global-country", "value"),
+        Output("global-product", "value"),
+        Input("M4-intent", "data"),
+        State("global-year", "value"),
+        State("global-country", "value"),
+        State("global-product", "value"),
+        prevent_initial_call=True,
+    )
+    def _apply_module_intent(intent, year, country, product):
+        from dash.exceptions import PreventUpdate
+
+        if not intent or intent.get("source") != "M4":
+            raise PreventUpdate
+        requested_year = intent.get("year", year)
+        requested_country = intent.get("country", country)
+        requested_product = intent.get("product", product)
+        if requested_year not in range(config.YEAR_MIN, config.YEAR_MAX + 1):
+            raise PreventUpdate
+        if requested_country not in {v["value"] for v in _country_options()}:
+            raise PreventUpdate
+        if requested_product not in {v["value"] for v in _PRODUCT_OPTIONS}:
+            raise PreventUpdate
+        return requested_year, requested_country, requested_product
 
     # Resize Plotly graphs in the newly-shown panel (hidden graphs lay out at 0×0),
     # and re-lock their interactions. Dash applies a graph's ``config`` client-side

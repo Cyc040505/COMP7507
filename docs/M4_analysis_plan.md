@@ -101,3 +101,7 @@
 两张主图、三个总览统计和一个详情统计区，方法与数据表折叠展示。全局年份与焦点国家衔接；M4 度量由局部 Share/RCA 控制。全局商品组定位相关章，不缩小指标分母。相似收入模式禁用手动比较名单并显示实际同伴收入、范围与基准国。
 
 数据审计已从 30 年原始 BACI 重算全部国家×章键；CHELEM GDP-CAP 同源核对。见 M4_source_audit.json。原始重建入口为 scripts/build_m4_data.py，不依赖旧公共管道草稿。
+
+## Jeff 反馈后的已授权实施更新
+
+已按 docs/M4_improvement_plan.md 执行三步引导、双视图详情、固定样本两年比较、Finding/Implication/Limits、自选后重新计算结论和完整证据下载。GDP 采用历史比较窗口截至2023、拒绝2024收入匹配；保留历史估计说明，见 income_policy.json，未宣称拿到逐单元格观测标记。案例通过 shell intent 同步控制台；首次进入时保留已有 Overview 非默认上下文。实际功能与测试以更新后的 M4_README.md、M4_validation.md 为准，早期讨论稿不再代表最终功能范围。

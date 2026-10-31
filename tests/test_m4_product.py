@@ -103,6 +103,38 @@ class ProductTests(unittest.TestCase):
         self.assertIn("SWE", m.eligible(d))
         self.assertNotIn("S19", m.eligible(d))
 
+    def test_two_year_missing_and_same_year_world(self):
+        from src.analytics.product import (
+            two_year_metrics,
+            spread_finding,
+            income_allowed,
+        )
+
+        f = pd.DataFrame(
+            [
+                (2010, "AAA", "01", 10.0),
+                (2010, "BBB", "02", 90.0),
+                (2023, "AAA", "01", 30.0),
+                (2023, "AAA", "02", 20.0),
+                (2023, "BBB", "02", 50.0),
+            ],
+            columns=["year", "exporter", "hs2", "value"],
+        )
+        d = two_year_metrics(f, "AAA", 2023, 2010, ["01", "02"])
+        absent = d[d.hs2 == "02"].iloc[0]
+        self.assertTrue(absent.missing_endpoint)
+        self.assertTrue(pd.isna(absent.change_pp))
+        self.assertAlmostEqual(absent.world_share_base, 0.9)
+        known = d[d.hs2 == "01"].iloc[0]
+        self.assertAlmostEqual(known.share_base, 1)
+        self.assertAlmostEqual(known.share_current, 0.6)
+        self.assertAlmostEqual(known.rca_base, 10)
+        self.assertAlmostEqual(known.rca_current, 2)
+        self.assertTrue(income_allowed(2023))
+        self.assertFalse(income_allowed(2024))
+        finding = spread_finding(year_metrics(f, 2023), ["AAA", "BBB"], ["02"])
+        self.assertEqual(finding["hs2"], "02")
+
 
 class DashIntegration(unittest.TestCase):
     def call(self, needle, inputs, states=None, changed=None):
@@ -139,68 +171,191 @@ class DashIntegration(unittest.TestCase):
         self.assertEqual(res.status_code, 200, res.data.decode()[:600])
         return res.json["response"]
 
-    def test_render_income_empty_click_download(self):
-        base = {
-            "global-filters.data": {"year": 2024, "country": "CHN", "product": "TOTAL"},
+    def inputs(self, step="structure", **changes):
+        r = m.recipe(step)
+        values = {
+            "global-filters.data": {"year": 2023, "country": "CHN", "product": "TOTAL"},
             "active-module.data": "M4",
-            "M4-countries.value": m.DEFAULTS,
-            "M4-products.value": [],
-            "M4-metric.value": "share",
-            "M4-mode.value": "selected",
+            "M4-countries.value": r["countries"],
+            "M4-products.value": r["products"],
+            "M4-metric.value": r["metric"],
+            "M4-mode.value": r["mode"],
+            "M4-pool.value": "overview",
+            "M4-factor.value": 1.25,
+            "M4-case.data": r,
+            "M4-baseline.value": 2010,
+            "M4-detail-view.value": r["view"],
         }
-        z = self.call("M4-graph.figure", base, {"M4-focus.value": "CHN"})
-        self.assertEqual(len(z["M4-focus"]["options"]), 3)
-        self.assertEqual(z["M4-table"]["data"][0]["year"], 2024)
-        r = self.call("M4-graph.figure", base | {"M4-metric.value": "rca"})
-        self.assertEqual(
-            z["M4-graph"]["figure"]["data"][0]["y"],
-            r["M4-graph"]["figure"]["data"][0]["y"],
-        )
-        inc = self.call("M4-graph.figure", base | {"M4-mode.value": "income"})
-        self.assertGreater(len(inc["M4-focus"]["options"]), 1)
-        empty = self.call("M4-graph.figure", base | {"M4-countries.value": []})
-        self.assertEqual(empty["M4-table"]["data"], [])
-        sel = self.call(
-            "M4-inspect.value",
-            {
-                "M4-graph.clickData": {"points": [{"customdata": ["DEU", "87"]}]},
-                "M4-focus.options": z["M4-focus"]["options"],
-                "global-filters.data": base["global-filters.data"],
-                "active-module.data": "M4",
-            },
-            changed="M4-graph.clickData",
-        )
-        self.assertEqual(sel["M4-focus"]["value"], "DEU")
-        self.assertEqual(sel["M4-inspect"]["value"], "87")
-        without_custom = self.call(
-            "M4-inspect.value",
-            {
-                "M4-graph.clickData": {"points": [{"x": "DEU", "y": "87"}]},
-                "M4-focus.options": z["M4-focus"]["options"],
-                "global-filters.data": base["global-filters.data"],
-                "active-module.data": "M4",
-            },
-            changed="M4-graph.clickData",
-        )
-        self.assertEqual(without_custom["M4-focus"]["value"], "DEU")
-        self.assertEqual(without_custom["M4-inspect"]["value"], "87")
+        values.update(changes)
+        return values
 
-        detail = self.call(
-            "M4-detail.figure",
+    def test_guided_income_and_sensitivity(self):
+        z = self.call("M4-graph.figure", self.inputs())
+        c = z["M4-comparison"]["data"]
+        self.assertEqual(c["selection_state"], "Guided case")
+        self.assertEqual(c["countries"], ["CHN", "RUS", "MEX"])
+        self.assertEqual(c["sensitivity"]["1.25"], c["sensitivity"]["1.5"])
+        self.assertTrue(z["M4-countries"]["disabled"])
+        self.assertIn("similar nominal GDP", z["M4-conclusion"]["children"])
+        self.assertTrue(all(r["gdp_cap"] > 0 for r in z["M4-table"]["data"]))
+
+    def test_forecast_exclusion_does_not_substitute_year(self):
+        z = self.call(
+            "M4-graph.figure",
+            self.inputs(
+                **{
+                    "global-filters.data": {
+                        "year": 2024,
+                        "country": "CHN",
+                        "product": "TOTAL",
+                    }
+                }
+            ),
+        )
+        self.assertEqual(z["M4-comparison"]["data"]["countries"], [])
+        self.assertEqual(z["M4-comparison"]["data"]["year"], 2024)
+        self.assertIn("no previous-year GDP", z["M4-scope"]["children"])
+        manual = self.call(
+            "M4-graph.figure",
+            self.inputs(
+                **{
+                    "global-filters.data": {
+                        "year": 2024,
+                        "country": "CHN",
+                        "product": "TOTAL",
+                    },
+                    "M4-mode.value": "selected",
+                }
+            ),
+        )
+        self.assertEqual(len(manual["M4-focus"]["options"]), 3)
+
+    def test_custom_scope_and_empty(self):
+        z = self.call("M4-graph.figure", self.inputs(**{"M4-products.value": ["85"]}))
+        self.assertEqual(z["M4-comparison"]["data"]["case_step"], "custom")
+        self.assertIn("HS85", z["M4-evidence"]["children"])
+        self.assertNotIn("HS27", z["M4-evidence"]["children"])
+        self.assertEqual(z["M4-graph"]["figure"]["data"][0]["y"], ["85"])
+        empty = self.call(
+            "M4-graph.figure",
+            self.inputs(**{"M4-mode.value": "selected", "M4-countries.value": []}),
+        )
+        self.assertEqual(empty["M4-table"]["data"], [])
+
+    def test_case_intent_and_shell_single_writer(self):
+        z = self.call(
+            "M4-intent.data",
+            {"active-module.data": "M4", "M4-step-specialization.n_clicks": 1},
+            changed="M4-step-specialization.n_clicks",
+        )
+        self.assertEqual(z["M4-case"]["data"]["product"], "31")
+        intent = z["M4-intent"]["data"]
+        shell = self.call(
+            "global-year.value",
+            {"M4-intent.data": intent},
             {
-                "M4-focus.value": "DEU",
-                "M4-inspect.value": "87",
-                "global-filters.data": base["global-filters.data"],
-                "active-module.data": "M4",
+                "global-year.value": 2024,
+                "global-country.value": "USA",
+                "global-product.value": "HS87",
             },
         )
-        self.assertIn("DEU", str(detail["M4-detail-note"]))
+        self.assertEqual(shell["global-year"]["value"], 2023)
+        self.assertEqual(shell["global-country"]["value"], "CHN")
+        self.assertEqual(shell["global-product"]["value"], "TOTAL")
+        writers = [key for key in app.app.callback_map if "global-filters.data" in key]
+        self.assertEqual(len(writers), 1)
+
+    def test_first_entry_keeps_overview_selection(self):
+        result = self.call(
+            "M4-intent.data",
+            {"active-module.data": "M4"},
+            {
+                "global-filters.data": {
+                    "year": 2010,
+                    "country": "DEU",
+                    "product": "HS87",
+                }
+            },
+            changed="active-module.data",
+        )
+        self.assertNotIn("M4-intent", result)
+        entry = result["M4-case"]["data"]
+        self.assertEqual(entry["countries"], ["DEU"])
+        self.assertEqual(entry["year"], 2010)
+        self.assertEqual(entry["products"], ["87"])
+        self.assertEqual(entry["mode"], "selected")
+
+    def test_specialization_click_and_two_year_export(self):
+        z = self.call("M4-graph.figure", self.inputs("specialization"))
+        self.assertIn("HS31", z["M4-evidence"]["children"])
+        self.assertIn("smaller export share", z["M4-conclusion"]["children"])
+        c = z["M4-comparison"]["data"]
+        selected = self.call(
+            "M4-inspect.value",
+            {
+                "M4-graph.clickData": {"points": [{"x": "RUS", "y": "31"}]},
+                "M4-comparison.data": c,
+                "M4-case.data": m.recipe("specialization"),
+                "active-module.data": "M4",
+            },
+            changed="M4-graph.clickData",
+        )
+        self.assertEqual(selected["M4-focus"]["value"], "RUS")
+        self.assertEqual(selected["M4-inspect"]["value"], "31")
+        changed = self.call("M4-graph.figure", self.inputs("change"))["M4-comparison"][
+            "data"
+        ]
+        detail_inputs = {
+            "M4-focus.value": "CHN",
+            "M4-inspect.value": "87",
+            "M4-comparison.data": changed,
+            "M4-detail-view.value": "change",
+            "M4-baseline.value": 2010,
+            "active-module.data": "M4",
+        }
+        detail = self.call("M4-detail.figure", detail_inputs)
+        row = next(r for r in detail["M4-detail-table"]["data"] if r["hs2"] == "87")
+        self.assertAlmostEqual(row["change_pp"], 5.399088 - 2.082040, places=3)
+        self.assertLess(row["current_rca"], 1)
+        self.assertFalse(row["missing_endpoint"])
+        self.assertEqual(row["baseline"], 2010)
+        self.assertEqual(row["reference_scope"], changed["reference_scope"])
+        invalid = self.call(
+            "M4-detail.figure", detail_inputs | {"M4-baseline.value": 2023}
+        )
+        self.assertEqual(invalid["M4-detail-table"]["data"], [])
         data = self.call(
+            "M4-detail-download.data",
+            {"M4-detail-download-button.n_clicks": 1},
+            {"M4-detail-table.data": detail["M4-detail-table"]["data"]},
+        )
+        self.assertIn("current_rca", data["M4-detail-download"]["data"]["content"])
+        heat = self.call(
             "M4-download.data",
             {"M4-download-button.n_clicks": 1},
             {"M4-table.data": z["M4-table"]["data"]},
         )
-        self.assertIn("world_pct", data["M4-download"]["data"]["content"])
+        self.assertIn("income_factor", heat["M4-download"]["data"]["content"])
+
+    def test_hidden_module_does_not_render(self):
+        key = next(k for k in app.app.callback_map if "M4-graph.figure" in k)
+        callback = app.app.callback_map[key]["callback"].__wrapped__
+        from dash.exceptions import PreventUpdate
+
+        with self.assertRaises(PreventUpdate):
+            callback(
+                {},
+                "M0",
+                [],
+                [],
+                "share",
+                "selected",
+                "overview",
+                1.25,
+                {},
+                2010,
+                "world",
+            )
 
 
 if __name__ == "__main__":

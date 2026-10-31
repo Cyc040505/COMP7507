@@ -29,6 +29,7 @@ SHORT = {
     "15": "Animal & vegetable fats and oils",
     "23": "Food residues & animal feed",
     "30": "Pharmaceutical products",
+    "31": "Fertilizers",
     "39": "Plastics & articles",
     "71": "Precious stones & metals",
     "90": "Optical, medical & measuring instruments",
@@ -119,3 +120,68 @@ def income_peers(gdp, year, anchor, eligible, factor=1.5, limit=6):
     g["distance"] = np.abs(np.log(g.ratio))
     g = g.sort_values(["distance", "country"]).head(limit)
     return g.country.tolist(), g, base
+
+
+@lru_cache(maxsize=1)
+def income_policy():
+    return json.loads((REFERENCE.parent / "m4_income_policy.json").read_text())
+
+
+def income_allowed(year):
+    policy = income_policy()
+    return policy["comparison_min_year"] <= year <= policy["comparison_max_year"]
+
+
+def candidate_pool(country_year, selectable):
+    """Union of annual Top10 after explicit metadata eligibility, not S-prefix filtering."""
+    d = country_year[country_year.country.isin(selectable)].copy()
+    d["rank"] = d.groupby("year").export_value.rank(method="min", ascending=False)
+    return sorted(d.loc[d["rank"].le(10), "country"].unique())
+
+
+def two_year_metrics(frame, country, year, baseline, products):
+    """Outer alignment preserves absent endpoints; no synthetic zeros or forward fills."""
+    pieces = []
+    for y, suffix in [(baseline, "base"), (year, "current")]:
+        all_metrics = year_metrics(frame, y)
+        d = (
+            all_metrics[all_metrics.exporter.eq(country)]
+            .set_index("hs2")[["value", "share", "world_share", "rca"]]
+            .reindex(products)
+        )
+        # World shares remain known even when the focus economy has no record.
+        world = all_metrics.drop_duplicates("hs2").set_index("hs2").world_share
+        d["world_share"] = world.reindex(products)
+        pieces.append(d.add_suffix("_" + suffix))
+    d = pieces[0].join(pieces[1], how="outer").reindex(products).copy()
+    d.index.name = "hs2"
+    d["change_pp"] = (d.share_current - d.share_base) * 100
+    d["baseline"] = baseline
+    d["year"] = year
+    d["country"] = country
+    d["missing_endpoint"] = d.share_base.isna() | d.share_current.isna()
+    return d.reset_index()
+
+
+def spread_finding(metrics, countries, products):
+    """Only the displayed product scope can contribute to a displayed finding."""
+    if len(countries) < 2 or not products:
+        return None
+    a = metrics[metrics.exporter.isin(countries) & metrics.hs2.isin(products)]
+    a = (
+        a.pivot(index="hs2", columns="exporter", values="share")
+        .reindex(columns=countries)
+        .dropna()
+    )
+    if a.empty:
+        return None
+    spread = a.max(axis=1) - a.min(axis=1)
+    p = spread.idxmax()
+    return {
+        "hs2": p,
+        "high": a.loc[p].idxmax(),
+        "low": a.loc[p].idxmin(),
+        "high_share": float(a.loc[p].max()),
+        "low_share": float(a.loc[p].min()),
+        "spread_pp": float(spread[p] * 100),
+    }

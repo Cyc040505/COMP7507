@@ -23,3 +23,26 @@
 .m4-method .m4-button { margin: 16px 0; }
 .m4 .Select-multi-value-wrapper { white-space: normal; }
 @media(max-width:1000px) { .m4-controls,.m4-detail-controls { grid-template-columns: minmax(0,1fr); } }
+
+/* Guided analysis: short first screen, deeper controls disclosed on demand. */
+.m4-steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.m4-step { display: flex; align-items: center; gap: 10px; padding: 16px 12px; min-height: 64px; border: 1px solid var(--line); background: white; border-radius: 10px; color: var(--ink); cursor: pointer; text-align: left; font: inherit; font-size: 13px; }
+.m4-step:hover { border-color: var(--accent); background: var(--accent-soft); }
+.m4-step.on { border-color: var(--accent); background: var(--accent-soft); }
+.m4-step-number { color: var(--accent); font-size: 12px; font-weight: 700; }
+.m4-question { background: linear-gradient(110deg,#edf4fa,#f7fafc); border: 1px solid #dce7f1; border-radius: 12px; padding: 20px 22px; }
+.m4-question h3 { margin: 8px 0; font-size: clamp(19px,2vw,25px); line-height: 1.3; letter-spacing: -.02em; text-wrap: balance; }
+.m4-question p { margin: 0; color: #485c72; font-size: 13px; }
+.m4-badge { color: #315e7d; font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.m4-advanced > summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.m4-advanced .m4-controls { margin: 18px 0 12px; }
+.m4-chart .radio-row { margin-bottom: 14px; }
+.m4-findings { display: grid; gap: 16px; }
+.m4-findings article { border-left: 3px solid var(--accent-line); padding-left: 14px; }
+.m4-findings article:first-child { border-left-color: var(--s4); }
+.m4-findings article:nth-child(2) { border-left-color: var(--s1); }
+.m4-findings h4 { margin: 0 0 5px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #415773; }
+.m4-findings p { margin: 0; font-size: 13px; line-height: 1.75; }
+.m4-chart .m4-detail-controls { grid-template-columns: minmax(0,1fr) minmax(0,1.5fr) minmax(110px,.5fr); }
+@media(max-width:1000px) { .m4-chart .m4-detail-controls { grid-template-columns: 1fr; } }
+@media(max-width:600px) { .m4-steps { grid-template-columns:1fr; } .m4-step { min-height:48px; } .m4-question { padding:16px; } }
