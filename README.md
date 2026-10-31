@@ -91,9 +91,10 @@ Every `src/modules/<mod>.py` exposes the same contract:
 section-4 console); `dcc.Store(id="active-module")` = the active module id. Both are written only
 by the shell callbacks in `src/layout.py`.
 
-> Escape hatch (not implemented yet): if you later need "click a map to set the global country",
-> the module must not write `global-filters` directly. Instead it writes an `intent` store, and a
-> single shell orchestrator callback merges that into `global-filters`.
+> Escape hatch (in use for M4): modules must not write `global-filters` directly. They publish a
+> small intent store (currently `M4-intent`); a shell callback in `src/layout.py` updates the
+> global console widgets, and the existing console callback remains the sole writer of
+> `global-filters`. Other modules can reuse the same pattern later without becoming writers.
 
 ## References
 
