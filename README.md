@@ -7,9 +7,7 @@ Data sources: CEPII **BACI** (bilateral goods trade) / **CHELEM** (macroeconomic
 Stack: Plotly Dash single-page app + dash-cytoscape (M3 force-directed network) + DuckDB offline
 pre-aggregation.
 
-> Status: **framework skeleton**. Running `python app.py` shows the full page structure; the six
-> modules are placeholder views and the data layer is defined but not yet fed by the offline
-> pipeline (so the app currently runs on demo data).
+> Status: **partially implemented**. Overview (M0) and Product Structure (M4) have data-backed views; M1, M2, M3 and M5 retain their framework placeholders. M4 includes its required compact inputs and a separate validation record.
 
 ## Quick start
 
@@ -102,3 +100,11 @@ by the shell callbacks in `src/layout.py`.
 - Proposal: `documents/proposal_Group7.pdf`
 - Report page structure: `documents/COMP7507_报告_Group7.html`, section 4
 - Course example architecture: `Lab2/example_dashboard`
+
+## M4 Product Structure
+
+M4 now includes real-data composition/RCA heatmaps, linked product detail,
+similar-income comparisons (CHELEM GDP-CAP), and evidence downloads. The two
+required compact analysis inputs are included; large raw files are not required
+to run the module. See [M4 usage and analysis](docs/M4_README.md),
+[validation](docs/M4_validation.md), and [Feishu summary](docs/M4_Feishu_notes.md).

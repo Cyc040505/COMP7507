@@ -1,0 +1,163 @@
+{
+  "source_version": "BACI HS92 V202601",
+  "years": [
+    {
+      "year": 1995,
+      "keys": 16314,
+      "max_relative_error": 9.440659647657051e-15
+    },
+    {
+      "year": 1996,
+      "keys": 16605,
+      "max_relative_error": 2.6694194717831456e-14
+    },
+    {
+      "year": 1997,
+      "keys": 16866,
+      "max_relative_error": 1.8862833558138716e-14
+    },
+    {
+      "year": 1998,
+      "keys": 16862,
+      "max_relative_error": 9.789416734660247e-15
+    },
+    {
+      "year": 1999,
+      "keys": 17085,
+      "max_relative_error": 2.6784453414578866e-14
+    },
+    {
+      "year": 2000,
+      "keys": 18527,
+      "max_relative_error": 1.9918930195997293e-14
+    },
+    {
+      "year": 2001,
+      "keys": 18657,
+      "max_relative_error": 9.070420011047937e-15
+    },
+    {
+      "year": 2002,
+      "keys": 18788,
+      "max_relative_error": 1.0100563118904962e-14
+    },
+    {
+      "year": 2003,
+      "keys": 18799,
+      "max_relative_error": 6.843852546426191e-15
+    },
+    {
+      "year": 2004,
+      "keys": 18928,
+      "max_relative_error": 1.3103080317424328e-14
+    },
+    {
+      "year": 2005,
+      "keys": 18990,
+      "max_relative_error": 1.9115661004968622e-14
+    },
+    {
+      "year": 2006,
+      "keys": 19099,
+      "max_relative_error": 7.812733162624268e-15
+    },
+    {
+      "year": 2007,
+      "keys": 19203,
+      "max_relative_error": 1.6515817622548776e-14
+    },
+    {
+      "year": 2008,
+      "keys": 19382,
+      "max_relative_error": 6.283863694972037e-15
+    },
+    {
+      "year": 2009,
+      "keys": 19392,
+      "max_relative_error": 8.362016718184528e-15
+    },
+    {
+      "year": 2010,
+      "keys": 19291,
+      "max_relative_error": 7.907439672692802e-15
+    },
+    {
+      "year": 2011,
+      "keys": 19386,
+      "max_relative_error": 7.660310740921549e-15
+    },
+    {
+      "year": 2012,
+      "keys": 19417,
+      "max_relative_error": 1.2298070878939102e-14
+    },
+    {
+      "year": 2013,
+      "keys": 19564,
+      "max_relative_error": 1.4432589220758306e-14
+    },
+    {
+      "year": 2014,
+      "keys": 19450,
+      "max_relative_error": 1.4485750580505418e-14
+    },
+    {
+      "year": 2015,
+      "keys": 19574,
+      "max_relative_error": 3.779609786544699e-14
+    },
+    {
+      "year": 2016,
+      "keys": 19515,
+      "max_relative_error": 9.762812724573135e-15
+    },
+    {
+      "year": 2017,
+      "keys": 19648,
+      "max_relative_error": 1.2050661302256894e-14
+    },
+    {
+      "year": 2018,
+      "keys": 19625,
+      "max_relative_error": 7.362616226580213e-15
+    },
+    {
+      "year": 2019,
+      "keys": 19521,
+      "max_relative_error": 1.2878522191347086e-14
+    },
+    {
+      "year": 2020,
+      "keys": 19280,
+      "max_relative_error": 1.0660284288047444e-14
+    },
+    {
+      "year": 2021,
+      "keys": 19611,
+      "max_relative_error": 8.976992492353614e-15
+    },
+    {
+      "year": 2022,
+      "keys": 19648,
+      "max_relative_error": 7.24291133915289e-15
+    },
+    {
+      "year": 2023,
+      "keys": 19707,
+      "max_relative_error": 7.4167904937054e-15
+    },
+    {
+      "year": 2024,
+      "keys": 19431,
+      "max_relative_error": 2.1256207854728103e-14
+    }
+  ],
+  "trade_rows": 566165,
+  "reference_scope": "All BACI exporters retained; absent product cells not filled.",
+  "gdp_cap_matched_rows": 7650,
+  "seconds": 13.33,
+  "files": {
+    "exporter_hs2_year.parquet": "a64944319b8766f66675a205eaf00d07509ba9b49aa5ffccb00aa563418dcf97",
+    "gdp_year.parquet": "95761fcd3bcb24031929535e4374b4447910efeb076ffed54b393554907159e3"
+  }
+}
