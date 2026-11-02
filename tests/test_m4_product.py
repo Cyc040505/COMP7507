@@ -135,6 +135,36 @@ class ProductTests(unittest.TestCase):
         finding = spread_finding(year_metrics(f, 2023), ["AAA", "BBB"], ["02"])
         self.assertEqual(finding["hs2"], "02")
 
+    def test_highlight_preserves_data_and_ranking(self):
+        d = m.metrics(2023)
+        a = m.detail_figure(d, "RUS", "27")
+        b = m.detail_figure(d, "RUS", "31")
+        self.assertEqual(list(a.data[0].y), list(b.data[0].y))
+        for old, new in zip(a.data, b.data):
+            np.testing.assert_allclose(old.x, new.x, equal_nan=True)
+            self.assertEqual(old.marker.color, new.marker.color)
+        codes = list(b.data[0].y)
+        index = codes.index("31")
+        self.assertEqual(b.data[0].marker.opacity[index], 1)
+        self.assertEqual(b.layout.shapes[0].y0, index - 0.46)
+        self.assertIn("<b>", b.layout.yaxis.ticktext[index])
+        added = m.detail_figure(d, "RUS", "01")
+        self.assertIn("01", added.data[0].y)
+        self.assertEqual(added.data[0].marker.opacity[-1], 1)
+
+    def test_two_year_highlight_keeps_missing_endpoints(self):
+        from src.analytics.product import two_year_metrics
+
+        f = pd.DataFrame(
+            [(2010, "AAA", "01", 10.0), (2023, "AAA", "02", 20.0)],
+            columns=["year", "exporter", "hs2", "value"],
+        )
+        rows = two_year_metrics(f, "AAA", 2023, 2010, ["01", "02"])
+        fig = m.comparison_figure(rows, 2010, 2023, "01")
+        self.assertEqual(fig.data[0].marker.opacity[0], 1)
+        self.assertTrue(pd.isna(fig.data[1].x[0]))
+        self.assertTrue(rows.missing_endpoint.all())
+
 
 class DashIntegration(unittest.TestCase):
     def call(self, needle, inputs, states=None, changed=None):
@@ -174,7 +204,7 @@ class DashIntegration(unittest.TestCase):
     def inputs(self, step="structure", **changes):
         r = m.recipe(step)
         values = {
-            "global-filters.data": {"year": 2023, "country": "CHN", "product": "TOTAL"},
+            "M4-filters.data": {"year": 2023, "country": "CHN", "product": "TOTAL"},
             "active-module.data": "M4",
             "M4-countries.value": r["countries"],
             "M4-products.value": r["products"],
@@ -204,7 +234,7 @@ class DashIntegration(unittest.TestCase):
             "M4-graph.figure",
             self.inputs(
                 **{
-                    "global-filters.data": {
+                    "M4-filters.data": {
                         "year": 2024,
                         "country": "CHN",
                         "product": "TOTAL",
@@ -219,7 +249,7 @@ class DashIntegration(unittest.TestCase):
             "M4-graph.figure",
             self.inputs(
                 **{
-                    "global-filters.data": {
+                    "M4-filters.data": {
                         "year": 2024,
                         "country": "CHN",
                         "product": "TOTAL",
@@ -242,48 +272,73 @@ class DashIntegration(unittest.TestCase):
         )
         self.assertEqual(empty["M4-table"]["data"], [])
 
-    def test_case_intent_and_shell_single_writer(self):
-        z = self.call(
-            "M4-intent.data",
+    def test_no_false_difference_for_equal_or_incomparable_baskets(self):
+        from unittest.mock import patch
+
+        values = self.inputs(
+            **{
+                "M4-mode.value": "selected",
+                "M4-countries.value": ["CHN", "USA"],
+                "M4-products.value": ["01", "02"],
+            }
+        )
+        for rows, phrase in [
+            (
+                [
+                    (2023, "CHN", "01", 10.0),
+                    (2023, "CHN", "02", 10.0),
+                    (2023, "USA", "01", 10.0),
+                    (2023, "USA", "02", 10.0),
+                ],
+                "below 0.05",
+            ),
+            (
+                [(2023, "CHN", "01", 10.0), (2023, "USA", "02", 10.0)],
+                "No displayed chapter",
+            ),
+        ]:
+            frame = pd.DataFrame(rows, columns=["year", "exporter", "hs2", "value"])
+            with patch.object(m, "metrics", return_value=year_metrics(frame, 2023)):
+                result = self.call("M4-graph.figure", values)
+                self.assertIn(phrase, result["M4-evidence"]["children"])
+                self.assertNotIn(
+                    "export baskets differ", result["M4-conclusion"]["children"]
+                )
+
+    def test_local_controls_and_no_global_console(self):
+        result = self.call(
+            "M4-case.data",
             {"active-module.data": "M4", "M4-step-specialization.n_clicks": 1},
             changed="M4-step-specialization.n_clicks",
         )
-        self.assertEqual(z["M4-case"]["data"]["product"], "31")
-        intent = z["M4-intent"]["data"]
-        shell = self.call(
-            "global-year.value",
-            {"M4-intent.data": intent},
-            {
-                "global-year.value": 2024,
-                "global-country.value": "USA",
-                "global-product.value": "HS87",
-            },
+        self.assertEqual(result["M4-case"]["data"]["product"], "31")
+        case = result["M4-case"]["data"]
+        settings = self.call(
+            "M4-countries.options",
+            {"active-module.data": "M4", "M4-case.data": case},
+            changed="M4-case.data",
         )
-        self.assertEqual(shell["global-year"]["value"], 2023)
-        self.assertEqual(shell["global-country"]["value"], "CHN")
-        self.assertEqual(shell["global-product"]["value"], "TOTAL")
-        writers = [key for key in app.app.callback_map if "global-filters.data" in key]
-        self.assertEqual(len(writers), 1)
-
-    def test_first_entry_keeps_overview_selection(self):
-        result = self.call(
-            "M4-intent.data",
-            {"active-module.data": "M4"},
-            {
-                "global-filters.data": {
-                    "year": 2010,
-                    "country": "DEU",
-                    "product": "HS87",
-                }
-            },
-            changed="active-module.data",
+        self.assertEqual(settings["M4-year"]["value"], 2023)
+        self.assertEqual(settings["M4-anchor"]["value"], "CHN")
+        local = self.call(
+            "M4-filters.data", {"M4-year.value": 2024, "M4-anchor.value": "MEX"}
         )
-        self.assertNotIn("M4-intent", result)
-        entry = result["M4-case"]["data"]
-        self.assertEqual(entry["countries"], ["DEU"])
-        self.assertEqual(entry["year"], 2010)
-        self.assertEqual(entry["products"], ["87"])
-        self.assertEqual(entry["mode"], "selected")
+        self.assertEqual(local["M4-filters"]["data"], {"year": 2024, "country": "MEX"})
+        layout = app.server.test_client().get("/_dash-layout").get_data(as_text=True)
+        for control in [
+            "global-year",
+            "global-country",
+            "global-product",
+            "global-indicator",
+        ]:
+            self.assertNotIn('"id":"' + control + '"', layout)
+        for meta in app.app.callback_map.values():
+            outputs = meta["output"]
+            outputs = outputs if isinstance(outputs, list) else [outputs]
+            if any(str(o.component_id).startswith("M4-") for o in outputs):
+                self.assertFalse(
+                    any(i["id"] == "global-filters" for i in meta["inputs"])
+                )
 
     def test_specialization_click_and_two_year_export(self):
         z = self.call("M4-graph.figure", self.inputs("specialization"))

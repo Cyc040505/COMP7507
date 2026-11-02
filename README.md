@@ -109,3 +109,7 @@ similar-income comparisons (CHELEM GDP-CAP), and evidence downloads. The two
 required compact analysis inputs are included; large raw files are not required
 to run the module. See [M4 usage and analysis](docs/M4_README.md),
 [validation](docs/M4_validation.md), and [Feishu summary](docs/M4_Feishu_notes.md).
+
+## Module-local controls (2026-11-02)
+
+The team agreed to remove the global console. The sidebar now contains navigation only. Overview retains its own year slider; M4 owns its year, income anchor and other controls through M4-filters. Guided cases never change another module. GLOBAL_FILTERS remains only as a read-only compatibility snapshot for unfinished placeholder modules; new module implementations must own their controls. Explicit cross-module transfer can be added by a visible action when required; no automatic transfer is active. This supersedes the earlier global-console and M4-intent rules above.
