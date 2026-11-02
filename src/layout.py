@@ -6,41 +6,13 @@ items and panels. It owns the two global stores and is their *sole writer*.
 
 from __future__ import annotations
 
-from dash import Input, Output, State, dcc, html, callback_context
+from dash import Input, Output, dcc, html, callback_context
 
 from src import components, config, data_loader
 from src.ids import ACTIVE_MODULE, GLOBAL_FILTERS, RESIZE_TOKEN, nav_id
 from src.modules import build_panels, nav_items
 
 DEFAULT_MODULE = "M0"
-
-
-# --- options ------------------------------------------------------------------
-def _country_options() -> list[dict]:
-    meta = data_loader.load_country_meta()
-    opts = [{"label": "World (global)", "value": "WLD"}]
-    for _, row in meta.sort_values("name").iterrows():
-        opts.append({"label": f"{row['name']} ({row['iso3']})", "value": row["iso3"]})
-    return opts
-
-
-_PRODUCT_OPTIONS = [
-    {"label": "All products", "value": "TOTAL"},
-    {"label": "HS2 · Machinery & electrical (84–85)", "value": "HS84"},
-    {"label": "HS2 · Vehicles & transport (87)", "value": "HS87"},
-    {"label": "HS2 · Chemicals (28–38)", "value": "HS28"},
-    {"label": "HS2 · Textiles & apparel (61–62)", "value": "HS61"},
-]
-
-_INDICATOR_OPTIONS = [
-    {"label": "Export value", "value": "export_value"},
-    {"label": "GDP (current, GDP-VAL)", "value": "gdp"},
-    {"label": "GDP per capita (GDP-CAP)", "value": "gdp_per_capita"},
-    {"label": "Openness", "value": "openness"},
-    {"label": "RCA", "value": "rca"},
-]
-
-_YEAR_OPTIONS = [{"label": str(y), "value": y} for y in range(config.YEAR_MIN, config.YEAR_MAX + 1)]
 
 
 # --- building blocks ----------------------------------------------------------
@@ -73,47 +45,6 @@ def _nav() -> html.Div:
     return html.Nav(className="nav", children=[html.Div("Modules", className="lbl"), *buttons])
 
 
-def _console() -> html.Div:
-    return html.Div(
-        className="console",
-        children=[
-            html.Div("Console · global parameters", className="lbl"),
-            html.Label("Year", className="ctl-label"),
-            dcc.Dropdown(
-                id="global-year",
-                options=_YEAR_OPTIONS,
-                value=config.DEFAULT_YEAR,
-                clearable=False,
-                className="ctl-dropdown",
-            ),
-            html.Label("Country / exporter", className="ctl-label"),
-            dcc.Dropdown(
-                id="global-country",
-                options=_country_options(),
-                value="CHN",
-                clearable=False,
-                className="ctl-dropdown",
-            ),
-            html.Label("Product", className="ctl-label"),
-            dcc.Dropdown(
-                id="global-product",
-                options=_PRODUCT_OPTIONS,
-                value="TOTAL",
-                clearable=False,
-                className="ctl-dropdown",
-            ),
-            html.Label("Indicator", className="ctl-label"),
-            dcc.Dropdown(
-                id="global-indicator",
-                options=_INDICATOR_OPTIONS,
-                value="export_value",
-                clearable=False,
-                className="ctl-dropdown",
-            ),
-        ],
-    )
-
-
 def _view_area() -> html.Div:
     return html.Div(
         className="view-area",
@@ -133,7 +64,8 @@ def build_layout() -> html.Div:
     return html.Div(
         className="page-shell",
         children=[
-            # Global state (single source of truth; written only by the shell).
+            # Read-only compatibility snapshot for unfinished legacy placeholders.
+            # Implemented modules own their controls; this is not a live global filter.
             dcc.Store(id=GLOBAL_FILTERS, storage_type="memory", data={
                 "year": config.DEFAULT_YEAR,
                 "country": "CHN",
@@ -146,7 +78,7 @@ def build_layout() -> html.Div:
             html.Div(
                 className="layout-grid",
                 children=[
-                    html.Aside(className="left-col", children=[_nav(), _console()]),
+                    html.Aside(className="left-col", children=[_nav()]),
                     html.Main(_view_area(), className="right-col"),
                 ],
             ),
@@ -182,49 +114,6 @@ def register_shell_callbacks(app) -> None:
             for m in module_ids
         ]
         return nav_classes + panel_classes
-
-    @app.callback(
-        Output(GLOBAL_FILTERS, "data"),
-        Input("global-year", "value"),
-        Input("global-country", "value"),
-        Input("global-product", "value"),
-        Input("global-indicator", "value"),
-    )
-    def _write_filters(year, country, product, indicator):
-        return {
-            "year": year,
-            "country": country,
-            "product": product,
-            "indicator": indicator,
-        }
-
-    # Modules publish a small intent; only the shell writes console values and
-    # global-filters. This keeps a guided case's context available to other modules.
-    @app.callback(
-        Output("global-year", "value"),
-        Output("global-country", "value"),
-        Output("global-product", "value"),
-        Input("M4-intent", "data"),
-        State("global-year", "value"),
-        State("global-country", "value"),
-        State("global-product", "value"),
-        prevent_initial_call=True,
-    )
-    def _apply_module_intent(intent, year, country, product):
-        from dash.exceptions import PreventUpdate
-
-        if not intent or intent.get("source") != "M4":
-            raise PreventUpdate
-        requested_year = intent.get("year", year)
-        requested_country = intent.get("country", country)
-        requested_product = intent.get("product", product)
-        if requested_year not in range(config.YEAR_MIN, config.YEAR_MAX + 1):
-            raise PreventUpdate
-        if requested_country not in {v["value"] for v in _country_options()}:
-            raise PreventUpdate
-        if requested_product not in {v["value"] for v in _PRODUCT_OPTIONS}:
-            raise PreventUpdate
-        return requested_year, requested_country, requested_product
 
     # Resize Plotly graphs in the newly-shown panel (hidden graphs lay out at 0×0),
     # and re-lock their interactions. Dash applies a graph's ``config`` client-side

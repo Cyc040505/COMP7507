@@ -20,19 +20,13 @@ from src.analytics.product import (
     two_year_metrics,
     spread_finding,
 )
-from src.ids import ACTIVE_MODULE, GLOBAL_FILTERS, mid
+from src.ids import ACTIVE_MODULE, mid
 from src.module_base import guard_active
 
 MODULE_ID = "M4"
 NAV_LABEL = "M4  Product Structure"
 ORDER = 4
 DEFAULTS = ["CHN", "RUS", "MEX"]
-PRODUCT_GROUPS = {
-    "HS84": ["84", "85"],
-    "HS87": ["87"],
-    "HS28": [f"{p:02}" for p in range(28, 39)],
-    "HS61": ["61", "62"],
-}
 GRAPH_CONFIG = {"displayModeBar": False, "responsive": True}
 STEPS = {
     "structure": {
@@ -116,7 +110,7 @@ def layout():
     return html.Div(
         className="module-inner m4",
         children=[
-            dcc.Store(id=cid("intent")),
+            dcc.Store(id=cid("filters"), data={"year": 2023, "country": "CHN"}),
             dcc.Store(id=cid("case")),
             dcc.Store(id=cid("global-context")),
             dcc.Store(id=cid("detail-context")),
@@ -130,6 +124,16 @@ def layout():
                         "Follow a focused comparison, test it with a second measure, then check two years."
                     ),
                 ],
+            ),
+            field(
+                "Analysis year",
+                dcc.Dropdown(
+                    id=cid("year"),
+                    options=[{"label": str(y), "value": y} for y in range(1995, 2025)],
+                    value=2023,
+                    clearable=False,
+                    className="ctl-dropdown",
+                ),
             ),
             html.Div(
                 className="m4-steps",
@@ -188,6 +192,16 @@ def layout():
                                 ),
                             ),
                             field(
+                                "Income reference economy",
+                                dcc.Dropdown(
+                                    id=cid("anchor"),
+                                    options=[],
+                                    value="CHN",
+                                    clearable=False,
+                                    className="ctl-dropdown",
+                                ),
+                            ),
+                            field(
                                 "Income candidates",
                                 dcc.Dropdown(
                                     id=cid("pool"),
@@ -239,7 +253,7 @@ def layout():
                         ],
                     ),
                     html.P(
-                        "Year and income anchor follow the global console. Product groups locate chapters; all-product denominators stay fixed. Changing the preset conditions switches the narrative to custom exploration.",
+                        "All controls here affect M4 only. The income reference is used only in Similar income mode; Detail economy changes only the second chart. All-product denominators stay fixed. Changing the preset conditions switches the narrative to custom exploration.",
                         className="m4-note",
                     ),
                 ],
@@ -292,7 +306,7 @@ def layout():
                             className="m4-detail-controls",
                             children=[
                                 field(
-                                    "Focus economy",
+                                    "Detail economy",
                                     dcc.Dropdown(
                                         id=cid("focus"),
                                         options=[],
@@ -302,7 +316,7 @@ def layout():
                                     ),
                                 ),
                                 field(
-                                    "Inspect a product",
+                                    "Highlight product",
                                     dcc.Dropdown(
                                         id=cid("inspect"),
                                         options=products,
@@ -574,6 +588,36 @@ def heat_figure(d, countries, products, metric):
     return fig
 
 
+def highlight_product(fig, product):
+    """Emphasize a row without changing series identity, rank, or numeric values."""
+    if not fig.data:
+        return fig
+    codes = list(fig.data[0].y)
+    if product not in codes:
+        return fig
+    index = codes.index(product)
+    for trace in fig.data:
+        trace.marker.opacity = [1.0 if p == product else 0.48 for p in codes]
+        trace.marker.line.color = theme.ACCENT
+        trace.marker.line.width = [1.5 if p == product else 0 for p in codes]
+    ticks = ["<br>".join(wrap(label(p), 32)) for p in codes]
+    ticks[index] = "<b>" + ticks[index] + "</b>"
+    fig.update_yaxes(tickmode="array", tickvals=codes, ticktext=ticks)
+    fig.add_shape(
+        type="rect",
+        xref="paper",
+        x0=0,
+        x1=1,
+        yref="y",
+        y0=index - 0.46,
+        y1=index + 0.46,
+        layer="below",
+        fillcolor="rgba(29,78,216,0.06)",
+        line=dict(color=theme.ACCENT, width=1),
+    )
+    return fig
+
+
 def detail_figure(d, focus, product):
     a = d[d.exporter.eq(focus)].sort_values(["value", "hs2"], ascending=[False, True])
     if a.empty:
@@ -581,7 +625,7 @@ def detail_figure(d, focus, product):
             "This economy has no recorded exports in the selected year."
         )
     codes = list(a.head(8).hs2)
-    if product not in codes and product in set(d.hs2):
+    if product not in codes and product in chapters():
         codes.append(product)
     w = d.drop_duplicates("hs2").set_index("hs2").world_share
     local = a.set_index("hs2").share.reindex(codes)
@@ -628,7 +672,7 @@ def detail_figure(d, focus, product):
         ),
         margin=dict(l=20, r=55, t=50, b=45),
     )
-    return fig
+    return highlight_product(fig, product)
 
 
 @lru_cache(maxsize=1)
@@ -677,7 +721,7 @@ def context_metadata(comparison):
     }
 
 
-def comparison_figure(rows, baseline, year):
+def comparison_figure(rows, baseline, year, product=None):
     if rows.empty:
         return theme.empty_figure(
             "Select products recorded in at least one comparison year."
@@ -730,49 +774,24 @@ def comparison_figure(rows, baseline, year):
             automargin=True,
         ),
     )
-    return fig
+    return highlight_product(fig, product)
 
 
 def register_callbacks(app):
     @app.callback(
         Output(cid("case"), "data"),
-        Output(cid("intent"), "data"),
         Input(ACTIVE_MODULE, "data"),
         Input(cid("step-structure"), "n_clicks"),
         Input(cid("step-specialization"), "n_clicks"),
         Input(cid("step-change"), "n_clicks"),
         Input(cid("reset"), "n_clicks"),
         State(cid("case"), "data"),
-        State(GLOBAL_FILTERS, "data"),
     )
-    def apply_case(active, first, second, third, reset, current, filters):
+    def apply_case(active, first, second, third, reset, current):
         guard_active(MODULE_ID, active)
         trigger = ctx.triggered_id
         if trigger == ACTIVE_MODULE and current:
-            return no_update, no_update
-        filters = filters or {}
-        if (
-            trigger == ACTIVE_MODULE
-            and not current
-            and (
-                filters.get("year", 2024) != 2024
-                or filters.get("country", "CHN") != "CHN"
-                or filters.get("product", "TOTAL") != "TOTAL"
-            )
-        ):
-            # Preserve an explicit Overview/global selection on first entry.
-            country = filters.get("country", "CHN")
-            entry = dict(
-                recipe("structure"),
-                step="entry",
-                mode="selected",
-                countries=[country] if country in eligible(trade()) else [],
-                products=PRODUCT_GROUPS.get(filters.get("product"), []),
-                year=filters.get("year", 2024),
-                anchor=country,
-                focus=country,
-            )
-            return entry, no_update
+            return no_update
         key = (
             "change"
             if trigger == cid("step-change")
@@ -784,14 +803,15 @@ def register_callbacks(app):
         )
         r = recipe(key)
         r["request_id"] = sum(n or 0 for n in [first, second, third, reset])
-        return r, {
-            "source": "M4",
-            "year": r["year"],
-            "country": r["anchor"],
-            "product": "TOTAL",
-            "step": key,
-            "request_id": r["request_id"],
-        }
+        return r
+
+    @app.callback(
+        Output(cid("filters"), "data"),
+        Input(cid("year"), "value"),
+        Input(cid("anchor"), "value"),
+    )
+    def local_filters(year, anchor):
+        return {"year": year, "country": anchor}
 
     @app.callback(
         Output(cid("countries"), "options"),
@@ -804,44 +824,45 @@ def register_callbacks(app):
         Output(cid("factor"), "value"),
         Output(cid("detail-view"), "value"),
         Output(cid("baseline"), "value"),
-        Input(GLOBAL_FILTERS, "data"),
+        Output(cid("year"), "value"),
+        Output(cid("anchor"), "options"),
+        Output(cid("anchor"), "value"),
         Input(ACTIVE_MODULE, "data"),
         Input(cid("case"), "data"),
         State(cid("countries"), "value"),
         State(cid("products"), "value"),
         State(cid("global-context"), "data"),
     )
-    def sync(filters, active, case, current, products, previous):
+    def sync(active, case, current, products, previous):
         guard_active(MODULE_ID, active)
-        filters = filters or {}
-        previous = previous or {}
         opts = eligible(trade())
         ns = names()
-        glob = filters.get("country", "CHN")
+        options = [{"label": f"{ns.get(c,c)} ({c})", "value": c} for c in opts]
         apply = case and (ctx.triggered_id == cid("case") or not previous)
-        extras = [no_update] * 6
         if apply:
-            current = case["countries"]
-            products = case["products"]
-            extras = [
+            return (
+                options,
+                case["countries"],
+                case["products"],
+                True,
                 case["mode"],
                 case["metric"],
                 case["pool"],
                 case["factor"],
                 case["view"],
                 case["baseline"],
-            ]
-        else:
-            if previous.get("country") != glob and glob in opts:
-                current = [glob] + [c for c in (current or []) if c != glob][:5]
-            if previous.get("product") != filters.get("product"):
-                products = PRODUCT_GROUPS.get(filters.get("product"), [])
+                case["year"],
+                options,
+                case["anchor"],
+            )
         return (
-            [{"label": f"{ns.get(c,c)} ({c})", "value": c} for c in opts],
-            [c for c in (current or []) if c in opts],
-            products,
-            {"country": glob, "product": filters.get("product")},
-            *extras,
+            options,
+            no_update,
+            no_update,
+            True,
+            *([no_update] * 7),
+            options,
+            no_update,
         )
 
     @app.callback(
@@ -859,7 +880,7 @@ def register_callbacks(app):
         Output(cid("question"), "children"),
         Output(cid("audit-note"), "children"),
         Output(cid("comparison"), "data"),
-        Input(GLOBAL_FILTERS, "data"),
+        Input(cid("filters"), "data"),
         Input(ACTIVE_MODULE, "data"),
         Input(cid("countries"), "value"),
         Input(cid("products"), "value"),
@@ -926,7 +947,7 @@ def register_callbacks(app):
             elif anchor == "WLD":
                 income_status = "Unavailable: select an economy"
                 messages.append(
-                    "Select an individual global country as the income anchor; World is not an economy."
+                    "Select an individual income reference economy; World is not an economy."
                 )
             else:
                 all_peers, peer_rows, base = income_peers(
@@ -1072,6 +1093,14 @@ def register_callbacks(app):
             implication = "The displayed export baskets differ. Compare Share with RCA to separate domestic importance from specialization against the world."
             if mode == "income":
                 implication = "Within this income-matched sample, similar nominal GDP per person does not imply the same export basket. Product structure adds information beyond this income comparison."
+        if spread and spread["spread_pp"] < 0.05:
+            finding = "Displayed chapters show a maximum share difference below 0.05 percentage points."
+            implication = "This selected scope does not show a material composition difference at the displayed precision; inspect other chapters or a different comparison before generalizing."
+        elif not spread and len(chosen) > 1:
+            finding = (
+                "No displayed chapter has recorded shares for every selected economy."
+            )
+            implication = "Missing records do not establish similarity or difference. Review coverage or select chapters with comparable observations."
         elif len(chosen) == 1:
             finding = f"{chosen[0]} is selected; add another economy for a cross-country finding."
         if guided and cases.get("step") == "specialization":
@@ -1223,7 +1252,7 @@ def register_callbacks(app):
                 )
             codes = list(dict.fromkeys(comparison.get("products", []) + [p]))
             rows = two_year_metrics(trade(), c, year, baseline, codes)
-            figure = comparison_figure(rows, baseline, year)
+            figure = comparison_figure(rows, baseline, year, p)
             note = f"{names().get(c,c)} ({c}) · {baseline} vs {year}. Fixed displayed chapters plus HS{p}; sorted by share change (pp). Each year uses its own full world reference. Missing endpoints are not filled."
         else:
             if a.empty:
@@ -1239,6 +1268,17 @@ def register_callbacks(app):
             rows = two_year_metrics(trade(), c, year, baseline, codes)
             note = f"{names().get(c,c)} ({c}) · {year} · HS{p}. Top8 chapters by exports plus inspected chapter; same-year economy and world shares. Other chapters remain in the denominators."
         r = rows[rows.hs2.eq(p)]
+        notice = ""
+        if r.empty or pd.isna(r.iloc[0].share_current):
+            notice = " No recorded current-year economy value; absence is not treated as zero."
+        if view == "change" and not r.empty and r.iloc[0].missing_endpoint:
+            notice += " An endpoint is missing, so share change is unknown."
+        note = html.Div(
+            [
+                html.Strong("Highlighted: " + label(p), className="m4-focus-title"),
+                html.Span(note + notice),
+            ]
+        )
         stats = []
         if not r.empty:
             r = r.iloc[0]
@@ -1320,6 +1360,8 @@ def register_callbacks(app):
                     hs2=r.hs2,
                     product=chapters().get(r.hs2, r.hs2),
                     detail_view=view,
+                    highlighted_product=p,
+                    is_highlighted=r.hs2 == p,
                     base_value=number(r.value_base) if view == "change" else None,
                     current_value=number(r.value_current),
                     base_share_pct=(

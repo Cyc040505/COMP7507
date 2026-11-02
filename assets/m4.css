@@ -46,3 +46,4 @@
 .m4-chart .m4-detail-controls { grid-template-columns: minmax(0,1fr) minmax(0,1.5fr) minmax(110px,.5fr); }
 @media(max-width:1000px) { .m4-chart .m4-detail-controls { grid-template-columns: 1fr; } }
 @media(max-width:600px) { .m4-steps { grid-template-columns:1fr; } .m4-step { min-height:48px; } .m4-question { padding:16px; } }
+.m4-focus-title { display: block; margin-bottom: 6px; color: var(--accent); font-size: 14px; }
