@@ -1,0 +1,14 @@
+{
+  "version": "CHELEM GDP V202502",
+  "indicator": "GDP-CAP",
+  "unit": "current USD per person",
+  "comparison_min_year": 1995,
+  "comparison_max_year": 2023,
+  "status": "Historical comparison window; historical estimates may remain, not certified final observations",
+  "rule": "Exclude years beyond the last year in this release's CHELEM trade data. No cross-year imputation or forecast extension.",
+  "local_evidence": "trade_chel_v202502.csv header ends at v2023; gdp_v202502.csv extends to v2029 without per-cell observation/forecast flags.",
+  "source": "https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=17",
+  "supporting_publication": "https://www.cepii.fr/PDF_PUB/em/2025/em2025-08.pdf",
+  "source_note": "CEPII describes GDP beyond the last available trade/BOP year as IMF WEO estimates. Its 2025 economic-world tables identify 2024/2025 growth as projections. Official text was available in indexed search results; direct page access returned 403 during this review.",
+  "reviewed": "2026-10-31"
+}

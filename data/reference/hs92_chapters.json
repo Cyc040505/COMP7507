@@ -1,0 +1,395 @@
+{
+  "source": "https://comtradeapi.un.org/files/v1/app/reference/H0.json",
+  "classification": "HS1992 (H0)",
+  "retrieved": "2026-10-31",
+  "chapters": [
+    {
+      "hs2": "01",
+      "name": "Live animals"
+    },
+    {
+      "hs2": "02",
+      "name": "Meat and edible meat offal"
+    },
+    {
+      "hs2": "03",
+      "name": "Fish & crustacean, mollusc & other  aquatic invertebrate"
+    },
+    {
+      "hs2": "04",
+      "name": "Dairy prod; birds' eggs; natural honey;  edible prod nes"
+    },
+    {
+      "hs2": "05",
+      "name": "Products of animal origin, nes or  included."
+    },
+    {
+      "hs2": "06",
+      "name": "Live tree & other plant; bulb, root; cut  flowers etc"
+    },
+    {
+      "hs2": "07",
+      "name": "Edible vegetables and certain roots and  tubers."
+    },
+    {
+      "hs2": "08",
+      "name": "Edible fruit and nuts; peel of citrus  fruit or melons."
+    },
+    {
+      "hs2": "09",
+      "name": "Coffee, tea, matF and spices."
+    },
+    {
+      "hs2": "10",
+      "name": "Cereals"
+    },
+    {
+      "hs2": "11",
+      "name": "Prod.mill.indust; malt; starches;  inulin; wheat gluten"
+    },
+    {
+      "hs2": "12",
+      "name": "Oil seed, oleagi fruits; miscell grain,  seed, fruit etc"
+    },
+    {
+      "hs2": "13",
+      "name": "Lac; gums, resins & other vegetable saps  & extracts."
+    },
+    {
+      "hs2": "14",
+      "name": "Vegetable plaiting materials; vegetable  products nes"
+    },
+    {
+      "hs2": "15",
+      "name": "Animal/veg fats & oils & their cleavage  products; etc"
+    },
+    {
+      "hs2": "16",
+      "name": "Prep of meat, fish or crustaceans,  molluscs etc"
+    },
+    {
+      "hs2": "17",
+      "name": "Sugars and sugar confectionery."
+    },
+    {
+      "hs2": "18",
+      "name": "Cocoa and cocoa preparations."
+    },
+    {
+      "hs2": "19",
+      "name": "Prep.of cereal, flour, starch/milk;  pastrycooks' prod"
+    },
+    {
+      "hs2": "20",
+      "name": "Prep of vegetable, fruit, nuts or other  parts of plants"
+    },
+    {
+      "hs2": "21",
+      "name": "Miscellaneous edible preparations."
+    },
+    {
+      "hs2": "22",
+      "name": "Beverages, spirits and vinegar."
+    },
+    {
+      "hs2": "23",
+      "name": "Residues & waste from the food indust;  prepr ani fodder"
+    },
+    {
+      "hs2": "24",
+      "name": "Tobacco and manufactured tobacco substitutes"
+    },
+    {
+      "hs2": "25",
+      "name": "Salt; sulphur; earth & ston; plastering  mat; lime & cem"
+    },
+    {
+      "hs2": "26",
+      "name": "Ores, slag and ash."
+    },
+    {
+      "hs2": "27",
+      "name": "Mineral fuels, oils & product of their  distillation;etc"
+    },
+    {
+      "hs2": "28",
+      "name": "Inorgn chem; compds of prec mtl,  radioact elements etc"
+    },
+    {
+      "hs2": "29",
+      "name": "Organic chemicals."
+    },
+    {
+      "hs2": "30",
+      "name": "Pharmaceutical products."
+    },
+    {
+      "hs2": "31",
+      "name": "Fertilisers."
+    },
+    {
+      "hs2": "32",
+      "name": "Tanning/dyeing extract; tannins &  derivs; pigm etc"
+    },
+    {
+      "hs2": "33",
+      "name": "Essential oils & resinoids; perf,  cosmetic/toilet prep"
+    },
+    {
+      "hs2": "34",
+      "name": "Soap, organic surface-active agents,  washing prep, etc"
+    },
+    {
+      "hs2": "35",
+      "name": "Albuminoidal subs; modified starches;  glues; enzymes."
+    },
+    {
+      "hs2": "36",
+      "name": "Explosives; pyrotechnic prod; matches;  pyrop alloy; etc"
+    },
+    {
+      "hs2": "37",
+      "name": "Photographic or cinematographic goods."
+    },
+    {
+      "hs2": "38",
+      "name": "Miscellaneous chemical products."
+    },
+    {
+      "hs2": "39",
+      "name": "Plastics and articles thereof."
+    },
+    {
+      "hs2": "40",
+      "name": "Rubber and articles thereof."
+    },
+    {
+      "hs2": "41",
+      "name": "Raw hides and skins (other than  furskins) and leather."
+    },
+    {
+      "hs2": "42",
+      "name": "Articles of leather; saddlery/harness;  travel goods etc"
+    },
+    {
+      "hs2": "43",
+      "name": "Furskins and artificial fur;  manufactures thereof."
+    },
+    {
+      "hs2": "44",
+      "name": "Wood and articles of wood; wood  charcoal."
+    },
+    {
+      "hs2": "45",
+      "name": "Cork and articles of cork."
+    },
+    {
+      "hs2": "46",
+      "name": "Manufactures of straw, esparto/other  plaiting mat; etc"
+    },
+    {
+      "hs2": "47",
+      "name": "Pulp of wood/of other fibrous cellulosic  mat; waste etc"
+    },
+    {
+      "hs2": "48",
+      "name": "Paper & paperboard; art of paper pulp,  paper/paperboard"
+    },
+    {
+      "hs2": "49",
+      "name": "Printed books, newspapers, pictures &  other product etc"
+    },
+    {
+      "hs2": "50",
+      "name": "Silk."
+    },
+    {
+      "hs2": "51",
+      "name": "Wool, fine/coarse animal hair, horsehair  yarn & fabric"
+    },
+    {
+      "hs2": "52",
+      "name": "Cotton."
+    },
+    {
+      "hs2": "53",
+      "name": "Other vegetable textile fibres; paper  yarn & woven fab"
+    },
+    {
+      "hs2": "54",
+      "name": "Man-made filaments."
+    },
+    {
+      "hs2": "55",
+      "name": "Man-made staple fibres."
+    },
+    {
+      "hs2": "56",
+      "name": "Wadding, felt & nonwoven; yarns; twine,  cordage, etc"
+    },
+    {
+      "hs2": "57",
+      "name": "Carpets and other textile floor  coverings."
+    },
+    {
+      "hs2": "58",
+      "name": "Special woven fab; tufted tex fab; lace;  tapestries etc"
+    },
+    {
+      "hs2": "59",
+      "name": "Impregnated, coated, cover/laminated  textile fabric etc"
+    },
+    {
+      "hs2": "60",
+      "name": "Knitted or crocheted fabrics."
+    },
+    {
+      "hs2": "61",
+      "name": "Art of apparel & clothing access,  knitted or crocheted."
+    },
+    {
+      "hs2": "62",
+      "name": "Art of apparel & clothing access, not  knitted/crocheted"
+    },
+    {
+      "hs2": "63",
+      "name": "Other made up textile articles; sets;  worn clothing etc"
+    },
+    {
+      "hs2": "64",
+      "name": "Footwear, gaiters and the like; parts of  such articles."
+    },
+    {
+      "hs2": "65",
+      "name": "Headgear and parts thereof."
+    },
+    {
+      "hs2": "66",
+      "name": "Umbrellas, walking-sticks, seat-sticks,  whips, etc"
+    },
+    {
+      "hs2": "67",
+      "name": "Prepr feathers & down; arti flower;  articles human hair"
+    },
+    {
+      "hs2": "68",
+      "name": "Art of stone, plaster, cement, asbestos,  mica/sim mat"
+    },
+    {
+      "hs2": "69",
+      "name": "Ceramic products."
+    },
+    {
+      "hs2": "70",
+      "name": "Glass and glassware."
+    },
+    {
+      "hs2": "71",
+      "name": "Natural/cultured pearls, prec stones &  metals, coin etc"
+    },
+    {
+      "hs2": "72",
+      "name": "Iron and steel."
+    },
+    {
+      "hs2": "73",
+      "name": "Articles of iron or steel."
+    },
+    {
+      "hs2": "74",
+      "name": "Copper and articles thereof."
+    },
+    {
+      "hs2": "75",
+      "name": "Nickel and articles thereof."
+    },
+    {
+      "hs2": "76",
+      "name": "Aluminium and articles thereof."
+    },
+    {
+      "hs2": "78",
+      "name": "Lead and articles thereof."
+    },
+    {
+      "hs2": "79",
+      "name": "Zinc and articles thereof."
+    },
+    {
+      "hs2": "80",
+      "name": "Tin and articles thereof."
+    },
+    {
+      "hs2": "81",
+      "name": "Other base metals; cermets; articles  thereof."
+    },
+    {
+      "hs2": "82",
+      "name": "Tool, implement, cutlery, spoon & fork,  of base mtl etc"
+    },
+    {
+      "hs2": "83",
+      "name": "Miscellaneous articles of base metal."
+    },
+    {
+      "hs2": "84",
+      "name": "Nuclear reactors, boilers, mchy & mech  appliance; parts"
+    },
+    {
+      "hs2": "85",
+      "name": "Electrical mchy equip parts thereof;  sound recorder etc"
+    },
+    {
+      "hs2": "86",
+      "name": "Railw/tramw locom, rolling-stock & parts  thereof; etc"
+    },
+    {
+      "hs2": "87",
+      "name": "Vehicles o/t railw/tramw roll-stock, pts  & accessories"
+    },
+    {
+      "hs2": "88",
+      "name": "Aircraft, spacecraft, and parts thereof."
+    },
+    {
+      "hs2": "89",
+      "name": "Ships, boats and floating structures."
+    },
+    {
+      "hs2": "90",
+      "name": "Optical, photo, cine, meas, checking,  precision, etc"
+    },
+    {
+      "hs2": "91",
+      "name": "Clocks and watches and parts thereof."
+    },
+    {
+      "hs2": "92",
+      "name": "Musical instruments; parts and access of  such articles"
+    },
+    {
+      "hs2": "93",
+      "name": "Arms and ammunition; parts and  accessories thereof."
+    },
+    {
+      "hs2": "94",
+      "name": "Furniture; bedding, mattress, matt  support, cushion etc"
+    },
+    {
+      "hs2": "95",
+      "name": "Toys, games & sports requisites; parts &  access thereof"
+    },
+    {
+      "hs2": "96",
+      "name": "Miscellaneous manufactured articles."
+    },
+    {
+      "hs2": "97",
+      "name": "Works of art, collectors' pieces and  antiques."
+    },
+    {
+      "hs2": "99",
+      "name": "Commodities not specified according to kind"
+    }
+  ]
+}
