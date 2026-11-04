@@ -10,7 +10,9 @@
 - 浏览器：Chrome真实运行，1440px、820px、390px。点选2018联动图与明细，切换商品和金融危机，M4案例显式导入，下载CSV均成功；页面错误0，无页面横向溢出。验证等待图形尺寸实际调整完成。
 - 启动：单独进程运行launch_m5.py，读取实际Dash布局确认初始active-module=M5。
 
-截图位于docs/screenshots/M5_*.png，现场CSV样例为M5_实测导出.csv。来源清单位于data/processed/m5_source_manifest.json。
+截图：[桌面](screenshots/M5_desktop.png)、[商品恢复](screenshots/M5_product_recovery.png)、[窄屏](screenshots/M5_narrow.png)、[手机宽度](screenshots/M5_mobile.png)。现场导出见 [CSV 样例](M5_export_sample.csv)，来源清单位于 `data/processed/m5_source_manifest.json`。
+
+CSV 保留应用实际导出的英文字段名和状态值，便于逐列核对。`value` 为所选商品出口额，`total` 为全部商品出口额，单位均为千当年美元；`index` 为基期 100 的金额指数。`product_share`、`intra_share`、`intra_upper`、`region_coverage` 均为 0–1 比例。`region_change_min_pp`、`region_change_max_pp` 为地区份额变化下界、上界，`end_product_change_pp` 为末年商品份额变化，单位为百分点。`recovered` 表示已观测到损失后的返回，`first_at_baseline` 为首次观测到返回的年份。
 
 验证边界：没有重新下载并审计官方30个CSV；数据对账不独立证明伙伴分配正确。没有对其他同学的未上传代码或M1/M2/M3进行验收。手机宽度仅检查了本次M5页面，没有声明全应用移动端验收。
 

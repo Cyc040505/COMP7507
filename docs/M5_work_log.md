@@ -1,13 +1,26 @@
-# M5 work log
+# M5 工作记录
 
-- Base: 87496f67f0e8415c9d0ca7cff525cfcf761fc985; separate clone in user-requested course directory, branch feat/m5-time-change.
-- Read proposal, lecture requirements and existing M4. User approved M5 scope and asked to execute to completion.
-- Ruling: keep original modules untouched; use explicit local context import instead of introducing shell-wide coupling.
-- Official CEPII ZIP download failed TLS/HTTP connections; retrieving same-vintage public Parquet distribution and requiring full reconciliation before use. Source limitations will remain visible.
+## 范围与设计
 
-- Data: three pinned release assets (132,977,388 bytes) downloaded into data/sources/m5. All566,165 product keys and870,755 bilateral keys reconciled; maxrelativeerror2.44e-14. No official-CSV audit claimed.
-- Ruling: exact duplicate metadata region rows collapse, conflicting region assignments fail. Original country_meta is not rewritten.
-- TDD: watched analytics/UI tests fail before implementation. Added regression for an event-year above baseline followed by a later loss; recovery requires a subsequent return after that loss.
-- Whole-branch reviewer independently ran29 tests and independently checked bilateral-key reconciliation; one color-collision issue fixed with unique comparison colours and redundant line patterns.30 tests pass after the fix.
-- Browser: original shared CSS overrode the M5 flex layout; fixed using scoped specificity. Actual plot resize completion is awaited in verification; desktop/820px screenshots and operations pass, no browser errors or page overflow.
-- Implementation finished locally; no remote publication, merge, message or Feishu edit performed.
+- 基于上游提交 `87496f67f0e8415c9d0ca7cff525cfcf761fc985`，在用户指定的课程目录中建立独立副本，使用 `feat/m5-time-change` 分支。
+- 阅读项目提案、课程要求与已有 M4 实现，按已确认的 M5 范围完成开发。
+- 控件保留在模块内，通过按钮显式导入 M4 的选择，避免不同模块的筛选条件互相覆盖。
+
+## 数据处理
+
+- CEPII 官方压缩包连接失败，改用同版本公开 Parquet 分发；使用前要求与项目现有数据完整对账，并公开来源限制。
+- 下载 3 个固定发布文件，共 132,977,388 字节，存入 `data/sources/m5`。566,165 个商品年度键、870,755 个双边年度键对账通过，最大相对金额误差约为 2.44e-14；未宣称完成官方 CSV 的独立审计。
+- 国家地区元数据中完全相同的重复行合并，地区归属冲突则报错，不改写原有国家元数据。
+
+## 实现与复查
+
+- 在计算与界面尚未实现时运行测试并观察失败，再完成实现。恢复计算覆盖“事件年高于基期、随后才出现损失”的情况，只有损失之后再次达到基期才标为返回。
+- 独立复核运行了当时的 29 项测试，并检查双边键对账；修复比较对象颜色重复问题，同时使用不同线型辅助区分，随后 30 项测试通过。
+- 浏览器检查发现共享样式覆盖了 M5 布局，通过限定模块样式修复。验证等待图表实际完成尺寸调整，桌面与 820 像素宽度的截图和交互通过。
+- 后续补充案例高亮、自选状态、动态发现与启示、地区变化上下界及 CSV 一致性检查；最终 32 项测试通过，并实测 1440、820、390 像素宽度的 M5 页面。
+
+## 提交与文档
+
+- M5 实现及复查修订已提交至 [PR #4](https://github.com/Cyc040505/COMP7507/pull/4)，未直接合并到主分支。
+- 本次将新增 M5 文档、截图与导出样例统一为英文文件名，说明正文使用中文，并更新相应链接。
+- 飞书同步稿保存在 [M5_Feishu_notes.md](M5_Feishu_notes.md)。原飞书页面的追加写入尚未完成，不将 GitHub 文档视为已同步至飞书。

@@ -1,16 +1,22 @@
-# M5 Implementation Plan
+# M5 实施计划
 
-Goal: complete proposal-aligned annual recovery and structural change analysis in the existing Dash app.
-Architecture: pure validated annual calculations in src/analytics/time_change.py; provenance-aware compact inputs; isolated M5 controls and callbacks; Plotly aligned views.
-Tech Stack: Python, pandas, pyarrow, Plotly Dash. Spec: M5_实施方案.md.
+目标：在现有 Dash 应用中，完成与项目提案一致的年度出口恢复与结构变化分析。模块主题与指标定义见 [模块方案](M5_module_plan.md)，面向组员的精简说明见 [飞书同步稿](M5_Feishu_notes.md)。
 
-## Constraints and review focus
-No synthetic evidence; missing years remain missing; all-product denominators are fixed; unknown regions retain an explicit coverage field; no changes to M1/M4 formulas or shell state ownership; nominal USD and descriptive event comparison only. Review: partial coverage, baseline missing/zero, event/window validity, recovery then relapse, module switching and empty selections.
+## 实现安排
 
-## Tasks
-- [x] 1. Data: download pinned same-version bilateral HS2 and country dimensions, validate against existing full annual product and country tables; build small regional year×exporter×HS2 table and provenance manifest. Fail closed on mismatch.
-- [x] 2. Analytics: tests first for build_timeline and summarize_recovery; implement complete-year grids, fixed denominators, coverage and conditional recovery status; run tests.
-- [x] 3. UI: tests first for callback payload, figures and downloads; replace M5 placeholder, add scoped CSS, local presets, explicit context import, aligned graphs and dynamic findings. Run entire suite.
-- [x] 4. Verification: actual desktop/narrow browser, preset/product/empty/baseline/click/download flows; audit source hashes; independent whole-branch review; fix substantive issues; document examples and launch instructions.
+使用 Python、pandas、pyarrow 与 Plotly Dash。年度计算集中在 `src/analytics/time_change.py`；界面及回调放在 `src/modules/m5_time.py`；使用经过来源校验的精简数据，保持模块内控件独立。
 
-Execution: inline in an isolated clone on feat/m5-time-change, using test-first implementation. No remote push/merge. Ledger: M5_work_log.md.
+## 约束与检查重点
+
+不生成模拟证据；缺失年份保留为空；商品份额使用固定的全部商品分母；未知地区显示覆盖率和份额上下界。保持现有 M1、M4 计算及导航状态约定。金额为当年美元，仅作描述性事件比较。
+
+重点检查数据覆盖不足、基期缺失或为零、事件与窗口不一致、先恢复后回落、模块切换及空选择。
+
+## 完成事项
+
+- [x] 数据：下载固定版本的双边 HS2 与国家维度数据，与原有年度商品表、国家总额和双边年度表逐键核对；生成精简地区汇总及来源清单。对账失败时停止构建。
+- [x] 计算：先建立年度时间线与恢复汇总测试，再实现完整年度网格、固定分母、覆盖率和有条件的恢复状态。
+- [x] 界面：建立回调、图表和下载测试，替换 M5 占位页；增加模块样式、引导案例、显式导入 M4 选择、对齐图表和动态发现。
+- [x] 验收：实测桌面与窄屏的预设、商品、空选择、基期、点击年份和下载流程；检查来源哈希、复核代码，并补齐案例与启动说明。
+
+在课程目录的独立项目副本中完成，分支为 `feat/m5-time-change`。当前代码已提交至 [PR #4](https://github.com/Cyc040505/COMP7507/pull/4)，合并状态以 GitHub 为准。实施记录见 [工作记录](M5_work_log.md)，检查结果见 [验收记录](M5_validation.md)。
