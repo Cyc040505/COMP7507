@@ -16,7 +16,6 @@ from src.analytics.product import (
     income_peers,
     income_allowed,
     income_policy,
-    candidate_pool,
     two_year_metrics,
     spread_finding,
 )
@@ -26,7 +25,8 @@ from src.module_base import guard_active
 MODULE_ID = "M4"
 NAV_LABEL = "M4  Product Structure"
 ORDER = 4
-DEFAULTS = ["CHN", "RUS", "MEX"]
+FOCUS_COUNTRIES = ("USA", "DEU", "CHN", "MEX", "NLD", "ITA")
+DEFAULTS = ["CHN", "MEX"]
 GRAPH_CONFIG = {"displayModeBar": False, "responsive": True}
 STEPS = {
     "structure": {
@@ -41,11 +41,11 @@ STEPS = {
     },
     "specialization": {
         "question": "Does a large export share mean stronger specialization?",
-        "action": "Inspect Russia’s fuels and fertilizers. Compare their shares and RCA.",
+        "action": "Inspect China’s electrical equipment (HS85) and toys/games (HS95). Compare their shares and RCA.",
         "metric": "rca",
         "mode": "income",
-        "focus": "RUS",
-        "product": "31",
+        "focus": "CHN",
+        "product": "95",
         "view": "world",
         "countries": DEFAULTS,
     },
@@ -207,15 +207,11 @@ def layout():
                                     id=cid("pool"),
                                     options=[
                                         {
-                                            "label": "Overview · ever Top10 exporters",
-                                            "value": "overview",
-                                        },
-                                        {
-                                            "label": "All named economies",
-                                            "value": "all",
+                                            "label": "Six project case economies",
+                                            "value": "focus",
                                         },
                                     ],
-                                    value="overview",
+                                    value="focus",
                                     clearable=False,
                                     className="ctl-dropdown",
                                 ),
@@ -227,7 +223,6 @@ def layout():
                                     options=[
                                         {"label": "1.25 × (narrow)", "value": 1.25},
                                         {"label": "1.5 ×", "value": 1.5},
-                                        {"label": "2 × (broad)", "value": 2.0},
                                     ],
                                     value=1.25,
                                     clearable=False,
@@ -372,7 +367,7 @@ def layout():
                         "World totals include all recorded BACI exporters, including special/historical entities. Display selection never changes the world reference. Amounts are thousand current USD; goods only, not services or domestic value added. HS85 is broader than chips; HS87 is broader than cars."
                     ),
                     html.P(
-                        "Income: CHELEM GDP-CAP in current USD/person. The default Overview candidate pool is the union of annual Top10 exporters after metadata matching, not an S-prefix filter. Matching retains positive same-year GDP-CAP within the displayed multiplicative range; at most six nearest log ratios are shown. The complete qualified list and a 1.25/1.5 sensitivity comparison are reported below. This is an exploratory rule, not an official income grouping or control for other country differences."
+                        "Income: CHELEM GDP-CAP in current USD/person. The comparison pool is USA, DEU, CHN, MEX, NLD and ITA: purposefully selected project cases, not a representative world sample. Matching retains positive same-year GDP-CAP within the displayed multiplicative range; at most six nearest log ratios are shown. The complete qualified list and a 1.25/1.5 sensitivity comparison are reported below. Similarity is relative to the anchor, not necessarily between every pair of peers. This is an exploratory rule, not an official income grouping or control for other country differences."
                     ),
                     html.P(
                         "Income comparisons use 1995–2023 only: this release’s CHELEM trade data end in 2023 and later GDP values may be projections/IMF estimates. Historical estimates can remain; the source has no per-cell status flags, so historical values are not certified final observations. Income mode at 2024 produces a notice and no matched group; it never substitutes a previous year. BACI-only analysis still extends to 2024."
@@ -675,14 +670,13 @@ def detail_figure(d, focus, product):
     return highlight_product(fig, product)
 
 
-@lru_cache(maxsize=1)
-def overview_pool():
-    return candidate_pool(data_loader.load_country_year(), eligible(trade()))
+def case_pool(d):
+    return [c for c in FOCUS_COUNTRIES if c in set(d.exporter)]
 
 
 def recipe(step):
     settings = STEPS[step]
-    products = sorted(set(product_set(metrics(2023), DEFAULTS)) | {"31"})
+    products = sorted(set(product_set(metrics(2023), DEFAULTS)) | {"85", "95", "87"})
     return dict(
         settings,
         step=step,
@@ -690,7 +684,7 @@ def recipe(step):
         anchor="CHN",
         products=products,
         baseline=2010,
-        pool="overview",
+        pool="focus",
         factor=1.25,
     )
 
@@ -835,7 +829,7 @@ def register_callbacks(app):
     )
     def sync(active, case, current, products, previous):
         guard_active(MODULE_ID, active)
-        opts = eligible(trade())
+        opts = case_pool(trade())
         ns = names()
         options = [{"label": f"{ns.get(c,c)} ({c})", "value": c} for c in opts]
         apply = case and (ctx.triggered_id == cid("case") or not previous)
@@ -910,7 +904,7 @@ def register_callbacks(app):
         year = int(filters.get("year", 2024))
         baseline = int(baseline or 2010)
         factor = float(factor or 1.25)
-        pool = pool or "overview"
+        pool = "focus"  # A single project-wide case scope; stale browser values cannot expand it.
         mode = mode or "selected"
         metric = metric or "share"
         d = metrics(year)
@@ -922,15 +916,15 @@ def register_callbacks(app):
         anchor = filters.get("country", "CHN")
         income_status = "Not used"
         cases = case or {}
-        chosen = list(dict.fromkeys(selected or []))[:6]
+        chosen = [c for c in dict.fromkeys(selected or []) if c in FOCUS_COUNTRIES][:6]
+        excluded = sorted(set(selected or []) - set(FOCUS_COUNTRIES))
+        if excluded:
+            messages.append("Outside the six project cases: " + ", ".join(excluded) + ".")
         if len(selected or []) > 6:
             messages.append(
                 "First six manual selections shown; reduce the list to include different cases."
             )
-        candidates = overview_pool() if pool == "overview" else eligible(d)
-        candidates = sorted(
-            set(candidates) | ({anchor} if anchor in eligible(d) else set())
-        )
+        candidates = case_pool(d)
         if mode == "income":
             chosen = []
             g = data_loader.load_gdp_year()
@@ -944,10 +938,10 @@ def register_callbacks(app):
                 messages.append(
                     "Income analysis requires both real trade and real GDP inputs."
                 )
-            elif anchor == "WLD":
+            elif anchor not in FOCUS_COUNTRIES:
                 income_status = "Unavailable: select an economy"
                 messages.append(
-                    "Select an individual income reference economy; World is not an economy."
+                    "Select one of the six project case economies as the income reference."
                 )
             else:
                 all_peers, peer_rows, base = income_peers(
@@ -977,6 +971,8 @@ def register_callbacks(app):
         chosen = [c for c in chosen if c in set(d.exporter)]
         if missing:
             messages.append("No recorded trade this year: " + ", ".join(missing) + ".")
+        if mode == "income" and len(chosen) == 1:
+            messages.append("Only the anchor qualifies; no peer comparison is available. The income range has not been widened automatically.")
         products = product_set(d, chosen, requested)
         absent = sorted(set(requested or []) - set(products))
         if absent:
@@ -1054,7 +1050,7 @@ def register_callbacks(app):
         )
         figure = heat_figure(d, chosen, products, metric)
         note = (
-            "Fixed chapters from the income-case economies’ Top5, including HS31; retained across guided steps. "
+            "Fixed chapters from the China/Mexico Top5 plus HS85, HS95 and HS87; retained across guided steps. "
             if guided
             else "Displayed chapter scope; all-product reference totals stay fixed. "
         ) + (
@@ -1104,13 +1100,13 @@ def register_callbacks(app):
         elif len(chosen) == 1:
             finding = f"{chosen[0]} is selected; add another economy for a cross-country finding."
         if guided and cases.get("step") == "specialization":
-            a = d[d.exporter.eq("RUS")].set_index("hs2")
-            if {"27", "31"} <= set(a.index) & set(products):
-                x = a.loc["27"]
-                y = a.loc["31"]
-                finding = f"RUS HS27: share {x.share:.2%}, RCA {x.rca:.2f}; HS31: share {y.share:.2%}, RCA {y.rca:.2f}."
+            a = d[d.exporter.eq("CHN")].set_index("hs2")
+            if {"85", "95"} <= set(a.index) & set(products):
+                x = a.loc["85"]
+                y = a.loc["95"]
+                finding = f"CHN HS85: share {x.share:.2%}, RCA {x.rca:.2f}; HS95: share {y.share:.2%}, RCA {y.rca:.2f}."
                 implication = (
-                    "Fertilizers have a smaller export share but a higher RCA than fuels in this case. A large domestic share and strong relative specialization answer different questions."
+                    "Toys, games and sports equipment (HS95) have a smaller export share but a higher RCA than electrical machinery (HS85) in this case. A large domestic share and strong relative specialization answer different questions."
                     if y.share < x.share and y.rca > x.rca
                     else "The current values do not support the preset share/RCA reversal; inspect the displayed evidence."
                 )

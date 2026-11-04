@@ -210,7 +210,7 @@ class DashIntegration(unittest.TestCase):
             "M4-products.value": r["products"],
             "M4-metric.value": r["metric"],
             "M4-mode.value": r["mode"],
-            "M4-pool.value": "overview",
+            "M4-pool.value": "focus",
             "M4-factor.value": 1.25,
             "M4-case.data": r,
             "M4-baseline.value": 2010,
@@ -223,7 +223,7 @@ class DashIntegration(unittest.TestCase):
         z = self.call("M4-graph.figure", self.inputs())
         c = z["M4-comparison"]["data"]
         self.assertEqual(c["selection_state"], "Guided case")
-        self.assertEqual(c["countries"], ["CHN", "RUS", "MEX"])
+        self.assertEqual(c["countries"], ["CHN", "MEX"])
         self.assertEqual(c["sensitivity"]["1.25"], c["sensitivity"]["1.5"])
         self.assertTrue(z["M4-countries"]["disabled"])
         self.assertIn("similar nominal GDP", z["M4-conclusion"]["children"])
@@ -258,7 +258,7 @@ class DashIntegration(unittest.TestCase):
                 }
             ),
         )
-        self.assertEqual(len(manual["M4-focus"]["options"]), 3)
+        self.assertEqual(len(manual["M4-focus"]["options"]), 2)
 
     def test_custom_scope_and_empty(self):
         z = self.call("M4-graph.figure", self.inputs(**{"M4-products.value": ["85"]}))
@@ -311,7 +311,7 @@ class DashIntegration(unittest.TestCase):
             {"active-module.data": "M4", "M4-step-specialization.n_clicks": 1},
             changed="M4-step-specialization.n_clicks",
         )
-        self.assertEqual(result["M4-case"]["data"]["product"], "31")
+        self.assertEqual(result["M4-case"]["data"]["product"], "95")
         case = result["M4-case"]["data"]
         settings = self.call(
             "M4-countries.options",
@@ -342,21 +342,21 @@ class DashIntegration(unittest.TestCase):
 
     def test_specialization_click_and_two_year_export(self):
         z = self.call("M4-graph.figure", self.inputs("specialization"))
-        self.assertIn("HS31", z["M4-evidence"]["children"])
+        self.assertIn("HS95", z["M4-evidence"]["children"])
         self.assertIn("smaller export share", z["M4-conclusion"]["children"])
         c = z["M4-comparison"]["data"]
         selected = self.call(
             "M4-inspect.value",
             {
-                "M4-graph.clickData": {"points": [{"x": "RUS", "y": "31"}]},
+                "M4-graph.clickData": {"points": [{"x": "CHN", "y": "95"}]},
                 "M4-comparison.data": c,
                 "M4-case.data": m.recipe("specialization"),
                 "active-module.data": "M4",
             },
             changed="M4-graph.clickData",
         )
-        self.assertEqual(selected["M4-focus"]["value"], "RUS")
-        self.assertEqual(selected["M4-inspect"]["value"], "31")
+        self.assertEqual(selected["M4-focus"]["value"], "CHN")
+        self.assertEqual(selected["M4-inspect"]["value"], "95")
         changed = self.call("M4-graph.figure", self.inputs("change"))["M4-comparison"][
             "data"
         ]
@@ -391,6 +391,44 @@ class DashIntegration(unittest.TestCase):
             {"M4-table.data": z["M4-table"]["data"]},
         )
         self.assertIn("income_factor", heat["M4-download"]["data"]["content"])
+
+    def test_six_country_scope_rejects_stale_browser_selections(self):
+        z = self.call("M4-graph.figure", self.inputs(**{
+            "M4-mode.value": "selected", "M4-countries.value": ["RUS", "CHN", "SGP"],
+            "M4-pool.value": "all",
+        }))
+        self.assertEqual(z["M4-comparison"]["data"]["countries"], ["CHN"])
+        self.assertIn("Outside the six project cases", z["M4-scope"]["children"])
+        z = self.call("M4-graph.figure", self.inputs(**{
+            "M4-filters.data": {"year": 2023, "country": "RUS"},
+            "M4-pool.value": "all",
+        }))
+        self.assertEqual(z["M4-comparison"]["data"]["countries"], [])
+
+    def test_anchor_only_does_not_widen_or_claim_comparison(self):
+        z = self.call("M4-graph.figure", self.inputs(**{
+            "M4-filters.data": {"year": 2023, "country": "USA"},
+        }))
+        self.assertEqual(z["M4-comparison"]["data"]["countries"], ["USA"])
+        self.assertIn("Only the anchor qualifies", z["M4-scope"]["children"])
+        self.assertNotIn("export baskets differ", z["M4-conclusion"]["children"])
+
+    def test_m5_handoff_uses_actual_comparison_and_inspected_product(self):
+        for step, product in [("structure", "85"), ("specialization", "95"), ("change", "87")]:
+            z = self.call("M4-graph.figure", self.inputs(step))
+            comparison = z["M4-comparison"]["data"]
+            selected = self.call("M4-inspect.value", {
+                "M4-comparison.data": comparison, "M4-case.data": m.recipe(step),
+                "active-module.data": "M4",
+            }, changed="M4-case.data")
+            self.assertEqual(comparison["countries"], ["CHN", "MEX"])
+            self.assertEqual(comparison["year"], 2023)
+            self.assertEqual(selected["M4-inspect"]["value"], product)
+            # Reference still includes worldwide exporters outside the six cases.
+            row = next(r for r in z["M4-table"]["data"] if r["country"] == "CHN" and r["hs2"] == product)
+            world = m.trade().query("year == 2023")
+            expected = world.loc[world.hs2.eq(product), "value"].sum() / world.value.sum() * 100
+            self.assertAlmostEqual(row["world_pct"], expected, places=5)
 
     def test_hidden_module_does_not_render(self):
         key = next(k for k in app.app.callback_map if "M4-graph.figure" in k)
