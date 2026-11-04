@@ -144,6 +144,11 @@ def register_shell_callbacks(app) -> None:
                         return;
                     }
                     if (window.Plotly.Plots) { window.Plotly.Plots.resize(gd); }
+                    // Maps and other opt-in interactive views own their gestures.
+                    // Resize them on navigation without applying the shell lock.
+                    if (wrap && wrap.classList && wrap.classList.contains('graph-interactive')) {
+                        return;
+                    }
                     if (gd.locked !== true) {
                         Plotly.update(gd, {}, locked, {
                             layout: { uirevision: 'locked', dragmode:false }
