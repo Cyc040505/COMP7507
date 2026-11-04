@@ -1,5 +1,14 @@
 # Global Trade Over Three Decades (1995–2024)
 
+## M5 delivered locally (2026-11-04)
+
+M5 now has reconciled real-data annual recovery and product/regional-share views,
+explicit M4 context import, missingness-aware recovery status, and evidence CSVs.
+Run `python launch_m5.py` (or `启动M5.bat`) to open directly on M5.
+See [M5 usage, findings and provenance](docs/M5_README.md) and
+[concise module plan for Feishu](docs/M5_Feishu_notes.md).
+The M1/M2/M3 modules remain at their upstream state. The older status below predates M5.
+
 Interactive visual-analytics application for **COMP7507 Visualization & Visual Analytics, Group 7**.
 
 Data sources: CEPII **BACI** (bilateral goods trade) / **CHELEM** (macroeconomic indicators) /
@@ -7,7 +16,7 @@ Data sources: CEPII **BACI** (bilateral goods trade) / **CHELEM** (macroeconomic
 Stack: Plotly Dash single-page app + dash-cytoscape (M3 force-directed network) + DuckDB offline
 pre-aggregation.
 
-> Status: **partially implemented**. Overview (M0) and Product Structure (M4) have data-backed views; M1, M2, M3 and M5 retain their framework placeholders. M4 includes its required compact inputs and a separate validation record.
+> Status: **partially implemented**. Overview (M0), Product Structure (M4), and Time Change (M5) have data-backed views; M1, M2 and M3 retain their framework placeholders. M4 includes its required compact inputs and a separate validation record.
 
 ## Quick start
 
