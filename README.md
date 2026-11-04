@@ -1,14 +1,5 @@
 # Global Trade Over Three Decades (1995–2024)
 
-## M5 delivered locally (2026-11-04)
-
-M5 now has reconciled real-data annual recovery and product/regional-share views,
-explicit M4 context import, missingness-aware recovery status, and evidence CSVs.
-Run `python launch_m5.py` (or `启动M5.bat`) to open directly on M5.
-See [M5 usage, findings and provenance](docs/M5_README.md) and
-[concise module plan for Feishu](docs/M5_Feishu_notes.md).
-The M1/M2/M3 modules remain at their upstream state. The older status below predates M5.
-
 Interactive visual-analytics application for **COMP7507 Visualization & Visual Analytics, Group 7**.
 
 Data sources: CEPII **BACI** (bilateral goods trade) / **CHELEM** (macroeconomic indicators) /
@@ -28,6 +19,12 @@ pip install -r requirements.txt
 python app.py
 # open http://127.0.0.1:8050
 ```
+
+## M5 · Time change
+
+Open **M5 Time Change** in the same app as M4. Three guided cases compare nominal exports with a baseline, trace HS87’s role in the export basket, and compare regional partners around the financial crisis. **Customize this comparison** opens the local controls. Using the M4 selection explicitly carries the current countries and product into M5. The two charts, findings, implications and CSV use the selected window.
+
+For direct access run  `python launch_m5.py`. On Windows, double-click `启动M5.bat`. The compact inputs for normal use are included. See [M5 implementation plan](docs/M5_Feishu_notes.md), [examples and sources](docs/M5_README.md) and [checks](docs/M5_validation.md).
 
 ## Directory layout
 

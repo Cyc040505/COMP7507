@@ -156,6 +156,15 @@ def summarize_recovery(timeline, baseline, event, end):
                 )
                 * 100,
                 end_region_coverage=d.loc[end, "region_coverage"],
+                # Bound the change itself, allowing unknown destinations in either year.
+                region_change_min_pp=(
+                    d.loc[end, "intra_share"] - d.loc[baseline, "intra_upper"]
+                )
+                * 100,
+                region_change_max_pp=(
+                    d.loc[end, "intra_upper"] - d.loc[baseline, "intra_share"]
+                )
+                * 100,
             )
         )
     return pd.DataFrame(records)

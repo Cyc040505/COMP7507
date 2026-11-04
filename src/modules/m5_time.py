@@ -1,7 +1,7 @@
 """M5: continuous nominal export recovery and structural indicators."""
 
 from functools import lru_cache
-import hashlib, json
+import hashlib, json, math
 import pandas as pd
 import plotly.graph_objects as go
 from dash import Input, Output, State, ctx, dcc, html, dash_table, no_update
@@ -15,6 +15,36 @@ MODULE_ID = "M5"
 NAV_LABEL = "M5  Time Change"
 ORDER = 5
 YEARS = list(range(1995, 2025))
+CASE_COUNTRIES = ["CHN", "DEU", "MEX"]
+CASES = {
+    "pandemic": (
+        "TOTAL",
+        2019,
+        2020,
+        (2016, 2024),
+        "intra",
+        "When did exports regain their 2019 value?",
+        "Compare each line with 100, then check where its exports went.",
+    ),
+    "vehicles": (
+        "87",
+        2019,
+        2020,
+        (2016, 2024),
+        "product",
+        "Did vehicles and parts recover at the same pace as all goods?",
+        "Read the first return year, then compare HS87’s weight in each export basket.",
+    ),
+    "crisis": (
+        "TOTAL",
+        2007,
+        2008,
+        (2004, 2013),
+        "intra",
+        "Where did trade go after the financial crisis?",
+        "Compare 2007 with 2013. Use the regional bounds to judge which shifts have a clear direction.",
+    ),
+}
 STATUS = {
     "invalid_baseline": "Baseline missing or zero",
     "no_observations": "No post-event observations",
@@ -45,6 +75,12 @@ def inputs():
             "M5 regional data is missing. Run scripts/build_m5_data.py before analysis."
         )
     manifest = json.loads(manifest_path.read_text(encoding="utf8"))
+    for name in ("exporter_hs2_year.parquet", "country_meta.parquet"):
+        digest = hashlib.sha256(config.processed_path(name).read_bytes()).hexdigest()
+        if digest != manifest["project_inputs_sha256"][name]:
+            raise ValueError(
+                f"{name} changed since the regional audit. Reconcile M5 inputs again."
+            )
     if hashlib.sha256(path.read_bytes()).hexdigest() != manifest["output_sha256"]:
         raise ValueError(
             "M5 regional file changed; rebuild and reconcile it before analysis."
@@ -90,78 +126,103 @@ def layout():
                     ]
                 ],
                 className="m5-presets",
+                id=cid("presets"),
             ),
+            html.Div(id=cid("guide"), className="m5-guide"),
             html.Div(id=cid("import-note"), className="m5-hint"),
-            html.Div(
+            html.Details(
                 [
-                    field(
-                        "Compare economies · up to 4",
-                        dcc.Dropdown(
-                            id=cid("countries"),
-                            options=[
-                                {"label": f"{ns[c]} ({c})", "value": c}
-                                for c in sorted(ns)
-                            ],
-                            value=["CHN", "DEU", "MEX"],
-                            multi=True,
-                        ),
+                    html.Summary("Customize this comparison"),
+                    html.Div(
+                        [
+                            field(
+                                "Compare economies · up to 4",
+                                dcc.Dropdown(
+                                    id=cid("countries"),
+                                    options=[
+                                        {"label": f"{ns[c]} ({c})", "value": c}
+                                        for c in sorted(ns)
+                                    ],
+                                    value=["CHN", "DEU", "MEX"],
+                                    multi=True,
+                                ),
+                            ),
+                            field(
+                                "Export scope · HS2 chapter",
+                                dcc.Dropdown(
+                                    id=cid("product"),
+                                    options=[
+                                        {"label": "All products", "value": "TOTAL"}
+                                    ]
+                                    + [
+                                        {"label": label(p), "value": p}
+                                        for p in chapters()
+                                    ],
+                                    value="TOTAL",
+                                    clearable=False,
+                                ),
+                            ),
+                            field(
+                                "Baseline · index = 100",
+                                dcc.Dropdown(
+                                    id=cid("baseline"),
+                                    options=YEARS,
+                                    value=2019,
+                                    clearable=False,
+                                ),
+                            ),
+                            field(
+                                "Event marker · annual data",
+                                dcc.Dropdown(
+                                    id=cid("event"),
+                                    options=YEARS,
+                                    value=2020,
+                                    clearable=False,
+                                ),
+                            ),
+                        ],
+                        className="m5-controls",
                     ),
-                    field(
-                        "Export scope · HS2 chapter",
-                        dcc.Dropdown(
-                            id=cid("product"),
-                            options=[{"label": "All products", "value": "TOTAL"}]
-                            + [{"label": label(p), "value": p} for p in chapters()],
-                            value="TOTAL",
-                            clearable=False,
-                        ),
-                    ),
-                    field(
-                        "Baseline · index = 100",
-                        dcc.Dropdown(
-                            id=cid("baseline"),
-                            options=YEARS,
-                            value=2019,
-                            clearable=False,
-                        ),
-                    ),
-                    field(
-                        "Event marker · annual data",
-                        dcc.Dropdown(
-                            id=cid("event"), options=YEARS, value=2020, clearable=False
-                        ),
+                    html.Div(
+                        [
+                            html.Span(
+                                "Observation window · summaries stop at the right endpoint"
+                            ),
+                            dcc.RangeSlider(
+                                id=cid("window"),
+                                min=1995,
+                                max=2024,
+                                value=[2016, 2024],
+                                step=1,
+                                marks={
+                                    1995: "1995",
+                                    2000: "2000",
+                                    2005: "2005",
+                                    2010: "2010",
+                                    2015: "2015",
+                                    2020: "2020",
+                                    2024: "2024",
+                                },
+                                allowCross=False,
+                                tooltip={"placement": "bottom"},
+                            ),
+                        ],
+                        className="m5-window",
                     ),
                 ],
-                className="m5-controls",
-            ),
-            html.Div(
-                [
-                    html.Span(
-                        "Observation window · summaries stop at the right endpoint"
-                    ),
-                    dcc.RangeSlider(
-                        id=cid("window"),
-                        min=1995,
-                        max=2024,
-                        value=[2016, 2024],
-                        step=1,
-                        marks={
-                            1995: "1995",
-                            2000: "2000",
-                            2005: "2005",
-                            2010: "2010",
-                            2015: "2015",
-                            2020: "2020",
-                            2024: "2024",
-                        },
-                        allowCross=False,
-                        tooltip={"placement": "bottom"},
-                    ),
-                ],
-                className="m5-window",
+                className="m5-methods m5-custom",
             ),
             html.Div(id=cid("message"), className="m5-source"),
-            html.Div(id=cid("finding"), className="m5-finding", role="status"),
+            html.Div(
+                [
+                    html.Strong("Finding"),
+                    html.Div(id=cid("finding")),
+                    html.Strong("Implication"),
+                    html.Div(id=cid("implication")),
+                ],
+                className="m5-finding",
+                role="status",
+            ),
             html.Div(id=cid("kpis")),
             components.card(
                 "01 / Follow nominal value recovery",
@@ -346,6 +407,9 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
             summary=[],
             message=message,
             finding=message,
+            implication="",
+            guide="",
+            preset_class="m5-presets",
             kpis=[],
             detail=[],
             limits="",
@@ -468,11 +532,18 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         summary.observed_years.astype(str) + " / " + summary.expected_years.astype(str)
     )
     summary["timing_label"] = summary.timing_complete.map(
-        {True: "Annual coverage complete", False: "Missing years; timing qualified"}
+        {
+            True: "No gaps through first return or endpoint",
+            False: "Timing uncertain due to gaps",
+        }
     )
     valid = summary.end_index.notna()
     above = int(summary.loc[valid, "end_index"].ge(100 - 1e-9).sum())
-    finding = f"{end}: {above} of {int(valid.sum())} economies with a valid endpoint are at or above their {baseline} export value."
+    finding = (
+        f"In {end}, {above} of {int(valid.sum())} comparable economies were at or above their {baseline} export value."
+        if valid.any()
+        else "The selected series have no comparable baseline and endpoint amounts."
+    )
     details = []
     for row in f[f.year.eq(selected)].itertuples():
         value = theme.fmt_usd(row.value) if pd.notna(row.value) else "No recorded value"
@@ -494,22 +565,46 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
                 ]
             )
         )
-    shifts = []
-    for row in summary.itertuples():
-        change = (
-            row.end_product_change_pp
-            if metric == "product"
-            else row.end_intra_change_pp
+    below = summary.loc[valid & summary.end_index.lt(100 - 1e-9), "country"]
+    if len(below):
+        finding += " Below baseline at the endpoint: " + ", ".join(below) + "."
+    if (~valid).any():
+        finding += (
+            " Missing comparison: " + ", ".join(summary.loc[~valid, "country"]) + "."
         )
-        if pd.notna(change):
-            shifts.append(f"{row.country} {change:+.2f} pp")
-    finding += (
-        (" Selected structural indicator vs baseline: " + ", ".join(shifts) + ".")
-        if shifts
-        else " Select a chapter or check coverage to compare a structural indicator."
+    returns = summary.dropna(subset=["first_at_baseline"])
+    if len(returns):
+        finding += (
+            " First observed returns after a loss: "
+            + ", ".join(
+                f"{row.country} {int(row.first_at_baseline)}"
+                for row in returns.itertuples()
+            )
+            + "."
+        )
+    implication = describe_structure(summary, metric, product, baseline, end)
+    signature = (product, baseline, event, (start, end), metric)
+    key = next(
+        (
+            name
+            for name, case in CASES.items()
+            if signature == case[:5] and set(countries) == set(CASE_COUNTRIES)
+        ),
+        None,
     )
-    if metric == "intra" and f.region_coverage.lt(1 - 1e-8).any():
-        finding += " Regional comparisons use observed lower bounds; changes may include coverage differences."
+    question, action = (
+        CASES[key][5:]
+        if key
+        else (
+            "What changed across your selected window?",
+            "Inspect one year in both charts and change the product to test the comparison.",
+        )
+    )
+    guide = [
+        html.Small("Guided case" if key else "Custom exploration"),
+        html.H3(question),
+        html.P(action),
+    ]
     f["baseline"] = baseline
     f["event_year"] = event
     f["window_start"] = start
@@ -523,7 +618,17 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
     f["selected_year"] = selected
     f["structural_measure"] = metric
     f = f.merge(
-        summary[["country", "status", "first_at_baseline", "timing_complete"]],
+        summary[
+            [
+                "country",
+                "status",
+                "first_at_baseline",
+                "timing_complete",
+                "region_change_min_pp",
+                "region_change_max_pp",
+                "end_product_change_pp",
+            ]
+        ],
         on="country",
         how="left",
     )
@@ -535,6 +640,9 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         message=f"Reconciled real data · {manifest['source_version']} · {start}–{end} · "
         + ("All products" if product == "TOTAL" else label(product)),
         finding=finding,
+        implication=implication,
+        guide=guide,
+        preset_class="m5-presets " + (key or "custom"),
         kpis=components.kpi_row(
             [
                 ("Baseline", str(baseline) + " = 100"),
@@ -545,6 +653,51 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         detail=details,
         limits="HS2 is broad; nominal USD includes price, exchange-rate and re-export effects. Neither event attribution nor full structural recovery is established by these indicators.",
         structure_note=note,
+    )
+
+
+def describe_structure(summary, metric, product, baseline, end):
+    if metric == "product":
+        changes = summary.set_index("country").end_product_change_pp.dropna()
+        if changes.empty:
+            return "Select an HS2 chapter with observations in both years to compare its share of total exports."
+        name = changes.abs().idxmax()
+        change = changes.loc[name]
+        if abs(change) < 0.005:
+            return "Across comparable endpoints, the selected chapter’s share changed by less than 0.005 percentage points."
+        movement = "gained" if change > 0 else "lost"
+        return (
+            f"HS{product} {movement} {abs(change):.2f} percentage points of {name}’s export basket "
+            f"from {baseline} to {end}. This is the largest absolute share shift among the selected economies with comparable endpoints."
+        )
+    evidence = []
+    ambiguous = []
+    for row in summary.itertuples():
+        low, high = row.region_change_min_pp, row.region_change_max_pp
+        if pd.isna(low) or pd.isna(high):
+            continue
+        if low >= 0.005 or high <= -0.005:
+            movement, bound = ("rose", low) if low > 0 else ("fell", -high)
+            # Round down so the reported lower bound remains mathematically valid.
+            evidence.append(
+                f"{row.country}’s intra-regional share {movement} by at least {math.floor(bound * 100) / 100:.2f} pp"
+            )
+        else:
+            ambiguous.append(row.country)
+    parts = []
+    if evidence:
+        parts.append(
+            "Even allowing for unknown partner regions, " + ", ".join(evidence) + "."
+        )
+    if ambiguous:
+        parts.append(
+            "At the displayed precision, the bounds leave the direction of change unresolved for "
+            + ", ".join(ambiguous)
+            + "."
+        )
+    return (
+        " ".join(parts)
+        or "Regional coverage is insufficient to compare the selected endpoints."
     )
 
 
@@ -594,35 +747,9 @@ def register_callbacks(app):
                 "product",
                 f"Explicitly imported {', '.join(countries)} and HS{product} from M4. Further changes affect M5 only.",
             )
-        if trigger == cid("crisis"):
-            return (
-                ["CHN", "DEU", "MEX"],
-                "TOTAL",
-                2007,
-                2008,
-                [2004, 2013],
-                "intra",
-                "Financial crisis comparison · descriptive event window.",
-            )
-        if trigger == cid("vehicles"):
-            return (
-                ["CHN", "DEU", "MEX"],
-                "87",
-                2019,
-                2020,
-                [2016, 2024],
-                "product",
-                "Vehicles and parts, excluding rail · HS87 is broader than cars.",
-            )
-        return (
-            ["CHN", "DEU", "MEX"],
-            "TOTAL",
-            2019,
-            2020,
-            [2016, 2024],
-            "intra",
-            "Pandemic comparison · nominal amounts and regional shares.",
-        )
+        key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
+        scope, baseline, event, window, measure = CASES[key][:5]
+        return list(CASE_COUNTRIES), scope, baseline, event, list(window), measure, ""
 
     @app.callback(
         Output(cid("selected"), "data"),
@@ -658,6 +785,9 @@ def register_callbacks(app):
         Output(cid("summary"), "data"),
         Output(cid("message"), "children"),
         Output(cid("finding"), "children"),
+        Output(cid("implication"), "children"),
+        Output(cid("guide"), "children"),
+        Output(cid("presets"), "className"),
         Output(cid("kpis"), "children"),
         Output(cid("detail"), "children"),
         Output(cid("limits"), "children"),
@@ -683,6 +813,9 @@ def register_callbacks(app):
                 "summary",
                 "message",
                 "finding",
+                "implication",
+                "guide",
+                "preset_class",
                 "kpis",
                 "detail",
                 "limits",

@@ -7,6 +7,43 @@ import app
 
 
 class TimeInterface(unittest.TestCase):
+    def test_guided_and_custom_selection_follow_actual_inputs(self):
+        guided = m.compute_view(
+            ["CHN", "DEU", "MEX"], "87", 2019, 2020, [2016, 2024], "product", 2024
+        )
+        self.assertEqual(guided["preset_class"], "m5-presets vehicles")
+        self.assertIn("3.00 percentage points", guided["implication"])
+        custom = m.compute_view(
+            ["DEU"], "87", 2019, 2020, [2016, 2024], "product", 2024
+        )
+        self.assertEqual(custom["preset_class"], "m5-presets custom")
+        self.assertIn("DEU", custom["implication"])
+        self.assertNotIn("CHN", custom["implication"])
+
+    def test_uncertain_region_assignments_change_the_allowed_conclusion(self):
+        view = m.compute_view(
+            ["CHN", "DEU", "MEX"], "TOTAL", 2019, 2020, [2016, 2024], "intra", 2024
+        )
+        rows = {r["country"]: r for r in view["summary"]}
+        # Reconstruct the bound from the downloadable year-level shares.
+        for code in rows:
+            series = {r["year"]: r for r in view["rows"] if r["country"] == code}
+            self.assertAlmostEqual(
+                rows[code]["region_change_min_pp"],
+                100 * (series[2024]["intra_share"] - series[2019]["intra_upper"]),
+                places=7,
+            )
+            self.assertAlmostEqual(
+                rows[code]["region_change_max_pp"],
+                100 * (series[2024]["intra_upper"] - series[2019]["intra_share"]),
+                places=7,
+            )
+        self.assertLess(rows["CHN"]["region_change_min_pp"], 0)
+        self.assertGreater(rows["CHN"]["region_change_max_pp"], 0)
+        self.assertIn("unresolved for CHN, DEU", view["implication"])
+        self.assertIn("MEX", view["implication"])
+        self.assertIn("at least 0.73 pp", view["implication"])
+
     def test_real_figures_and_exports_share_the_same_values(self):
         v = m.compute_view(
             ["CHN", "MEX"], "87", 2019, 2020, [2016, 2024], "product", 2021
