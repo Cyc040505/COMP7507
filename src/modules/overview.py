@@ -21,13 +21,8 @@ from src.ids import ACTIVE_MODULE, GLOBAL_FILTERS, mid
 from src.module_base import guard_active
 
 MODULE_ID = "M0"
-NAV_LABEL = "0  Overview"
+NAV_LABEL = "M0  Overview"
 ORDER = 0
-
-_QUESTION = (
-    "Over 1995–2024, what drives bilateral trade between countries, "
-    "and how has the global trade landscape evolved?"
-)
 
 _TOP_N = 10
 
@@ -112,13 +107,6 @@ def _total_figure(flow: pd.DataFrame) -> go.Figure:
 
 
 def _share_figure(country_year: pd.DataFrame, year: int, demo: bool) -> go.Figure:
-    """Top-N country ranking for a single year, stable per-country colours.
-
-    The y-axis shows fixed *rank* labels (Top 1 … Top N) rather than country
-    names, and each bar carries its country name as in-bar text (left-aligned).
-    Ranks are a stable, position-independent axis, so the animate path can't
-    freeze stale country names the way a categorical y-axis does.
-    """
     top = (
         country_year[country_year["year"] == year]
         .loc[country_year[country_year["year"] == year]["country"].map(_is_country)]
@@ -132,9 +120,6 @@ def _share_figure(country_year: pd.DataFrame, year: int, demo: bool) -> go.Figur
     codes = list(top["country"])
     ranks = [_TOP_N - i for i in range(len(top))]
 
-    # Share of the *global* total for the year (all countries incl. S aggregates),
-    # so the bar text reads "CODE (x%)" — how big that country's exports are
-    # relative to the whole world.
     yr_rows = country_year[country_year["year"] == year]
     global_total = float(yr_rows["export_value"].sum())
     shares = (
@@ -220,14 +205,87 @@ def _meta_iter():
     yield from data_loader.load_country_meta().itertuples(index=False)
 
 
+def _summary_category(title: str, items: list[tuple[str, str]]) -> html.Div:
+    """One archetype block: a heading plus a 'country: reason' list."""
+    return html.Div(
+        className="summary-category",
+        children=[
+            html.H5(title, className="summary-cat-title"),
+            html.Ul(
+                className="summary-list",
+                children=[
+                    html.Li([html.Strong(f"{country}: "), reason])
+                    for country, reason in items
+                ],
+            ),
+        ],
+    )
+
+
+def _global_trend_card() -> html.Div:
+    """The global export-total description, shown between the two graphs."""
+    return components.card(
+        "Global trade over time",
+        html.Div(
+            className="summary-body",
+            children=[
+                html.P(
+                    "Global trade has grown steadily, on an overall upward trend. "
+                    "Global exports rose from $5.07 trillion in 1995 to $22.83 "
+                    "trillion in 2024 — about a 4.5× increase. The series dipped "
+                    "twice, around the 2009 financial crisis (down ~23% year on "
+                    "year) and the 2020 COVID-19 pandemic (down ~7.5%), but "
+                    "recovered quickly both times and reached a historical peak "
+                    "of $24.15 trillion in 2022."
+                ),
+            ],
+        ),
+        extra_class="summary-card",
+    )
+
+
+def _ranking_summary_card() -> html.Div:
+    """Three-archetype reading of the ever-Top-10 country ranking."""
+    return components.card(
+        "Top-10 country ranking",
+        html.Div(
+            className="summary-body",
+            children=[
+                _summary_category("Consistently dominant (always in the top three)", [
+                    ("United States (USA)",
+                     "Ranked Top1 for 1995–2003, then held Top2–3; never left the top "
+                     "three, with a share of 8–13%."),
+                    ("Germany (DEU)",
+                     "Ranked Top2 for 1995–2003, briefly Top1 in 2004, then held Top2–3; "
+                     "also never left the top three, with a share of 6.4–9.7%."),
+                ]),
+                _summary_category("Rising fast (rank and share climbed sharply)", [
+                    ("China (CHN)",
+                     "Only Top6 in 1995 (4.5% share), took the top spot from 2005 "
+                     "and has held it since (15.7% in 2024) — a ~3.5× share gain, "
+                     "the classic chaser-turned-leader."),
+                    ("Mexico (MEX)",
+                     "First entered the Top10 in 2015, rising to Top6 by 2024 "
+                     "(2.8% share) — the fastest late newcomer."),
+                ]),
+                _summary_category("Steadily stable (narrow rank band, small share swings)", [
+                    ("Netherlands (NLD)",
+                     "In the top 10 for all 30 years, ranked Top7–10, share 2.4–3.4% "
+                     "— the smallest swings, the most stable economy."),
+                    ("Italy (ITA)",
+                     "In the top 10 for all 30 years, ranked Top6–9, share 2.6–4.5% "
+                     "— steady in the upper-mid tier."),
+                ]),
+            ],
+        ),
+        extra_class="summary-card",
+    )
+
+
 def layout():
     return html.Div(
         className="module-inner",
         children=[
-            # Both graphs are always shown, stacked top-to-bottom: Total, then
-            # Country share. Two INDEPENDENT, always-mounted graph components so
-            # a repaint of one never disturbs the other; only the ranking graph
-            # tweens between years, the Total graph is static.
             html.Div(
                 id=mid(MODULE_ID, "view-host"),
                 className="view-host",
@@ -237,6 +295,7 @@ def layout():
                         components.placeholder_graph(mid(MODULE_ID, "total-graph")),
                         extra_class="graph-card",
                     ),
+                    _global_trend_card(),
                     components.card(
                         "Top-10 exporting countries by year",
                         html.Div(
@@ -264,8 +323,6 @@ def layout():
                     ),
                 ],
             ),
-            # Year slider: always visible, placed between the two graphs and the
-            # verification panel. It drives the ranking graph only.
             html.Div(
                 id=mid(MODULE_ID, "share-controls"),
                 className="module-controls",
@@ -285,43 +342,22 @@ def layout():
                     html.Span(id=mid(MODULE_ID, "year-display"), className="year-display"),
                 ],
             ),
-            components.verification_panel(
-                _QUESTION,
-                "No evidence yet: once analysis tables are wired in, key totals and country shares "
-                "will be placed here.",
-                "No conclusion yet: the overview poses the core question that M1–M5 answer in turn.",
-                evidence_id=mid(MODULE_ID, "evidence"),
-                conclusion_id=mid(MODULE_ID, "conclusion"),
-            ),
+            _ranking_summary_card(),
         ],
     )
 
 
 def register_callbacks(app):
-    # Static Total graph. Always renders, independent of the ranking view. Owns
-    # only the Total figure plus the module captions / verification text.
+    # Static Total graph. Always renders, independent of the ranking view.
     @app.callback(
         Output(mid(MODULE_ID, "total-graph"), "figure"),
-        Output(mid(MODULE_ID, "evidence"), "children"),
-        Output(mid(MODULE_ID, "conclusion"), "children"),
         Input(GLOBAL_FILTERS, "data"),
         Input(ACTIVE_MODULE, "data"),
         prevent_initial_call=False,
     )
     def _update_total(filters, active_module):
         guard_active(MODULE_ID, active_module)
-
-        total_fig = _total_figure(data_loader.load_flow_year())
-        evidence = (
-            "The global trade-total series spans 1995–2024; the peak marker "
-            "identifies the high-water year."
-        )
-        conclusion = (
-            "Background view: the global total sets the stage, while the live "
-            f"top-{_TOP_N} country-share ranking below answers which economies "
-            "drive it. The country-level question is answered in M1–M5."
-        )
-        return total_fig, evidence, conclusion
+        return _total_figure(data_loader.load_flow_year())
 
     @app.callback(
         Output(mid(MODULE_ID, "share-graph"), "figure"),
