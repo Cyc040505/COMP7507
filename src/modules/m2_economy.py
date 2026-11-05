@@ -150,8 +150,8 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
     fig.update_layout(
         template=theme.PLOT_TEMPLATE, height=510, margin={"l": 65, "r": 25, "t": 35, "b": 105},
         dragmode="zoom",
-        xaxis={"type": "log", "title": "GDP · billion current USD (log)", "autorange": True},
-        yaxis={"type": "log", "title": "Goods exports · billion current USD (log)", "autorange": True},
+        xaxis={"type": "log", "dtick": 1, "title": "GDP · billion current USD (log)", "autorange": True},
+        yaxis={"type": "log", "dtick": 1, "title": "Goods exports · billion current USD (log)", "autorange": True},
         legend={"orientation": "h", "y": -0.22, "x": 0, "font": {"size": 11}},
         uirevision=f"M2-{int(rows.year.iloc[0])}-{anchor}-{mode}-{factor}",
     )

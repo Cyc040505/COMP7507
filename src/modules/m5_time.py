@@ -236,6 +236,7 @@ def layout():
                         ),
                         dcc.Graph(
                             id=cid("index"),
+                            style={"height": "350px"},
                             config={"displayModeBar": False, "responsive": True},
                         ),
                     ]
@@ -261,56 +262,63 @@ def layout():
                         html.P(id=cid("structure-note"), className="m5-hint"),
                         dcc.Graph(
                             id=cid("structure"),
+                            style={"height": "350px"},
                             config={"displayModeBar": False, "responsive": True},
                         ),
                         html.Div(id=cid("detail"), className="m5-detail"),
                     ]
                 ),
             ),
-            html.Details([
-                html.Summary("Recovery status · expand for the complete table"),
-                html.Div(
-                    [
-                        html.P(
-                            "First observed return ≥100 follows an observed below-baseline loss. It is not necessarily an exact recovery date. No observed loss is identified separately.",
-                            className="m5-hint",
-                        ),
-                        dash_table.DataTable(
-                            id=cid("summary"),
-                            columns=[
-                                {"name": "Economy", "id": "country"},
-                                {"name": "Observed status", "id": "status_label"},
-                                {
-                                    "name": "First observed return ≥100",
-                                    "id": "first_at_baseline",
+            html.Details(
+                [
+                    html.Summary("Recovery status · expand for the complete table"),
+                    html.Div(
+                        [
+                            html.P(
+                                "First observed return ≥100 follows an observed below-baseline loss. It is not necessarily an exact recovery date. No observed loss is identified separately.",
+                                className="m5-hint",
+                            ),
+                            dash_table.DataTable(
+                                id=cid("summary"),
+                                columns=[
+                                    {"name": "Economy", "id": "country"},
+                                    {"name": "Observed status", "id": "status_label"},
+                                    {
+                                        "name": "First observed return ≥100",
+                                        "id": "first_at_baseline",
+                                    },
+                                    {
+                                        "name": "End index",
+                                        "id": "end_index",
+                                        "type": "numeric",
+                                        "format": {"specifier": ".1f"},
+                                    },
+                                    {
+                                        "name": "Observed / expected years",
+                                        "id": "coverage",
+                                    },
+                                    {"name": "Timing", "id": "timing_label"},
+                                ],
+                                data=[],
+                                style_cell={
+                                    "textAlign": "left",
+                                    "whiteSpace": "normal",
+                                    "height": "auto",
+                                    "padding": "12px",
+                                    "fontFamily": "inherit",
+                                    "fontSize": 12,
                                 },
-                                {
-                                    "name": "End index",
-                                    "id": "end_index",
-                                    "type": "numeric",
-                                    "format": {"specifier": ".1f"},
+                                style_header={
+                                    "fontWeight": 600,
+                                    "backgroundColor": "#f3f6fa",
                                 },
-                                {"name": "Observed / expected years", "id": "coverage"},
-                                {"name": "Timing", "id": "timing_label"},
-                            ],
-                            data=[],
-                            style_cell={
-                                "textAlign": "left",
-                                "whiteSpace": "normal",
-                                "height": "auto",
-                                "padding": "12px",
-                                "fontFamily": "inherit",
-                                "fontSize": 12,
-                            },
-                            style_header={
-                                "fontWeight": 600,
-                                "backgroundColor": "#f3f6fa",
-                            },
-                            style_table={"overflowX": "auto"},
-                        ),
-                    ]
-                ),
-            ], className="m5-methods"),
+                                style_table={"overflowX": "auto"},
+                            ),
+                        ]
+                    ),
+                ],
+                className="m5-methods",
+            ),
             html.Details(
                 [
                     html.Summary("Methods, provenance & evidence download"),
@@ -422,8 +430,12 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         return empty("Select one to four economies to begin.")
     if len(countries) > 4:
         return empty("Select at most 4 economies for a readable comparison.")
-    if len(set(countries)) != len(countries) or any(c not in FOCUS_COUNTRIES for c in countries):
-        return empty("Choose distinct economies from USA, DEU, CHN, MEX, NLD, ITA only.")
+    if len(set(countries)) != len(countries) or any(
+        c not in FOCUS_COUNTRIES for c in countries
+    ):
+        return empty(
+            "Choose distinct economies from USA, DEU, CHN, MEX, NLD, ITA only."
+        )
     if not window or len(window) != 2:
         return empty("Select a valid observation window.")
     start, end = map(int, window)
@@ -712,11 +724,17 @@ def validate_import(comparison, product):
     countries = comparison.get("countries")
     if not isinstance(countries, list) or not 1 <= len(countries) <= 4:
         raise ValueError("M4 must display 1–4 economies before importing.")
-    if any(not isinstance(c, str) or c not in FOCUS_COUNTRIES for c in countries) or len(set(countries)) != len(countries):
-        raise ValueError("M4 economies must be distinct members of USA, DEU, CHN, MEX, NLD, ITA.")
+    if any(
+        not isinstance(c, str) or c not in FOCUS_COUNTRIES for c in countries
+    ) or len(set(countries)) != len(countries):
+        raise ValueError(
+            "M4 economies must be distinct members of USA, DEU, CHN, MEX, NLD, ITA."
+        )
     year = comparison.get("year")
     if isinstance(year, bool) or not isinstance(year, int) or not 2020 <= year <= 2024:
-        raise ValueError("M4 analysis year must be an integer from 2020 to 2024; M5 was unchanged.")
+        raise ValueError(
+            "M4 analysis year must be an integer from 2020 to 2024; M5 was unchanged."
+        )
     scope = "TOTAL" if product in (None, "", "TOTAL") else product
     if not isinstance(scope, str) or (scope != "TOTAL" and scope not in chapters()):
         raise ValueError("M4 product must be a valid HS2 chapter; M5 was unchanged.")
@@ -763,14 +781,31 @@ def register_callbacks(app):
             except ValueError as exc:
                 return [no_update] * 6 + [str(exc)] + [no_update] * 3
             return (
-                countries, scope, 2019, 2020, [2016, end],
+                countries,
+                scope,
+                2019,
+                2020,
+                [2016, end],
                 "intra" if scope == "TOTAL" else "product",
                 f"Explicitly imported {', '.join(countries)} · {scope} · 2016–{end}; baseline 2019, event 2020. M5 only; old year highlight cleared.",
-                imported, None, None,
+                imported,
+                None,
+                None,
             )
         key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
         scope, baseline, event, window, measure = CASES[key][:5]
-        return list(CASE_COUNTRIES), scope, baseline, event, list(window), measure, "", no_update, None, None
+        return (
+            list(CASE_COUNTRIES),
+            scope,
+            baseline,
+            event,
+            list(window),
+            measure,
+            "",
+            no_update,
+            None,
+            None,
+        )
 
     @app.callback(
         Output(cid("selected"), "data"),
@@ -788,9 +823,7 @@ def register_callbacks(app):
         click = (
             a
             if ctx.triggered_id == cid("index")
-            else b
-            if ctx.triggered_id == cid("structure")
-            else None
+            else b if ctx.triggered_id == cid("structure") else None
         )
         if click and click.get("points"):
             year = click["points"][0].get("x")

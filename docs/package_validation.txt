@@ -1,6 +1,9 @@
-Clean ZIP extraction: no raw CSVs, full bilateral HS2 table, Git worktree or local virtual environment included.
-Verified with the existing Python 3.12 dependency environment.
+Desktop visual review · completed 2026-11-06
+Clean ZIP extracted independently under /tmp/comp7507-desktop-package-check.
+Imported app.py from the extracted folder (resolved macOS /private/tmp path).
+No raw CSVs, full bilateral HS2 table, Git worktree or local virtual environment included.
+Verified using the existing Python 3.12 locked dependency environment, from the extracted working directory.
 ----------------------------------------------------------------------
-Ran 85 tests in 3.907s
+Ran 91 tests in 3.765s
 
 OK

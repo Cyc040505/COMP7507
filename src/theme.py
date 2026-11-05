@@ -9,15 +9,16 @@ from __future__ import annotations
 from textwrap import wrap
 
 import plotly.graph_objects as go
+import plotly.io as pio
 
 # --- Palette (report section 4) ------------------------------------------------
 INK = "#1a2233"
 MUTED = "#5f6f86"
 LINE = "#e3e8ef"
 BG = "#f7f9fc"
-ACCENT = "#1d4ed8"
-ACCENT_SOFT = "#eef3ff"
-ACCENT_LINE = "#c7d7fb"
+ACCENT = "#147e8b"
+ACCENT_SOFT = "#eaf4f5"
+ACCENT_LINE = "#b9d8dc"
 
 # Narrative-stage accents.
 S1 = "#0d9488"
@@ -27,7 +28,47 @@ S4 = "#0369a1"
 
 STAGE_COLORS = {"stage0": MUTED, "stage1": S1, "stage2": S2, "stage3": S3}
 
-PLOT_TEMPLATE = "plotly_white"
+FONT = "Helvetica Neue, Segoe UI, Arial, sans-serif"
+MAP_BG = "#102a3b"
+MAP_LAND = "#29485d"
+MAP_TEXT = "#eaf3f8"
+PLOT_TEMPLATE = "trade_review"
+pio.templates[PLOT_TEMPLATE] = go.layout.Template(
+    layout=dict(
+        font=dict(family=FONT, size=13, color=INK),
+        title=dict(font=dict(size=16, color=INK), x=0, xanchor="left"),
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        colorway=["#147e8b", "#c48c36", "#738ba5", "#776592", "#4a8271"],
+        xaxis=dict(
+            gridcolor="#e5ecf0",
+            gridwidth=1,
+            zeroline=False,
+            automargin=True,
+            tickfont=dict(size=12, color=MUTED),
+            title=dict(font=dict(size=12, color=MUTED), standoff=14),
+        ),
+        yaxis=dict(
+            gridcolor="#e5ecf0",
+            gridwidth=1,
+            zeroline=False,
+            automargin=True,
+            tickfont=dict(size=12, color=MUTED),
+            title=dict(font=dict(size=12, color=MUTED), standoff=12),
+        ),
+        legend=dict(font=dict(size=12), bgcolor="rgba(0,0,0,0)", borderwidth=0),
+        hoverlabel=dict(
+            bgcolor="#152f41",
+            bordercolor="#152f41",
+            font=dict(family=FONT, size=13, color="white"),
+        ),
+        barcornerradius=3,
+        bargap=0.3,
+        margin=dict(l=55, r=25, t=30, b=55),
+    ),
+    data=dict(scatter=[go.Scatter(line=dict(width=2.4))]),
+)
+pio.templates.default = PLOT_TEMPLATE
 _EMPTY_MSG = "Awaiting data · real results appear here once the data pipeline is built"
 
 
@@ -35,8 +76,8 @@ _EMPTY_MSG = "Awaiting data · real results appear here once the data pipeline i
 # BACI's ``v`` (export_value) is stored in THOUSANDS of US dollars. To convert a
 # stored value to *trillions* of USD, divide by ``T_UNITS`` (= 1e9 thousand-USD per
 # trillion). To convert to *dollars*, multiply by ``EXPORT_VALUE_UNIT`` (= 1000).
-EXPORT_VALUE_UNIT = 1000                # thousand-USD → USD
-T_UNITS = 1e9                           # thousand-USD → trillion USD (1e9 × 1000 = 1e12 USD)
+EXPORT_VALUE_UNIT = 1000  # thousand-USD → USD
+T_UNITS = 1e9  # thousand-USD → trillion USD (1e9 × 1000 = 1e12 USD)
 
 
 def stored_to_trillions(value_stored: float) -> float:
@@ -95,9 +136,14 @@ def empty_figure(message: str = _EMPTY_MSG, height: int = 420) -> go.Figure:
     annotation = message
     if isinstance(message, str) and "<" not in message:
         annotation = "<br>".join(
-            line for paragraph in message.splitlines()
-            for line in (wrap(paragraph, width=40, break_long_words=False,
-                              break_on_hyphens=False) or [""])
+            line
+            for paragraph in message.splitlines()
+            for line in (
+                wrap(
+                    paragraph, width=40, break_long_words=False, break_on_hyphens=False
+                )
+                or [""]
+            )
         )
     fig = go.Figure()
     fig.update_layout(

@@ -27,30 +27,48 @@ def layout():
     return html.Div(
         className="module-inner m0",
         children=[
-            html.H2("Global growth, changing export shares"),
-            html.P("Nominal merchandise exports · BACI HS92 V202601 · 1995–2024"),
-            dcc.Download(id=cid("download")),
-            html.Label("Analysis year", htmlFor=cid("year")),
-            dcc.Dropdown(
-                id=cid("year"),
-                options=list(range(1995, 2025)),
-                value=2023,
-                clearable=False,
+            components.module_intro(
+                "Global growth, changing export shares",
+                "How has the scale of world trade changed—and which economies account for it?",
             ),
-            components.card("Global export value", dcc.Graph(id=cid("total"))),
-            dcc.RadioItems(
-                id=cid("view"),
-                options=[
-                    {"label": "Annual Top10", "value": "ranking"},
-                    {"label": "Six-economy world shares", "value": "six"},
+            dcc.Download(id=cid("download")),
+            html.Div(
+                [
+                    components.field(
+                        "Analysis year",
+                        dcc.Dropdown(
+                            id=cid("year"),
+                            options=list(range(1995, 2025)),
+                            value=2023,
+                            clearable=False,
+                        ),
+                    ),
+                    dcc.RadioItems(
+                        id=cid("view"),
+                        options=[
+                            {"label": "Annual Top10", "value": "ranking"},
+                            {"label": "Six-economy world shares", "value": "six"},
+                        ],
+                        value="ranking",
+                        className="radio-row",
+                    ),
                 ],
-                value="ranking",
-                className="radio-row",
+                className="m0-controls",
+            ),
+            html.Div(
+                [
+                    components.card("Global export value", dcc.Graph(id=cid("total"))),
+                    components.card(
+                        "Share of complete world exports", dcc.Graph(id=cid("share"))
+                    ),
+                ],
+                className="m0-charts",
             ),
             components.card(
-                "Share of complete world exports", dcc.Graph(id=cid("share"))
+                "What the evidence shows",
+                html.Div(id=cid("finding"), className="m3-note"),
+                extra_class="m0-finding",
             ),
-            html.Div(id=cid("finding"), className="m3-note"),
             html.Details(
                 [
                     html.Summary("Annual Top10 evidence & full data"),
@@ -89,16 +107,17 @@ def figures(year, view):
             y=w.export_value / 1e9,
             mode="lines",
             name="Global exports",
-            line={"color": "#247c99"},
+            line={"color": theme.ACCENT, "width": 2.7},
             hovertemplate="%{x}: $%{y:.2f}T<extra></extra>",
         )
     )
     total.add_vline(x=year, line_dash="dot")
     total.update_layout(
-        height=370,
+        height=420,
         yaxis_title="Trillion current USD",
         xaxis_title="Year",
-        margin=dict(t=20),
+        margin=dict(t=20, b=90),
+        xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024]),
     )
     valid = c[c.country.isin(eligible())]
     top = (
@@ -112,11 +131,15 @@ def figures(year, view):
                 orientation="h",
                 marker_color=[theme.country_color(k) for k in top.country],
                 text=[f"{v:.2f}%" for v in top.share],
-                textposition="auto",
+                textposition="outside",
+                cliponaxis=False,
             )
         )
         fig.update_layout(
-            yaxis_autorange="reversed", xaxis_title="World export share (%)"
+            yaxis_autorange="reversed",
+            xaxis_title="World export share (%)",
+            xaxis_range=[0, float(top.share.max()) * 1.2],
+            yaxis_showgrid=False,
         )
     else:
         fig = go.Figure()
@@ -132,8 +155,16 @@ def figures(year, view):
                 )
             )
         fig.add_vline(x=year, line_dash="dot")
-        fig.update_layout(yaxis_title="World export share (%)", xaxis_title="Year")
-    fig.update_layout(height=420, margin=dict(t=20), legend={"orientation": "h"})
+        fig.update_layout(
+            yaxis_title="World export share (%)",
+            xaxis_title="Year",
+            xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024]),
+        )
+    fig.update_layout(
+        height=420,
+        margin=dict(t=20, b=90),
+        legend={"orientation": "h", "y": -0.22, "yanchor": "top", "x": 0},
+    )
     ever = (
         valid.sort_values("export_value", ascending=False)
         .groupby("year")

@@ -15,3 +15,8 @@ M4 shows why a leading export product and relative specialization are different 
 M5 separates a return in nominal export value from structural changes. For the default 2019 baseline and pandemic comparison, China, Germany and Mexico first returned to baseline after an observed loss in 2021. Mexico’s 2024 same-region share exceeded baseline by at least 0.73 percentage points even after allowing for unknown regions. For China and Germany, the uncertainty bounds leave the direction unresolved at the displayed precision. China’s HS87 export index in 2024 was 280.62 (2019=100), while its share of the entire export basket was 5.74%. Event markers support comparison rather than causal attribution.
 
 All findings derive from real data. Official annual bilateral files were reaggregated and reconciled to the shared product, country and world totals. Unknown regions are retained, absent observations are not silently filled, and regional change intervals combine both endpoints’ uncertainty. The six cases are not a representative global sample. Monetary values are nominal, and HS2 chapters are broad categories. See FINAL_REVIEW.md and final_example_audit.json for reproducible values, screenshots and validation.
+
+
+## 2026-11-05 视觉与交互定稿
+
+展示统一为窄侧栏、紧凑局部控制、白底统计图与深色伙伴地图。M3地图/份额并列，全部伙伴分母、Top-N覆盖率和剩余份额直接显示；曲线为真实首都间的示意连接，方向和金额编码保持不变。M4明确HS2为分类轴，M5两张时间图保持同宽对齐。此次改版不改变数据、计算、既定图表任务与验收目标；35组绘图场景和22个数据/分析文件均通过前后比对，最终91项检查通过。详细评价见VISUAL_REVIEW.md。

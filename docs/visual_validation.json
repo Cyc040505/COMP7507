@@ -1,0 +1,33 @@
+{
+  "baseline_commit": "81b21798305bf555dad23bc345260a8c51c96782",
+  "scenario_count": 35,
+  "protected_file_count": 22,
+  "changed_scenarios": [],
+  "snapshot_sha256": "b32c0313b4a155606ac2580ab6d39ee42639c2e27fefe55395c177181d038799",
+  "protected_files": {
+    "data/processed/country_locations.csv": "ed0b1503d62f8523c8136990efb81ca537bc97aaafc895f24c3d9ea8cfe23a0f",
+    "data/processed/country_meta.parquet": "6c90644cb5eceb95edf68b2a1959a5f4123f557fae2c8b429d2c30a702324944",
+    "data/processed/country_pair_hs2_focus_year.parquet": "d0587506629c56adff799b679f9278a4eddfcda3908a7d231e9d5d303a81b26e",
+    "data/processed/country_pair_hs2_year.parquet": "b22972222da8b068792e2cc47d6ce4f3a31d44445e65666fbc5c5404ed2c072f",
+    "data/processed/country_pair_year.parquet": "bc51768ca5b53b706e69644d4ca4ec36e2d33a7d9beb807187dd788d06c3aa29",
+    "data/processed/country_year.parquet": "82db2d822437521aee9b5254de2df39d9ab8524da57fed8b08f1db982769774f",
+    "data/processed/exporter_hs2_year.parquet": "a64944319b8766f66675a205eaf00d07509ba9b49aa5ffccb00aa563418dcf97",
+    "data/processed/flow_year.parquet": "fa94e543d9360121d1082035a92d249bc96f6fbbe26db003a87b0a4b90707d00",
+    "data/processed/gdp_year.parquet": "95761fcd3bcb24031929535e4374b4447910efeb076ffed54b393554907159e3",
+    "data/processed/geodist.parquet": "3b48b005618c87754c34ca66df1e18c43f52971b004c6aad63abf7eef2803ae7",
+    "data/processed/m5_region_hs2_year.parquet": "8251c0a5fb4deab9bb238dd261f92e79ae9042ced521c21ec4aa70b044db35f6",
+    "data/processed/m5_source_manifest.json": "e193a6121870624b4e305e67ca9317dd5cf01981f169ee91a99e4d1e30901fca",
+    "data/reference/capitals.csv": "0be20a048c4867a2944435702d31c7307bedcf5e4076b3981614996ab03041ab",
+    "data/reference/hs92_chapters.json": "4a522be408eaf042e36a89710abe000d4e226c4be4087a180663221a48a8afdc",
+    "data/reference/m2_country_codes_V202601.csv": "c6892f28bea23d689b29b074d299cea7f5196c708b03026fbe419fa4ecb4e820",
+    "data/reference/m4_income_policy.json": "414bc47e591c7ca9d5cf36a91c84c13cdc042f5c94ab02feda379504e8e4f37e",
+    "src/analytics/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/analytics/economy.py": "54bde9195fddebfc3647a1ffc257287ba069543a9e995b7dc69a6dba9676f86a",
+    "src/analytics/geography.py": "56350d23fd638466150bfdde2c746c2e7f828c2422f65ac63e1c1277bcfda63f",
+    "src/analytics/partners.py": "cebfdf73d592ea2c3587bb296874505f94130a5588304267b2f05f167fc3b448",
+    "src/analytics/product.py": "d4f8e54927a7adfc67f01071ddc189d9e4f6030f832880d785620095d8e9cae4",
+    "src/analytics/time_change.py": "ea04ac167dfacc5f7f05bf62f334b5aa6b6305fc5c491d23746664ec4d29b25b"
+  },
+  "tests_passed": 91,
+  "scope": "Trace type/x/y/z/customdata and M3 export records, M1 statistics, M5 recovery rows and summary unchanged. Capitals, flow directions and amount-width relation tested separately."
+}

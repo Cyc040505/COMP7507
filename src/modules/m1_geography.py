@@ -463,7 +463,7 @@ def _evidence(res, product) -> list:
     scope = "all products" if product == "TOTAL" else f"HS{product}"
     rho = s["spearman"]
     parts = [
-        f"{s['n']} partners in scope ({scope}), {s['coverage']:.0%} partner-count distance coverage."
+        f"{s['n']} partners in scope ({scope}), {s['coverage']:.0%} partner-count distance coverage. "
     ]
     if rho is not None:
         parts.append(f"Spearman ρ = {rho:.2f} between distance and share.")
@@ -476,9 +476,7 @@ def _conclusion(res) -> str:
     s = res["stats"]
     rho = s["spearman"]
     if s["n"] < 3 or s["coverage"] < 0.5:
-        return (
-            "Not enough evidence yet: too few partners or too little distance coverage."
-        )
+        return "Not enough evidence yet: too few partners or too little distance coverage. "
     if rho is None:
         return "Not enough paired observations to draw a conclusion."
     if rho <= -0.3:
@@ -502,70 +500,89 @@ def layout():
     return html.Div(
         className="module-inner m1-module",
         children=[
+            components.module_intro(
+                "Does distance shape trade?",
+                "Test the distance–share association, then use the linked map and ranking to inspect individual partners.",
+            ),
             dcc.Store(id=cid("selected")),
             dcc.Download(id=cid("download")),
-            components.control_bar(
-                [
-                    dcc.Dropdown(
-                        id=cid("year"),
-                        options=year_options,
-                        value=2023,
-                        clearable=False,
-                        className="ctl-dropdown",
-                    ),
-                    dcc.Dropdown(
-                        id=cid("exporter"),
-                        options=_country_options(),
-                        value="CHN",
-                        clearable=False,
-                        className="ctl-dropdown",
-                    ),
-                    dcc.Dropdown(
-                        id=cid("product"),
-                        options=_product_options(),
-                        value="TOTAL",
-                        clearable=False,
-                        className="ctl-dropdown",
-                    ),
-                    dcc.Dropdown(
-                        id=cid("dist-metric"),
-                        options=[
-                            {"label": METRIC_LABELS[m], "value": m} for m in ("dist",)
-                        ],
-                        value="dist",
-                        clearable=False,
-                        className="ctl-dropdown",
-                    ),
-                    dcc.Dropdown(
-                        id=cid("show"),
-                        options=[
-                            {"label": "Top 10 by share", "value": "top10"},
-                            {"label": "Nearest 10", "value": "nearest10"},
-                            {"label": "Top 40 partners", "value": "all"},
-                        ],
-                        value="top10",
-                        clearable=False,
-                        className="ctl-dropdown",
-                    ),
-                ],
-                "Explore geography",
+            html.Div(
+                html.Div(
+                    [
+                        components.field(
+                            "Year",
+                            dcc.Dropdown(
+                                id=cid("year"),
+                                options=year_options,
+                                value=2023,
+                                clearable=False,
+                                className="ctl-dropdown",
+                            ),
+                        ),
+                        components.field(
+                            "Exporter",
+                            dcc.Dropdown(
+                                id=cid("exporter"),
+                                options=_country_options(),
+                                value="CHN",
+                                clearable=False,
+                                className="ctl-dropdown",
+                            ),
+                        ),
+                        components.field(
+                            "Product",
+                            dcc.Dropdown(
+                                id=cid("product"),
+                                options=_product_options(),
+                                value="TOTAL",
+                                clearable=False,
+                                className="ctl-dropdown",
+                            ),
+                        ),
+                        components.field(
+                            "Distance measure",
+                            dcc.Dropdown(
+                                id=cid("dist-metric"),
+                                options=[
+                                    {"label": METRIC_LABELS[m], "value": m}
+                                    for m in ("dist",)
+                                ],
+                                value="dist",
+                                clearable=False,
+                                className="ctl-dropdown",
+                            ),
+                        ),
+                        components.field(
+                            "Map / ranking scope",
+                            dcc.Dropdown(
+                                id=cid("show"),
+                                options=[
+                                    {"label": "Top 10 by share", "value": "top10"},
+                                    {"label": "Nearest 10", "value": "nearest10"},
+                                    {"label": "Top 40 partners", "value": "all"},
+                                ],
+                                value="top10",
+                                clearable=False,
+                                className="ctl-dropdown",
+                            ),
+                        ),
+                    ],
+                    className="chips",
+                ),
+                className="module-controls",
             ),
+            html.Div(id=cid("stats"), className="stats-body"),
             components.card(
                 "Distance and partner export share",
                 dcc.Graph(id=cid("scatter"), config={"displayModeBar": False}),
             ),
             html.Div(
+                id=cid("selection-detail"), className="selection-detail", role="status"
+            ),
+            html.Div(
                 [
-                    html.Div(
-                        [
-                            html.P("M1 / GEOGRAPHY", className="m1-eyebrow"),
-                            html.H2("The geography of trade"),
-                            html.P(
-                                "Where do exports go, and how much stays close to home?",
-                                className="m1-subtitle",
-                            ),
-                        ],
-                        className="m1-map-heading",
+                    html.H3(
+                        "Locate the displayed partners", className="card-title-text"
                     ),
                     html.Div(
                         [
@@ -629,57 +646,6 @@ def layout():
                 ],
                 className="card m1-map-card",
             ),
-            components.card(
-                "Statistics / Detail",
-                html.Div(id=cid("stats"), className="stats-body"),
-            ),
-            components.card(
-                "Top share vs nearest partners",
-                dash_table.DataTable(
-                    id=cid("comparison-table"),
-                    columns=[
-                        {"name": "Partner", "id": "name"},
-                        {"name": "Distance (km)", "id": "distance"},
-                        {"name": "Exports (k USD)", "id": "value"},
-                        {"name": "Share %", "id": "share_pct"},
-                        {"name": "Share rank", "id": "share_rank"},
-                        {"name": "Distance rank", "id": "distance_rank"},
-                        {"name": "Flags", "id": "flags"},
-                    ],
-                    data=[],
-                    page_size=10,
-                    style_table={"overflowX": "auto"},
-                    style_cell={
-                        "textAlign": "left",
-                        "fontSize": 12,
-                        "fontFamily": "inherit",
-                        "padding": "8px",
-                        "minWidth": "90px",
-                    },
-                    style_header={"fontWeight": 600, "backgroundColor": "#eef3ff"},
-                ),
-            ),
-            html.Details(
-                className="card",
-                children=[
-                    html.Summary("How this view works"),
-                    html.Button("Download complete partner evidence", id=cid("export")),
-                    html.P(
-                        "The amber country marks the exporter. Partner countries are "
-                        "filled in teal: darker means a larger export share in Top 10 by share "
-                        "and Top 40 partners, or a shorter distance in Nearest 10. Grey "
-                        "countries are outside the displayed selection. Hover over a country "
-                        "to see its export value, share and distance. The ranking "
-                        "summarises the current map selection. The table lists the top-10 partners by "
-                        "share and the nearest 10 partners in one place and marks "
-                        "any overlap."
-                    ),
-                    html.P(
-                        "Spearman ρ is reported as a supporting description of the "
-                        "distance–share association, not a causal estimate."
-                    ),
-                ],
-            ),
             components.verification_panel(
                 _HYPOTHESIS,
                 "Select a country, year and product to see the map and partner lists.",
@@ -687,11 +653,83 @@ def layout():
                 evidence_id=cid("evidence"),
                 conclusion_id=cid("conclusion"),
             ),
+            html.Details(
+                [
+                    html.Summary("Top-share & nearest-partner evidence"),
+                    dash_table.DataTable(
+                        id=cid("comparison-table"),
+                        columns=[
+                            {"name": "Partner", "id": "name"},
+                            {"name": "Distance (km)", "id": "distance"},
+                            {"name": "Exports (k USD)", "id": "value"},
+                            {"name": "Share %", "id": "share_pct"},
+                            {"name": "Share rank", "id": "share_rank"},
+                            {"name": "Distance rank", "id": "distance_rank"},
+                            {"name": "Flags", "id": "flags"},
+                        ],
+                        data=[],
+                        page_size=10,
+                        style_table={"overflowX": "auto"},
+                        style_cell={
+                            "textAlign": "left",
+                            "fontSize": 12,
+                            "fontFamily": "inherit",
+                            "padding": "8px",
+                            "minWidth": "90px",
+                        },
+                        style_header={"fontWeight": 600, "backgroundColor": "#eef3ff"},
+                    ),
+                ]
+            ),
+            html.Details(
+                className="card",
+                children=[
+                    html.Summary("How this view works"),
+                    html.Button("Download complete partner evidence", id=cid("export")),
+                    html.P(
+                        "The amber country marks the exporter. Partner countries are filled in teal: darker means a larger export share in Top 10 by share and Top 40 partners, or a shorter distance in Nearest 10. Grey countries are outside the displayed selection. Hover over a country to see its export value, share and distance. The ranking summarises the current map selection. The table lists the top-10 partners by share and the nearest 10 partners in one place and marks any overlap."
+                    ),
+                    html.P(
+                        "Spearman ρ is reported as a supporting description of the distance–share association, not a causal estimate."
+                    ),
+                ],
+            ),
         ],
     )
 
 
 def register_callbacks(app):
+    @app.callback(
+        Output(cid("selection-detail"), "children"),
+        Input(cid("selected"), "data"),
+        Input(cid("exporter"), "value"),
+        Input(cid("year"), "value"),
+        Input(cid("product"), "value"),
+        Input(ACTIVE_MODULE, "data"),
+    )
+    def selection_detail(selected, country, year, product, active):
+        guard_active(MODULE_ID, active)
+        if not selected:
+            return "Click a scatter point, map country or ranked bar to highlight the same partner across all three views."
+        res = analyze(
+            flows(year, product),
+            data_loader.load_geodist(),
+            data_loader.load_country_meta(),
+            country,
+            year,
+            hs2=None if product == "TOTAL" else product,
+            metric="dist",
+        )
+        d = res["frame"]
+        r = d[d.partner.eq(selected)]
+        if r.empty:
+            return f"{selected} · No recorded partner flow in the current scope."
+        r = r.iloc[0]
+        distance = (
+            f"{r.distance:,.0f} km" if pd.notna(r.distance) else "Distance unavailable"
+        )
+        return f"Selected: {r['name']} ({selected}) · {r.share_pct:.2f}% of exports · {distance}. Highlighting preserves the full association sample."
+
     @app.callback(
         Output(cid("selected"), "data"),
         Input(cid("map"), "clickData"),
@@ -881,6 +919,16 @@ def scatter_figure(res, selected=None):
     )
     total = res["frame"].value.sum()
     coverage = d.value.sum() / total if total else 0
+    fig.update_xaxes(
+        tickmode="array",
+        tickvals=[100, 200, 500, 1000, 2000, 5000, 10000, 20000],
+        ticktext=["100", "200", "500", "1,000", "2,000", "5,000", "10,000", "20,000"],
+    )
+    fig.update_yaxes(
+        tickmode="array",
+        tickvals=[10.0**n for n in range(-10, 3)],
+        ticktext=[f"{10.0**n:g}" for n in range(-10, 3)],
+    )
     fig.update_layout(
         height=430,
         xaxis={"type": "log", "title": "GEODIST dist (km, logarithmic)"},

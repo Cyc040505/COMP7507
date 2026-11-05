@@ -15,7 +15,7 @@ from src.module_base import guard_active
 MODULE_ID = "M3"
 NAV_LABEL = "M3  Network & Partners"
 ORDER = 3
-COLORS = ["#95613e", "#d38b27", "#21799b", "#725ca1", "#48866d", "#9ca3af"]
+COLORS = ["#147e8b", "#c48c36", "#738ba5", "#698c7c", "#b48673", "#bcc6ce"]
 
 
 def cid(k):
@@ -34,13 +34,14 @@ def positions():
 
 
 def layout():
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    graph_config = {"displaylogo": False, "displayModeBar": False, "responsive": True}
     return html.Div(
         className="module-inner m3",
         children=[
-            html.P("PARTNERS / M3", className="m3-eyebrow"),
-            html.H2("Regional ties or global reach?"),
-            html.P(
-                "Start with China’s vehicle exports in 2023. Compare destinations with electronics, then reverse the direction."
+            components.module_intro(
+                "Trade partners & regional reach",
+                "Follow the flows, compare partner shares, then test how destinations change across products.",
             ),
             dcc.Store(id=cid("selected")),
             dcc.Store(id=cid("records")),
@@ -51,7 +52,10 @@ def layout():
                         "Focal economy",
                         dcc.Dropdown(
                             id=cid("country"),
-                            options=FOCUS,
+                            options=[
+                                {"label": f"{meta.loc[c, 'name']} ({c})", "value": c}
+                                for c in FOCUS
+                            ],
                             value="CHN",
                             clearable=False,
                         ),
@@ -99,61 +103,141 @@ def layout():
                 ],
                 className="m3-controls",
             ),
-            html.Div(id=cid("scope"), className="m3-note"),
-            dcc.RadioItems(
-                id=cid("view"),
-                options=[
-                    {"label": "World map", "value": "map"},
-                    {"label": "Six-economy partner matrix", "value": "matrix"},
+            html.Div(
+                [
+                    html.Div(id=cid("kpis")),
+                    html.Div(
+                        [
+                            html.Button("Reset case", id=cid("reset")),
+                            html.Button("Export data ↓", id=cid("export")),
+                        ],
+                        className="m3-actions",
+                    ),
                 ],
-                value="map",
-                className="radio-row",
+                className="m3-summary",
             ),
-            components.card(
-                "01 / Locate the trade links",
-                dcc.Graph(
-                    id=cid("graph"),
-                    className="graph-interactive",
-                    config={"displaylogo": False, "topojsonURL": "/assets/"},
-                ),
-            ),
-            html.P(
-                "Capital locations identify economies; curves are schematic connections, not transport routes. Arrowheads point toward the importer. Click a focal economy to switch; other partners only select a detail."
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.H3(
+                                        "01  Trade flows",
+                                        id=cid("map-title"),
+                                        className="card-title-text",
+                                    ),
+                                    dcc.RadioItems(
+                                        id=cid("view"),
+                                        options=[
+                                            {"label": "Map", "value": "map"},
+                                            {
+                                                "label": "Partner matrix",
+                                                "value": "matrix",
+                                            },
+                                        ],
+                                        value="map",
+                                        className="radio-row",
+                                    ),
+                                ],
+                                className="m3-map-heading",
+                            ),
+                            dcc.Graph(
+                                id=cid("graph"),
+                                className="graph-interactive",
+                                config={**graph_config, "topojsonURL": "/assets/"},
+                            ),
+                            html.Div(
+                                id=cid("detail"),
+                                className="m3-selection",
+                                role="status",
+                            ),
+                            html.P(
+                                "Arrows point to importers · Width encodes value. Capitals locate economies; curves are not transport routes.",
+                                id=cid("map-caption"),
+                                className="m3-map-caption",
+                            ),
+                        ],
+                        id=cid("map-card"),
+                        className="card m3-map-card",
+                    ),
+                    components.card(
+                        "02  Partner shares",
+                        [
+                            html.P(
+                                "Share of trade with all partners",
+                                className="chart-subtitle",
+                            ),
+                            dcc.Graph(id=cid("ranking"), config=graph_config),
+                            html.Div(id=cid("remaining"), className="m3-remaining"),
+                        ],
+                        extra_class="m3-rank-card",
+                    ),
+                ],
+                className="m3-primary",
             ),
             html.Div(
                 [
                     components.card(
-                        "02 / Compare partner shares", dcc.Graph(id=cid("ranking"))
+                        "03  How does the regional mix change?",
+                        [
+                            html.P(
+                                "HS85 · Electrical equipment  /  HS87 · Vehicles & parts",
+                                className="chart-subtitle",
+                            ),
+                            dcc.Graph(id=cid("regions"), config=graph_config),
+                        ],
                     ),
-                    components.card(
-                        "03 / Compare product destinations",
-                        dcc.Graph(id=cid("regions")),
+                    components.verification_panel(
+                        "Does the regional concentration of trade differ between electronics and vehicles?",
+                        "",
+                        "Regional shares describe composition, not preference adjusted for region size. No causal inference.",
+                        evidence_id=cid("finding"),
+                        conclusion_id=cid("limits"),
                     ),
                 ],
-                className="m3-pair",
+                className="m3-secondary",
             ),
-            html.Div(id=cid("detail"), className="m3-note"),
-            components.verification_panel(
-                "Partner concentration may differ across products.",
-                "",
-                "Regional shares describe destinations, not trade preferences adjusted for region size; no causal inference.",
-                evidence_id=cid("finding"),
-                conclusion_id=cid("limits"),
-            ),
+            html.Div(id=cid("scope"), className="scope-note"),
             html.Details(
                 [
-                    html.Summary("Scope, methods & data"),
+                    html.Summary("Scope, methods & complete partner data"),
                     html.P(
-                        "BACI HS92 V202601; nominal merchandise trade, thousand current USD. Shares use all partners before Top-N. Unknown regions remain in the denominator. The matrix uses the fixed union of six economies’ 2023 all-product Top5 partners; Other includes remaining partners and is not Unknown. Blank rows mean no observed total. Zero cells mean no recorded flow in the complete selected source, not proof of structural absence."
+                        "BACI HS92 V202601; nominal merchandise trade, thousand current USD. Shares use all partners before Top-N. Unknown regions remain in the denominator. Regions follow GeoDist: Russia is in Asia; the Americas are not split. The matrix uses the fixed union of six economies’ 2023 all-product Top5 partners; Other includes remaining partners and is not Unknown. Blank rows mean no observed total. Zero cells mean no recorded flow in the selected source, not proof of structural absence."
+                    ),
+                    html.P(
+                        "Click a focal economy on the map to switch; other partners select a detail. Select a table cell for the same partner highlight."
                     ),
                     dash_table.DataTable(
                         id=cid("table"),
                         columns=[
-                            {"name": c, "id": c}
+                            {
+                                "name": {
+                                    "partner": "Partner",
+                                    "name": "Economy",
+                                    "value": "Trade (thousand USD)",
+                                    "share": "All-partner share",
+                                    "region": "Region",
+                                }[c],
+                                "id": c,
+                                **(
+                                    {
+                                        "type": "numeric",
+                                        "format": {
+                                            "specifier": (
+                                                ",.3f" if c == "value" else ".2%"
+                                            )
+                                        },
+                                    }
+                                    if c in {"value", "share"}
+                                    else {}
+                                ),
+                            }
                             for c in ["partner", "name", "value", "share", "region"]
                         ],
                         page_size=10,
                         sort_action="native",
+                        cell_selectable=True,
                         style_table={"overflowX": "auto"},
                         style_cell={
                             "textAlign": "left",
@@ -162,9 +246,8 @@ def layout():
                         },
                     ),
                     html.P(
-                        "Value = thousand current USD; share = fraction of all partners."
+                        "Trade value is in thousand current USD; table shares are percentages. CSV retains fractional shares and the complete current partner scope."
                     ),
-                    html.Button("Download current partner data", id=cid("export")),
                 ]
             ),
         ],
@@ -179,21 +262,31 @@ def map_figure(country, d, direction, top, selected):
         go.Choropleth(
             locations=codes,
             z=[0] * len(codes),
-            colorscale=[[0, "#f0f2f4"], [1, "#f0f2f4"]],
+            colorscale=[[0, theme.MAP_LAND], [1, theme.MAP_LAND]],
             showscale=False,
             hovertemplate="%{location}<extra>Partner</extra>",
-            marker_line_color="white",
+            marker_line_color=theme.MAP_BG,
         )
     )
     fig.add_trace(
         go.Choropleth(
             locations=FOCUS,
             z=[1] * 6,
-            colorscale=[[0, "#d5e4f3"], [1, "#d5e4f3"]],
+            colorscale=[[0, "#365f70"], [1, "#365f70"]],
             showscale=False,
             customdata=FOCUS,
             hovertemplate="%{location}<extra>Focal economy</extra>",
-            marker_line_color="white",
+            marker_line_color=theme.MAP_BG,
+        )
+    )
+    fig.add_trace(
+        go.Choropleth(
+            locations=[country],
+            z=[1],
+            colorscale=[[0, "#c48c36"], [1, "#c48c36"]],
+            showscale=False,
+            marker_line_color=theme.MAP_BG,
+            hovertemplate="%{location}<extra>Selected focal economy</extra>",
         )
     )
     shown = d.head(top)
@@ -206,28 +299,26 @@ def map_figure(country, d, direction, top, selected):
                 (country, r.partner) if direction == "export" else (r.partner, country)
             )
 
-            # Great-circle interpolation, with an explicit tangent arrowhead near destination.
-            def xyz(code):
-                la, lo = np.radians([pos.loc[code, "lat"], pos.loc[code, "lon"]])
-                return np.array(
-                    [np.cos(la) * np.cos(lo), np.cos(la) * np.sin(lo), np.sin(la)]
-                )
-
-            u, v = xyz(a), xyz(b)
-            omega = np.arccos(np.clip(np.dot(u, v), -1, 1))
+            # Schematic quadratic arcs keep links continuous across the world
+            # view. Endpoints remain the true capitals; these are not routes.
             t = np.linspace(0, 1, 40)
-            pts = (
-                np.outer(1 - t, u) + np.outer(t, v)
-                if abs(np.sin(omega)) < 1e-8
-                else (
-                    np.outer(np.sin((1 - t) * omega), u)
-                    + np.outer(np.sin(t * omega), v)
-                )
-                / np.sin(omega)
+            start_lon, end_lon = float(pos.loc[a, "lon"]), float(pos.loc[b, "lon"])
+            start_lat, end_lat = float(pos.loc[a, "lat"]), float(pos.loc[b, "lat"])
+            control_lon = (start_lon + end_lon) / 2 + abs(end_lat - start_lat) * 0.12
+            control_lat = min(
+                84, (start_lat + end_lat) / 2 + min(50, abs(end_lon - start_lon) * 0.45)
             )
-            lat = np.degrees(np.arctan2(pts[:, 2], np.hypot(pts[:, 0], pts[:, 1])))
-            lon = np.degrees(np.arctan2(pts[:, 1], pts[:, 0]))
-            color = "#d56a24" if r.partner == selected else "#247c99"
+            lon = (
+                (1 - t) ** 2 * start_lon
+                + 2 * (1 - t) * t * control_lon
+                + t**2 * end_lon
+            )
+            lat = (
+                (1 - t) ** 2 * start_lat
+                + 2 * (1 - t) * t * control_lat
+                + t**2 * end_lat
+            )
+            color = "#e6b35e" if r.partner == selected else "#60bec8"
             width = 1 + 5 * math.sqrt(r.value / maxv)
             text = f"{a} → {b}<br>{r.value:,.0f} thousand USD<br>{r.share:.2%} of all partners"
             fig.add_trace(
@@ -271,15 +362,32 @@ def map_figure(country, d, direction, top, selected):
             go.Scattergeo(
                 lon=[pos.loc[p, "lon"] for p in codes],
                 lat=[pos.loc[p, "lat"] for p in codes],
-                text=[c if c in [country, selected] else "" for c in codes],
+                text=[
+                    (
+                        c
+                        if c in [country, selected]
+                        or c in ["USA", "MEX", "RUS", "JPN", "AUS", "SAU", "THA"]
+                        else ""
+                    )
+                    for c in codes
+                ],
                 hovertext=codes,
                 customdata=codes,
                 mode="markers+text",
-                textposition="top center",
+                textposition=[
+                    (
+                        "middle right"
+                        if c == "JPN"
+                        else "bottom left" if c == "THA" else "top center"
+                    )
+                    for c in codes
+                ],
+                textfont={"size": 13, "color": theme.MAP_TEXT},
                 marker={
                     "size": [11] + [6] * (len(codes) - 1),
-                    "color": [theme.country_color(country)]
-                    + ["#d56a24" if p == selected else "#247c99" for p in codes[1:]],
+                    "line": {"width": 1.2, "color": theme.MAP_BG},
+                    "color": ["#e6b35e"]
+                    + ["#e6b35e" if p == selected else "#60bec8" for p in codes[1:]],
                 },
                 hovertemplate="%{hovertext}<extra></extra>",
                 showlegend=False,
@@ -291,24 +399,40 @@ def map_figure(country, d, direction, top, selected):
                 lon=[None],
                 lat=[None],
                 mode="lines",
-                line={"width": 1 + 5 * math.sqrt(fraction), "color": "#247c99"},
+                line={"width": 1 + 5 * math.sqrt(fraction), "color": "#60bec8"},
                 name=f"${maxv*fraction/1e6:.1f}bn",
             )
         )
     fig.update_geos(
         projection_type="natural earth",
+        projection_rotation=dict(lon=0, lat=0, roll=0),
+        center=dict(lon=0, lat=10),
+        fitbounds=False,
+        lonaxis=dict(range=[-180, 180]),
+        lataxis=dict(range=[-60, 85]),
         showland=True,
-        landcolor="#f0f2f4",
+        landcolor=theme.MAP_LAND,
         showocean=True,
-        oceancolor="#f9fbfd",
+        oceancolor=theme.MAP_BG,
         showcountries=True,
-        countrycolor="white",
+        countrycolor=theme.MAP_BG,
+        bgcolor=theme.MAP_BG,
+        showcoastlines=False,
         showframe=False,
     )
     fig.update_layout(
-        height=510,
+        height=max(480, top * 26),
+        paper_bgcolor=theme.MAP_BG,
+        plot_bgcolor=theme.MAP_BG,
+        font=dict(color=theme.MAP_TEXT),
         margin=dict(l=0, r=0, t=15, b=10),
-        legend={"orientation": "h", "title": "Flow amount (line width)"},
+        legend={
+            "orientation": "h",
+            "title": "Flow amount",
+            "font": {"size": 11, "color": theme.MAP_TEXT},
+            "x": 0.02,
+            "y": 0,
+        },
         uirevision="world",
     )
     return fig
@@ -329,13 +453,18 @@ def figures(country, year, product, direction, top, view, selected):
                 z=rows,
                 zmin=0,
                 zmax=100,
-                colorscale="Blues",
+                colorscale=[
+                    [0, "#f0f5f6"],
+                    [0.2, "#99c6cc"],
+                    [0.5, "#378b97"],
+                    [1, "#064b5b"],
+                ],
                 colorbar={"title": "Share %"},
                 hovertemplate="%{y} / %{x}: %{z:.2f}%<extra></extra>",
             )
         )
         fig.update_layout(
-            height=460,
+            height=max(480, top * 26),
             margin=dict(t=20, b=90),
             xaxis_tickangle=-45,
             yaxis_autorange="reversed",
@@ -347,17 +476,40 @@ def figures(country, year, product, direction, top, view, selected):
             customdata=shown.partner.tolist(),
             orientation="h",
             marker_color=[
-                "#d56a24" if p == selected else "#247c99" for p in shown.partner
+                "#c48c36" if p == selected else "#147e8b" for p in shown.partner
             ],
             text=[f"{v:.1%}" for v in shown.share],
-            textposition="auto",
+            textposition="outside",
+            cliponaxis=False,
+            width=0.55,
             hovertemplate="%{y}: %{x:.2f}%<extra></extra>",
         )
     )
     rank.update_layout(
-        height=400,
-        margin=dict(l=45, r=20, t=15, b=40),
-        xaxis_title="Share of all partners (%)",
+        height=max(480, top * 26),
+        margin=dict(l=75, r=37, t=30, b=35),
+        xaxis=dict(
+            side="top",
+            ticksuffix="%",
+            range=[0, max(float(shown.share.max() * 125) if len(shown) else 1, 1)],
+            nticks=4,
+            tickangle=0,
+            tickfont=dict(size=11),
+        ),
+        yaxis=dict(
+            tickvals=shown.partner.tolist(),
+            ticktext=[
+                {
+                    "Russian Federation": "Russia",
+                    "United States of America": "United States",
+                    "United Kingdom": "UK",
+                }.get(n, n)
+                for n in shown.name
+            ],
+            tickfont=dict(size=11),
+            showgrid=False,
+        ),
+        xaxis_title=None,
         yaxis_autorange="reversed",
     )
     reg = go.Figure()
@@ -373,6 +525,12 @@ def figures(country, year, product, direction, top, view, selected):
                 x=["HS" + c for c, r in summaries],
                 y=[r[0][region] * 100 for c, r in summaries],
                 marker_color=COLORS[i],
+                text=[
+                    f"{r[0][region]*100:.1f}%" if r[0][region] >= 0.055 else ""
+                    for c, r in summaries
+                ],
+                textposition="inside",
+                insidetextfont=dict(color="white", size=12),
                 hovertemplate="%{x}: %{y:.2f}%<extra>" + region + "</extra>",
             )
         )
@@ -402,6 +560,16 @@ def figures(country, year, product, direction, top, view, selected):
         if direction == "import"
         else ". Compare these shares to locate differences; they do not establish a preference after controlling for region size."
     )
+    bounds = {c: r for c, r in summaries}
+    if all(c in bounds and bounds[c][1] is not None for c in ["85", "87"]):
+        a, b = bounds["85"], bounds["87"]
+        if b[2] < a[1]:
+            comparison = "HS87 has a lower same-region share than HS85, even when all unknown HS87 trade is assigned to the focal region. "
+        elif a[2] < b[1]:
+            comparison = "HS87 has a higher same-region share than HS85, even when all unknown HS85 trade is assigned to the focal region. "
+        else:
+            comparison = "The same-region bounds overlap; unknown-region trade prevents an unambiguous ordering. "
+        finding = comparison + finding
     detail = "Select a partner on the map or ranking."
     if selected:
         r = d[d.partner.eq(selected)]
@@ -487,6 +655,68 @@ def register_callbacks(app):
             message = str(error)
             empty = theme.empty_figure(message)
             return empty, empty, empty, message, "No result calculated.", "", []
+
+    @app.callback(
+        Output(cid("kpis"), "children"),
+        Output(cid("remaining"), "children"),
+        Input(cid("records"), "data"),
+        Input(cid("top"), "value"),
+    )
+    def summary(rows, top):
+        d = pd.DataFrame(rows or [])
+        total = float(d.value.sum()) if len(d) else 0
+        coverage = float(d.head(top).value.sum() / total) if total > 0 else 0
+        return components.kpi_row(
+            [
+                ("Selected trade value", theme.fmt_usd(total, 1)),
+                (f"Top {top} coverage", f"{coverage:.1%}" if total > 0 else "—"),
+                ("Complete scope", f"{len(d)} partners"),
+            ]
+        ), [
+            html.Span("Remaining partners"),
+            html.Strong(f"{1-coverage:.1%}" if total > 0 else "—"),
+        ]
+
+    @app.callback(
+        Output(cid("map-card"), "className"),
+        Output(cid("map-title"), "children"),
+        Output(cid("map-caption"), "children"),
+        Input(cid("view"), "value"),
+    )
+    def map_style(view):
+        return (
+            "card m3-map-card" + (" m3-matrix-card" if view == "matrix" else ""),
+            "01  Six-economy partner matrix" if view == "matrix" else "01  Trade flows",
+            (
+                "Fixed partner columns · All-partner shares · Common 0–100% scale. Other includes partners outside the fixed columns."
+                if view == "matrix"
+                else "Arrows point to importers · Width encodes value. Capitals locate economies; curves are not transport routes."
+            ),
+        )
+
+    @app.callback(
+        Output(cid("country"), "value", allow_duplicate=True),
+        Output(cid("selected"), "data", allow_duplicate=True),
+        *[
+            Output(cid(k), "value")
+            for k in ["year", "product", "direction", "top", "view"]
+        ],
+        Input(cid("reset"), "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def reset(n):
+        return "CHN", None, 2023, "87", "export", 10, "map"
+
+    @app.callback(
+        Output(cid("selected"), "data", allow_duplicate=True),
+        Input(cid("table"), "active_cell"),
+        State(cid("table"), "derived_viewport_data"),
+        prevent_initial_call=True,
+    )
+    def select_table(cell, rows):
+        if not cell or not rows or cell["row"] >= len(rows):
+            return no_update
+        return rows[cell["row"]]["partner"]
 
     @app.callback(
         Output(cid("download"), "data"),

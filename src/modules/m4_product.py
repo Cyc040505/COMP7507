@@ -557,10 +557,10 @@ def heat_figure(d, countries, products, metric):
             hovertemplate="<b>%{customdata[0]} · HS%{customdata[1]}</b><br>%{customdata[2]}<br>Exports: %{customdata[3]:,.0f} thousand USD<br>Economy share: %{customdata[4]:.2f}%<br>World share: %{customdata[5]:.2f}%<br>RCA: %{customdata[6]:.3f}<extra></extra>",
         )
     )
-    base_style(fig, max(370, 110 + 34 * len(products)))
+    base_style(fig, max(370, 110 + 42 * len(products)))
     ticks = [label(p) for p in products]
     # Wrap long UN descriptions without concealing their codes.
-    ticks = ["<br>".join(wrap(s, 34)) for s in ticks]
+    ticks = ["<br>".join(wrap(s, 24)) for s in ticks]
     fig.update_layout(
         plot_bgcolor="#e8edf2",
         margin=dict(l=20, r=22, t=60, b=20),
@@ -572,6 +572,7 @@ def heat_figure(d, countries, products, metric):
             fixedrange=True,
         ),
         yaxis=dict(
+            type="category",
             tickmode="array",
             tickvals=products,
             ticktext=ticks,
@@ -595,7 +596,7 @@ def highlight_product(fig, product):
         trace.marker.opacity = [1.0 if p == product else 0.48 for p in codes]
         trace.marker.line.color = theme.ACCENT
         trace.marker.line.width = [1.5 if p == product else 0 for p in codes]
-    ticks = ["<br>".join(wrap(label(p), 32)) for p in codes]
+    ticks = ["<br>".join(wrap(label(p), 24)) for p in codes]
     ticks[index] = "<b>" + ticks[index] + "</b>"
     fig.update_yaxes(tickmode="array", tickvals=codes, ticktext=ticks)
     fig.add_shape(
@@ -659,9 +660,10 @@ def detail_figure(d, focus, product):
             title="Share of all-product exports (%)", rangemode="tozero", ticksuffix="%"
         ),
         yaxis=dict(
+            type="category",
             tickmode="array",
             tickvals=codes,
-            ticktext=["<br>".join(wrap(label(p), 32)) for p in codes],
+            ticktext=["<br>".join(wrap(label(p), 24)) for p in codes],
             autorange="reversed",
             automargin=True,
         ),
@@ -761,9 +763,10 @@ def comparison_figure(rows, baseline, year, product=None):
             title="Share of all-product exports (%)", rangemode="tozero", ticksuffix="%"
         ),
         yaxis=dict(
+            type="category",
             tickmode="array",
             tickvals=list(rows.hs2),
-            ticktext=["<br>".join(wrap(label(p), 32)) for p in rows.hs2],
+            ticktext=["<br>".join(wrap(label(p), 24)) for p in rows.hs2],
             autorange="reversed",
             automargin=True,
         ),
@@ -919,7 +922,9 @@ def register_callbacks(app):
         chosen = [c for c in dict.fromkeys(selected or []) if c in FOCUS_COUNTRIES][:6]
         excluded = sorted(set(selected or []) - set(FOCUS_COUNTRIES))
         if excluded:
-            messages.append("Outside the six project cases: " + ", ".join(excluded) + ".")
+            messages.append(
+                "Outside the six project cases: " + ", ".join(excluded) + "."
+            )
         if len(selected or []) > 6:
             messages.append(
                 "First six manual selections shown; reduce the list to include different cases."
@@ -972,7 +977,9 @@ def register_callbacks(app):
         if missing:
             messages.append("No recorded trade this year: " + ", ".join(missing) + ".")
         if mode == "income" and len(chosen) == 1:
-            messages.append("Only the anchor qualifies; no peer comparison is available. The income range has not been widened automatically.")
+            messages.append(
+                "Only the anchor qualifies; no peer comparison is available. The income range has not been widened automatically."
+            )
         products = product_set(d, chosen, requested)
         absent = sorted(set(requested or []) - set(products))
         if absent:
