@@ -119,6 +119,7 @@ def placeholder_graph(
     )
     return dcc.Graph(
         id=graph_id,
+        style={"height": f"{figure.layout.height or 420}px"},
         figure=figure,
         config={"displayModeBar": False, "responsive": True},
         **kwargs,

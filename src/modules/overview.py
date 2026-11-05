@@ -57,9 +57,17 @@ def layout():
             ),
             html.Div(
                 [
-                    components.card("Global export value", dcc.Graph(id=cid("total"))),
                     components.card(
-                        "Share of complete world exports", dcc.Graph(id=cid("share"))
+                        "Global export value",
+                        dcc.Graph(
+                            id=cid("total"), responsive=True, style={"height": "420px"}
+                        ),
+                    ),
+                    components.card(
+                        "Share of complete world exports",
+                        dcc.Graph(
+                            id=cid("share"), responsive=True, style={"height": "420px"}
+                        ),
                     ),
                 ],
                 className="m0-charts",
@@ -111,7 +119,14 @@ def figures(year, view):
             hovertemplate="%{x}: $%{y:.2f}T<extra></extra>",
         )
     )
-    total.add_vline(x=year, line_dash="dot")
+    total.add_vline(
+        x=year,
+        line_dash="dot",
+        line_color="#9aabbc",
+        line_width=1.5,
+        annotation_text=str(year),
+        annotation_position="top left",
+    )
     total.update_layout(
         height=420,
         yaxis_title="Trillion current USD",
@@ -154,7 +169,14 @@ def figures(year, view):
                     hovertemplate="%{x}: %{y:.2f}%<extra>" + country + "</extra>",
                 )
             )
-        fig.add_vline(x=year, line_dash="dot")
+        fig.add_vline(
+            x=year,
+            line_dash="dot",
+            line_color="#9aabbc",
+            line_width=1.5,
+            annotation_text=str(year),
+            annotation_position="top left",
+        )
         fig.update_layout(
             yaxis_title="World export share (%)",
             xaxis_title="Year",

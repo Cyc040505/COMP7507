@@ -18,15 +18,15 @@ DEFAULT_MODULE = "M0"
 # --- building blocks ----------------------------------------------------------
 def _header() -> html.Header:
     return html.Header(
-        className="app-header",
-        children=[
+        [
             html.Div(
                 [
-                    html.H1("Global trade, in perspective"),
-                    html.P(
-                        "Scale, geography and product structure", className="subtitle"
+                    html.Span("Trade atlas", className="brand-name"),
+                    html.Span(
+                        "Global trade over three decades", className="brand-caption"
                     ),
-                ]
+                ],
+                className="masthead-brand",
             ),
             html.Div(
                 [
@@ -36,6 +36,7 @@ def _header() -> html.Header:
                 className="header-meta",
             ),
         ],
+        className="app-header",
     )
 
 
@@ -70,30 +71,6 @@ def _nav() -> html.Nav:
     return html.Nav(buttons, className="nav", **{"aria-label": "Analysis modules"})
 
 
-def _sidebar():
-    return html.Aside(
-        className="left-col",
-        children=[
-            html.Div(
-                [
-                    html.Div("Trade atlas", className="brand-name"),
-                    html.P("COMP7507 · Group 7", className="brand-caption"),
-                ],
-                className="sidebar-brand",
-            ),
-            _nav(),
-            html.Div(
-                [
-                    html.Strong("Six focal economies"),
-                    html.P("USA · DEU · CHN\nMEX · NLD · ITA"),
-                    html.Small("Worldwide partners.\nIndependent module controls."),
-                ],
-                className="sidebar-context",
-            ),
-        ],
-    )
-
-
 def _view_area() -> html.Div:
     return html.Div(
         className="view-area",
@@ -101,7 +78,7 @@ def _view_area() -> html.Div:
             dcc.Loading(
                 id="view-loading",
                 type="dot",
-                color="#147e8b",
+                color="#315c88",
                 delay_show=350,
                 children=html.Div(
                     id="module-host", className="module-host", children=build_panels()
@@ -135,10 +112,9 @@ def build_layout() -> html.Div:
             dcc.Store(id=ACTIVE_MODULE, storage_type="memory", data=DEFAULT_MODULE),
             dcc.Store(id=RESIZE_TOKEN, storage_type="memory"),
             html.A("Skip to analysis", href="#analysis-main", className="skip-link"),
-            _sidebar(),
+            html.Div([_header(), _nav()], className="app-chrome"),
             html.Div(
                 [
-                    _header(),
                     html.Main(
                         _view_area(),
                         id="analysis-main",

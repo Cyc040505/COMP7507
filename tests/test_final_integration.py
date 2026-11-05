@@ -181,7 +181,13 @@ class FinalIntegration(unittest.TestCase):
             )
         f = g.scatter_figure(res, selected)
         i = list(f.data[0].customdata).index(selected)
-        self.assertEqual(f.data[0].marker.color[i], "#d56a24")
+        self.assertTrue(
+            all(
+                color != f.data[0].marker.color[i]
+                for j, color in enumerate(f.data[0].marker.color)
+                if j != i
+            )
+        )
         vals = {
             "active-module.data": "M1",
             "M1-year.value": 2023,

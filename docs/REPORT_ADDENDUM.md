@@ -17,6 +17,8 @@ M5 separates a return in nominal export value from structural changes. For the d
 All findings derive from real data. Official annual bilateral files were reaggregated and reconciled to the shared product, country and world totals. Unknown regions are retained, absent observations are not silently filled, and regional change intervals combine both endpoints’ uncertainty. The six cases are not a representative global sample. Monetary values are nominal, and HS2 chapters are broad categories. See FINAL_REVIEW.md and final_example_audit.json for reproducible values, screenshots and validation.
 
 
-## 2026-11-05 视觉与交互定稿
+## 2026-11-06 电脑端视觉重构
 
-展示统一为窄侧栏、紧凑局部控制、白底统计图与深色伙伴地图。M3地图/份额并列，全部伙伴分母、Top-N覆盖率和剩余份额直接显示；曲线为真实首都间的示意连接，方向和金额编码保持不变。M4明确HS2为分类轴，M5两张时间图保持同宽对齐。此次改版不改变数据、计算、既定图表任务与验收目标；35组绘图场景和22个数据/分析文件均通过前后比对，最终91项检查通过。详细评价见VISUAL_REVIEW.md。
+六模块改用顶部导航与完整电脑宽度。M2、M4将关联比较图并列，M5将发现与指标放到右侧并保持两图横轴对齐；M3保留深色地图，扩大地理视图，加入欧洲标签引线和清晰的选中金额。字体改为Avenir Next及系统后备字体，界面以白、灰蓝、单一蓝色强调为主，金色标记焦点和选择，国家颜色跨模块保持一致。
+
+图表类型、真实坐标、金额、分母、样本范围和验收目标不变；35组绘图场景与22个数据/分析文件均通过前后比对，91项检查通过。此次仅优化电脑端。完整评价与真实页面设计稿见 [VISUAL_REVIEW.md](VISUAL_REVIEW.md)。

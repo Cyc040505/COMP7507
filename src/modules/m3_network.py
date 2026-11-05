@@ -15,7 +15,7 @@ from src.module_base import guard_active
 MODULE_ID = "M3"
 NAV_LABEL = "M3  Network & Partners"
 ORDER = 3
-COLORS = ["#147e8b", "#c48c36", "#738ba5", "#698c7c", "#b48673", "#bcc6ce"]
+COLORS = ["#637f91", "#bb9360", "#4c7096", "#6f9389", "#a58d9d", "#c6ccd3"]
 
 
 def cid(k):
@@ -144,6 +144,8 @@ def layout():
                             ),
                             dcc.Graph(
                                 id=cid("graph"),
+                                responsive=True,
+                                style={"height": "435px"},
                                 className="graph-interactive",
                                 config={**graph_config, "topojsonURL": "/assets/"},
                             ),
@@ -168,7 +170,12 @@ def layout():
                                 "Share of trade with all partners",
                                 className="chart-subtitle",
                             ),
-                            dcc.Graph(id=cid("ranking"), config=graph_config),
+                            dcc.Graph(
+                                id=cid("ranking"),
+                                responsive=True,
+                                style={"height": "435px"},
+                                config=graph_config,
+                            ),
                             html.Div(id=cid("remaining"), className="m3-remaining"),
                         ],
                         extra_class="m3-rank-card",
@@ -185,7 +192,12 @@ def layout():
                                 "HS85 · Electrical equipment  /  HS87 · Vehicles & parts",
                                 className="chart-subtitle",
                             ),
-                            dcc.Graph(id=cid("regions"), config=graph_config),
+                            dcc.Graph(
+                                id=cid("regions"),
+                                responsive=True,
+                                style={"height": "350px"},
+                                config=graph_config,
+                            ),
                         ],
                     ),
                     components.verification_panel(
@@ -272,7 +284,7 @@ def map_figure(country, d, direction, top, selected):
         go.Choropleth(
             locations=FOCUS,
             z=[1] * 6,
-            colorscale=[[0, "#365f70"], [1, "#365f70"]],
+            colorscale=[[0, "#3a5a6e"], [1, "#3a5a6e"]],
             showscale=False,
             customdata=FOCUS,
             hovertemplate="%{location}<extra>Focal economy</extra>",
@@ -283,7 +295,7 @@ def map_figure(country, d, direction, top, selected):
         go.Choropleth(
             locations=[country],
             z=[1],
-            colorscale=[[0, "#c48c36"], [1, "#c48c36"]],
+            colorscale=[[0, "#bd955c"], [1, "#bd955c"]],
             showscale=False,
             marker_line_color=theme.MAP_BG,
             hovertemplate="%{location}<extra>Selected focal economy</extra>",
@@ -318,7 +330,7 @@ def map_figure(country, d, direction, top, selected):
                 + 2 * (1 - t) * t * control_lat
                 + t**2 * end_lat
             )
-            color = "#e6b35e" if r.partner == selected else "#60bec8"
+            color = "#e5b878" if r.partner == selected else "#75b5c7"
             width = 1 + 5 * math.sqrt(r.value / maxv)
             text = f"{a} → {b}<br>{r.value:,.0f} thousand USD<br>{r.share:.2%} of all partners"
             fig.add_trace(
@@ -364,9 +376,17 @@ def map_figure(country, d, direction, top, selected):
                 lat=[pos.loc[p, "lat"] for p in codes],
                 text=[
                     (
-                        c
-                        if c in [country, selected]
-                        or c in ["USA", "MEX", "RUS", "JPN", "AUS", "SAU", "THA"]
+                        {
+                            "CHN": "China",
+                            "USA": "United States",
+                            "MEX": "Mexico",
+                            "RUS": "Russia",
+                            "JPN": "Japan",
+                            "AUS": "Australia",
+                            "THA": "Thailand",
+                            "SAU": "Saudi Arabia",
+                        }.get(c, c)
+                        if c not in {"GBR", "DEU", "FRA", "NLD", "BEL"}
                         else ""
                     )
                     for c in codes
@@ -386,10 +406,34 @@ def map_figure(country, d, direction, top, selected):
                 marker={
                     "size": [11] + [6] * (len(codes) - 1),
                     "line": {"width": 1.2, "color": theme.MAP_BG},
-                    "color": ["#e6b35e"]
-                    + ["#e6b35e" if p == selected else "#60bec8" for p in codes[1:]],
+                    "color": ["#e5b878"]
+                    + ["#e5b878" if p == selected else "#75b5c7" for p in codes[1:]],
                 },
                 hovertemplate="%{hovertext}<extra></extra>",
+                showlegend=False,
+            )
+        )
+    callouts = {
+        "GBR": (-30, 65, "United Kingdom", "top left"),
+        "DEU": (33, 69, "Germany", "top right"),
+        "FRA": (-17, 31, "France", "bottom left"),
+        "NLD": (-19, 56, "Netherlands", "middle left"),
+        "BEL": (29, 34, "Belgium", "bottom right"),
+    }
+    for partner, (lon, lat, name, placement) in callouts.items():
+        if partner not in codes or partner not in pos.index:
+            continue
+        fig.add_trace(
+            go.Scattergeo(
+                lon=[float(pos.loc[partner, "lon"]), lon],
+                lat=[float(pos.loc[partner, "lat"]), lat],
+                mode="lines+text",
+                text=["", name],
+                textposition=placement,
+                textfont=dict(size=12, color=theme.MAP_TEXT),
+                line=dict(width=1, color="#9cb0c0"),
+                customdata=[partner, partner],
+                hoverinfo="skip",
                 showlegend=False,
             )
         )
@@ -399,7 +443,7 @@ def map_figure(country, d, direction, top, selected):
                 lon=[None],
                 lat=[None],
                 mode="lines",
-                line={"width": 1 + 5 * math.sqrt(fraction), "color": "#60bec8"},
+                line={"width": 1 + 5 * math.sqrt(fraction), "color": "#75b5c7"},
                 name=f"${maxv*fraction/1e6:.1f}bn",
             )
         )
@@ -454,10 +498,10 @@ def figures(country, year, product, direction, top, view, selected):
                 zmin=0,
                 zmax=100,
                 colorscale=[
-                    [0, "#f0f5f6"],
-                    [0.2, "#99c6cc"],
-                    [0.5, "#378b97"],
-                    [1, "#064b5b"],
+                    [0, "#f2f5f9"],
+                    [0.2, "#b6c9dd"],
+                    [0.5, "#6289b0"],
+                    [1, "#254b73"],
                 ],
                 colorbar={"title": "Share %"},
                 hovertemplate="%{y} / %{x}: %{z:.2f}%<extra></extra>",
@@ -476,7 +520,7 @@ def figures(country, year, product, direction, top, view, selected):
             customdata=shown.partner.tolist(),
             orientation="h",
             marker_color=[
-                "#c48c36" if p == selected else "#147e8b" for p in shown.partner
+                "#d4a15b" if p == selected else theme.ACCENT for p in shown.partner
             ],
             text=[f"{v:.1%}" for v in shown.share],
             textposition="outside",
@@ -494,7 +538,7 @@ def figures(country, year, product, direction, top, view, selected):
             range=[0, max(float(shown.share.max() * 125) if len(shown) else 1, 1)],
             nticks=4,
             tickangle=0,
-            tickfont=dict(size=11),
+            tickfont=dict(size=12),
         ),
         yaxis=dict(
             tickvals=shown.partner.tolist(),
@@ -506,7 +550,7 @@ def figures(country, year, product, direction, top, view, selected):
                 }.get(n, n)
                 for n in shown.name
             ],
-            tickfont=dict(size=11),
+            tickfont=dict(size=12),
             showgrid=False,
         ),
         xaxis_title=None,
@@ -536,7 +580,8 @@ def figures(country, year, product, direction, top, view, selected):
         )
     reg.update_layout(
         barmode="stack",
-        height=400,
+        uniformtext=dict(minsize=12, mode="hide"),
+        height=350,
         yaxis={"range": [0, 100], "title": "All-partner share (%)"},
         legend={"orientation": "h", "y": -0.2},
         margin=dict(l=45, r=10, t=15, b=100),
@@ -570,14 +615,29 @@ def figures(country, year, product, direction, top, view, selected):
         else:
             comparison = "The same-region bounds overlap; unknown-region trade prevents an unambiguous ordering. "
         finding = comparison + finding
-    detail = "Select a partner on the map or ranking."
+    detail = html.Span("Select a partner on the map or ranking.")
     if selected:
-        r = d[d.partner.eq(selected)]
-        detail = f"{selected}: " + (
-            f"{r.iloc[0].share:.2%}; ${r.iloc[0].value/1e6:.3f}bn; {r.iloc[0].region}."
-            if len(r)
-            else "No recorded flow in the current scope."
-        )
+        selected_rows = d[d.partner.eq(selected)]
+        if len(selected_rows):
+            row = selected_rows.iloc[0]
+            route = (
+                f"{country} → {selected}"
+                if direction == "export"
+                else f"{selected} → {country}"
+            )
+            detail = html.Div(
+                [
+                    html.Span(f"{route} / {row['name']}", className="m3-flow-name"),
+                    html.Strong(f"${row.value/1e6:.3f}bn", className="m3-flow-value"),
+                    html.Span(
+                        f"{row.share:.2%} of all partners · {row.region}",
+                        className="m3-flow-share",
+                    ),
+                ],
+                className="m3-flow-detail",
+            )
+        else:
+            detail = html.Span(f"{selected}: No recorded flow in the current scope.")
     records = d.assign(
         year=year,
         focal_country=country,

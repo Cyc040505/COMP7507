@@ -29,5 +29,6 @@
     "src/analytics/time_change.py": "ea04ac167dfacc5f7f05bf62f334b5aa6b6305fc5c491d23746664ec4d29b25b"
   },
   "tests_passed": 91,
-  "scope": "Trace type/x/y/z/customdata and M3 export records, M1 statistics, M5 recovery rows and summary unchanged. Capitals, flow directions and amount-width relation tested separately."
+  "scope": "Trace type/x/y/z/customdata and M3 export records, M1 statistics, M5 recovery rows and summary unchanged. Capitals, flow directions and amount-width relation tested separately.",
+  "redesign_baseline_commit": "437d7639103d050973fe4a684abb6271b89bebad"
 }

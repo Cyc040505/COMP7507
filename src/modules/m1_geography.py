@@ -67,7 +67,7 @@ def _focus_subset(frame, show) -> "pd.DataFrame":
 
 
 # Sequential, high-contrast palette shared by the map and partner ranking.
-_MAP_SCALE = [[0, "#8ac8ce"], [0.35, "#429dac"], [0.7, "#187487"], [1, "#084b63"]]
+_MAP_SCALE = [[0, "#bdcfe0"], [0.35, "#8ba9c5"], [0.7, "#557fa5"], [1, "#254b73"]]
 _EXPORTER_COLOR = "#db8b35"
 
 
@@ -229,7 +229,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             go.Choropleth(
                 locations=[selected],
                 z=[1],
-                colorscale=[[0, "#d56a24"], [1, "#d56a24"]],
+                colorscale=[[0, "#c79750"], [1, "#c79750"]],
                 showscale=False,
                 marker_line_color="#713410",
                 hovertemplate=selected + " · selected partner<extra></extra>",
@@ -572,9 +572,25 @@ def layout():
                 className="module-controls",
             ),
             html.Div(id=cid("stats"), className="stats-body"),
-            components.card(
-                "Distance and partner export share",
-                dcc.Graph(id=cid("scatter"), config={"displayModeBar": False}),
+            html.Div(
+                [
+                    components.card(
+                        "Distance and partner export share",
+                        dcc.Graph(
+                            id=cid("scatter"),
+                            style={"height": "430px"},
+                            config={"displayModeBar": False},
+                        ),
+                    ),
+                    components.verification_panel(
+                        _HYPOTHESIS,
+                        "Select a country, year and product to see the map and partner lists.",
+                        "A dynamic conclusion will follow once the selection has enough coverage.",
+                        evidence_id=cid("evidence"),
+                        conclusion_id=cid("conclusion"),
+                    ),
+                ],
+                className="m1-analysis",
             ),
             html.Div(
                 id=cid("selection-detail"), className="selection-detail", role="status"
@@ -593,6 +609,9 @@ def layout():
                                 [html.I(className="m1-key-partner"), "Trade partner"]
                             ),
                             html.Span(
+                                [html.I(className="m1-key-selected"), "Selected partner"]
+                            ),
+                            html.Span(
                                 id=cid("map-encoding"), className="m1-encoding-key"
                             ),
                         ],
@@ -606,6 +625,7 @@ def layout():
                         [
                             dcc.Graph(
                                 id=cid("map"),
+                                style={"height": "410px"},
                                 figure=theme.empty_figure(
                                     "Loading partner geography…", height=410
                                 ),
@@ -627,6 +647,8 @@ def layout():
                                 [
                                     dcc.Graph(
                                         id=cid("ranking"),
+                                        responsive=True,
+                                        style={"height": "260px"},
                                         config={"displayModeBar": False},
                                     ),
                                     html.Div(id=cid("map-summary")),
@@ -645,13 +667,6 @@ def layout():
                     ),
                 ],
                 className="card m1-map-card",
-            ),
-            components.verification_panel(
-                _HYPOTHESIS,
-                "Select a country, year and product to see the map and partner lists.",
-                "A dynamic conclusion will follow once the selection has enough coverage.",
-                evidence_id=cid("evidence"),
-                conclusion_id=cid("conclusion"),
             ),
             html.Details(
                 [
@@ -687,7 +702,7 @@ def layout():
                     html.Summary("How this view works"),
                     html.Button("Download complete partner evidence", id=cid("export")),
                     html.P(
-                        "The amber country marks the exporter. Partner countries are filled in teal: darker means a larger export share in Top 10 by share and Top 40 partners, or a shorter distance in Nearest 10. Grey countries are outside the displayed selection. Hover over a country to see its export value, share and distance. The ranking summarises the current map selection. The table lists the top-10 partners by share and the nearest 10 partners in one place and marks any overlap."
+                        "The amber country marks the exporter. Partner countries are filled in blue: darker means a larger export share in Top 10 by share and Top 40 partners, or a shorter distance in Nearest 10. Grey countries are outside the displayed selection. Hover over a country to see its export value, share and distance. The ranking summarises the current map selection. The table lists the top-10 partners by share and the nearest 10 partners in one place and marks any overlap."
                     ),
                     html.P(
                         "Spearman ρ is reported as a supporting description of the distance–share association, not a causal estimate."
@@ -699,6 +714,12 @@ def layout():
 
 
 def register_callbacks(app):
+    @app.callback(Output(cid("ranking"), "style"), Input(cid("ranking"), "figure"))
+    def ranking_height(figure):
+        # Keep all Top-40 labels legible inside the scrollable ranking rail.
+        height = (figure or {}).get("layout", {}).get("height") or 260
+        return {"height": f"{max(260, int(height))}px"}
+
     @app.callback(
         Output(cid("selection-detail"), "children"),
         Input(cid("selected"), "data"),
@@ -912,7 +933,7 @@ def scatter_figure(res, selected=None):
             text=d.name,
             marker={
                 "size": 8,
-                "color": ["#d56a24" if p == selected else "#247c99" for p in d.partner],
+                "color": ["#c79750" if p == selected else "#315c88" for p in d.partner],
             },
             hovertemplate="%{text} (%{customdata})<br>%{x:,.0f} km · %{y:.3f}%<extra></extra>",
         )
@@ -951,7 +972,7 @@ def ranking_figure(res, show, selected):
             y=d.partner,
             customdata=d.partner,
             orientation="h",
-            marker_color=["#d56a24" if p == selected else "#247c99" for p in d.partner],
+            marker_color=["#c79750" if p == selected else "#315c88" for p in d.partner],
             hovertemplate="%{y}: %{x:.3f}%<extra></extra>",
         )
     )

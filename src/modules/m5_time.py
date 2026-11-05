@@ -109,166 +109,206 @@ def layout():
             dcc.Download(id=cid("download")),
             html.Div(
                 [
-                    html.Span("TIME / M5", className="m5-eyebrow"),
-                    html.H2("Has trade recovered — and what changed?"),
-                    html.P(
-                        "Compare the full recovery path, then check product and regional partner shares."
+                    html.Div(
+                        [
+                            html.Span("TIME / M5", className="m5-eyebrow"),
+                            html.H2("Recovery & structural change"),
+                            html.P(
+                                "Compare the full recovery path, then check product and regional partner shares."
+                            ),
+                        ],
+                        className="m5-heading",
                     ),
+                    html.Div(id=cid("guide"), className="m5-guide"),
                 ],
-                className="m5-heading",
+                className="m5-intro-row",
             ),
             html.Div(
                 [
-                    html.Button(text, id=cid(key), n_clicks=0)
-                    for key, text in [
-                        ("pandemic", "01 · Pandemic recovery"),
-                        ("vehicles", "02 · Vehicles & parts"),
-                        ("crisis", "03 · Financial crisis"),
-                        ("import", "Use current M4 selection"),
-                    ]
+                    html.Div(
+                        [
+                            html.Button(text, id=cid(key), n_clicks=0)
+                            for key, text in [
+                                ("pandemic", "01 · Pandemic recovery"),
+                                ("vehicles", "02 · Vehicles & parts"),
+                                ("crisis", "03 · Financial crisis"),
+                                ("import", "Use current M4 selection"),
+                            ]
+                        ],
+                        className="m5-presets",
+                        id=cid("presets"),
+                    ),
+                    html.Details(
+                        [
+                            html.Summary("Customize this comparison"),
+                            html.Div(
+                                [
+                                    field(
+                                        "Six focus economies · choose 1–4",
+                                        dcc.Dropdown(
+                                            id=cid("countries"),
+                                            options=[
+                                                {"label": f"{ns[c]} ({c})", "value": c}
+                                                for c in FOCUS_COUNTRIES
+                                            ],
+                                            value=["CHN", "DEU", "MEX"],
+                                            multi=True,
+                                        ),
+                                    ),
+                                    field(
+                                        "Export scope · HS2 chapter",
+                                        dcc.Dropdown(
+                                            id=cid("product"),
+                                            options=[
+                                                {
+                                                    "label": "All products",
+                                                    "value": "TOTAL",
+                                                }
+                                            ]
+                                            + [
+                                                {"label": label(p), "value": p}
+                                                for p in chapters()
+                                            ],
+                                            value="TOTAL",
+                                            clearable=False,
+                                        ),
+                                    ),
+                                    field(
+                                        "Baseline · index = 100",
+                                        dcc.Dropdown(
+                                            id=cid("baseline"),
+                                            options=YEARS,
+                                            value=2019,
+                                            clearable=False,
+                                        ),
+                                    ),
+                                    field(
+                                        "Event marker · annual data",
+                                        dcc.Dropdown(
+                                            id=cid("event"),
+                                            options=YEARS,
+                                            value=2020,
+                                            clearable=False,
+                                        ),
+                                    ),
+                                ],
+                                className="m5-controls",
+                            ),
+                            html.Div(
+                                [
+                                    html.Span(
+                                        "Observation window · summaries stop at the right endpoint"
+                                    ),
+                                    dcc.RangeSlider(
+                                        id=cid("window"),
+                                        min=1995,
+                                        max=2024,
+                                        value=[2016, 2024],
+                                        step=1,
+                                        marks={
+                                            1995: "1995",
+                                            2000: "2000",
+                                            2005: "2005",
+                                            2010: "2010",
+                                            2015: "2015",
+                                            2020: "2020",
+                                            2024: "2024",
+                                        },
+                                        allowCross=False,
+                                        tooltip={"placement": "bottom"},
+                                    ),
+                                ],
+                                className="m5-window",
+                            ),
+                        ],
+                        className="m5-methods m5-custom",
+                    ),
                 ],
-                className="m5-presets",
-                id=cid("presets"),
+                className="m5-toolbar",
             ),
-            html.Div(id=cid("guide"), className="m5-guide"),
             html.Div(id=cid("import-note"), className="m5-hint"),
-            html.Details(
+            html.Div(
                 [
-                    html.Summary("Customize this comparison"),
                     html.Div(
                         [
-                            field(
-                                "Six focus economies · choose 1–4",
-                                dcc.Dropdown(
-                                    id=cid("countries"),
-                                    options=[
-                                        {"label": f"{ns[c]} ({c})", "value": c}
-                                        for c in FOCUS_COUNTRIES
-                                    ],
-                                    value=["CHN", "DEU", "MEX"],
-                                    multi=True,
-                                ),
-                            ),
-                            field(
-                                "Export scope · HS2 chapter",
-                                dcc.Dropdown(
-                                    id=cid("product"),
-                                    options=[
-                                        {"label": "All products", "value": "TOTAL"}
+                            components.card(
+                                "01 / Follow nominal value recovery",
+                                html.Div(
+                                    [
+                                        html.P(
+                                            "100 = selected baseline. Dashed marker = event year. Click a point to inspect the same year in both charts.",
+                                            className="m5-hint",
+                                        ),
+                                        dcc.Graph(
+                                            id=cid("index"),
+                                            style={"height": "330px"},
+                                            config={
+                                                "displayModeBar": False,
+                                                "responsive": True,
+                                            },
+                                        ),
                                     ]
-                                    + [
-                                        {"label": label(p), "value": p}
-                                        for p in chapters()
-                                    ],
-                                    value="TOTAL",
-                                    clearable=False,
                                 ),
                             ),
-                            field(
-                                "Baseline · index = 100",
-                                dcc.Dropdown(
-                                    id=cid("baseline"),
-                                    options=YEARS,
-                                    value=2019,
-                                    clearable=False,
-                                ),
-                            ),
-                            field(
-                                "Event marker · annual data",
-                                dcc.Dropdown(
-                                    id=cid("event"),
-                                    options=YEARS,
-                                    value=2020,
-                                    clearable=False,
+                            components.card(
+                                "02 / Check structural indicators",
+                                html.Div(
+                                    [
+                                        dcc.RadioItems(
+                                            id=cid("metric"),
+                                            options=[
+                                                {
+                                                    "label": "Product share",
+                                                    "value": "product",
+                                                },
+                                                {
+                                                    "label": "Intra-regional partner share",
+                                                    "value": "intra",
+                                                },
+                                            ],
+                                            value="intra",
+                                            inline=True,
+                                            className="m5-radio",
+                                        ),
+                                        html.P(
+                                            id=cid("structure-note"),
+                                            className="m5-hint",
+                                        ),
+                                        dcc.Graph(
+                                            id=cid("structure"),
+                                            style={"height": "330px"},
+                                            config={
+                                                "displayModeBar": False,
+                                                "responsive": True,
+                                            },
+                                        ),
+                                    ]
                                 ),
                             ),
                         ],
-                        className="m5-controls",
+                        className="m5-timelines",
                     ),
-                    html.Div(
+                    html.Aside(
                         [
-                            html.Span(
-                                "Observation window · summaries stop at the right endpoint"
+                            html.Div(
+                                [
+                                    html.Strong("Finding"),
+                                    html.Div(id=cid("finding")),
+                                    html.Strong("Implication"),
+                                    html.Div(id=cid("implication")),
+                                ],
+                                className="m5-finding",
+                                role="status",
                             ),
-                            dcc.RangeSlider(
-                                id=cid("window"),
-                                min=1995,
-                                max=2024,
-                                value=[2016, 2024],
-                                step=1,
-                                marks={
-                                    1995: "1995",
-                                    2000: "2000",
-                                    2005: "2005",
-                                    2010: "2010",
-                                    2015: "2015",
-                                    2020: "2020",
-                                    2024: "2024",
-                                },
-                                allowCross=False,
-                                tooltip={"placement": "bottom"},
-                            ),
+                            html.Div(id=cid("kpis")),
+                            html.Div(id=cid("detail"), className="m5-detail"),
                         ],
-                        className="m5-window",
+                        className="m5-analysis-rail",
                     ),
                 ],
-                className="m5-methods m5-custom",
+                className="m5-analysis",
             ),
             html.Div(id=cid("message"), className="m5-source"),
-            html.Div(
-                [
-                    html.Strong("Finding"),
-                    html.Div(id=cid("finding")),
-                    html.Strong("Implication"),
-                    html.Div(id=cid("implication")),
-                ],
-                className="m5-finding",
-                role="status",
-            ),
-            html.Div(id=cid("kpis")),
-            components.card(
-                "01 / Follow nominal value recovery",
-                html.Div(
-                    [
-                        html.P(
-                            "100 = selected baseline. Dashed marker = event year. Click a point to inspect the same year in both charts.",
-                            className="m5-hint",
-                        ),
-                        dcc.Graph(
-                            id=cid("index"),
-                            style={"height": "350px"},
-                            config={"displayModeBar": False, "responsive": True},
-                        ),
-                    ]
-                ),
-            ),
-            components.card(
-                "02 / Check structural indicators",
-                html.Div(
-                    [
-                        dcc.RadioItems(
-                            id=cid("metric"),
-                            options=[
-                                {"label": "Product share", "value": "product"},
-                                {
-                                    "label": "Intra-regional partner share",
-                                    "value": "intra",
-                                },
-                            ],
-                            value="intra",
-                            inline=True,
-                            className="m5-radio",
-                        ),
-                        html.P(id=cid("structure-note"), className="m5-hint"),
-                        dcc.Graph(
-                            id=cid("structure"),
-                            style={"height": "350px"},
-                            config={"displayModeBar": False, "responsive": True},
-                        ),
-                        html.Div(id=cid("detail"), className="m5-detail"),
-                    ]
-                ),
-            ),
             html.Details(
                 [
                     html.Summary("Recovery status · expand for the complete table"),
@@ -373,7 +413,7 @@ def style(fig, start, end, event, selected, ytitle):
     theme.style_figure(fig, height=330)
     fig.update_layout(
         margin=dict(l=55, r=30, t=42, b=48),
-        legend=dict(orientation="h", y=1.15, x=0),
+        legend=dict(orientation="h", y=1.15, x=0, traceorder="normal"),
         hovermode="x unified",
         clickmode="event",
         dragmode=False,
@@ -395,7 +435,7 @@ def style(fig, start, end, event, selected, ytitle):
     if start <= selected <= end:
         fig.add_vline(
             x=selected,
-            line_color="#c2410c",
+            line_color="#b88742",
             line_width=1,
             annotation_text=f"Inspect {selected}",
             annotation_position="bottom left",

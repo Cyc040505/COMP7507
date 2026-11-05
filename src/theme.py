@@ -1,7 +1,7 @@
 """Design tokens and small Plotly helpers.
 
-Colours are ported from the report's section-4 UI
-(``COMP7507_报告_Group7.html``) so the running app matches the written proposal.
+The desktop palette separates interface controls, categorical country identity
+and quantitative scales. Analytical values and encodings remain module-owned.
 """
 
 from __future__ import annotations
@@ -11,14 +11,14 @@ from textwrap import wrap
 import plotly.graph_objects as go
 import plotly.io as pio
 
-# --- Palette (report section 4) ------------------------------------------------
-INK = "#1a2233"
-MUTED = "#5f6f86"
-LINE = "#e3e8ef"
-BG = "#f7f9fc"
-ACCENT = "#147e8b"
-ACCENT_SOFT = "#eaf4f5"
-ACCENT_LINE = "#b9d8dc"
+# --- Desktop palette ------------------------------------------------
+INK = "#202d40"
+MUTED = "#657185"
+LINE = "#e0e5eb"
+BG = "#f5f6f8"
+ACCENT = "#315c88"
+ACCENT_SOFT = "#edf2f7"
+ACCENT_LINE = "#b7c9db"
 
 # Narrative-stage accents.
 S1 = "#0d9488"
@@ -28,9 +28,9 @@ S4 = "#0369a1"
 
 STAGE_COLORS = {"stage0": MUTED, "stage1": S1, "stage2": S2, "stage3": S3}
 
-FONT = "Helvetica Neue, Segoe UI, Arial, sans-serif"
-MAP_BG = "#102a3b"
-MAP_LAND = "#29485d"
+FONT = "Avenir Next, Segoe UI, Arial, sans-serif"
+MAP_BG = "#132b3e"
+MAP_LAND = "#304a60"
 MAP_TEXT = "#eaf3f8"
 PLOT_TEMPLATE = "trade_review"
 pio.templates[PLOT_TEMPLATE] = go.layout.Template(
@@ -39,9 +39,9 @@ pio.templates[PLOT_TEMPLATE] = go.layout.Template(
         title=dict(font=dict(size=16, color=INK), x=0, xanchor="left"),
         paper_bgcolor="white",
         plot_bgcolor="white",
-        colorway=["#147e8b", "#c48c36", "#738ba5", "#776592", "#4a8271"],
+        colorway=["#315c88", "#c48c36", "#738ba5", "#776592", "#4a8271"],
         xaxis=dict(
-            gridcolor="#e5ecf0",
+            gridcolor="#e9edf2",
             gridwidth=1,
             zeroline=False,
             automargin=True,
@@ -49,7 +49,7 @@ pio.templates[PLOT_TEMPLATE] = go.layout.Template(
             title=dict(font=dict(size=12, color=MUTED), standoff=14),
         ),
         yaxis=dict(
-            gridcolor="#e5ecf0",
+            gridcolor="#e9edf2",
             gridwidth=1,
             zeroline=False,
             automargin=True,
@@ -95,24 +95,20 @@ def fmt_usd(value_stored: float, sig: int = 3) -> str:
 
 
 # --- Categorical country palette (M0 ranking) ----------------------------------
-# 8 distinct identities, assigned in the reference palette's validated categorical
-# order (CVD-safe, see the dataviz skill). Color follows the *country*, never its
-# rank, so a country keeps its hue as it climbs the ranking. The tail of the
-# ever-Top-10 set folds into a desaturated "Other" gray (the sanctioned exception
-# for a low-chroma bucket); every bar also carries a direct country label so
-# identity is never colour-alone (relief for the sub-3:1 slots).
+# Country identity remains stable across modules and years. Direct labels and
+# marker shapes supplement hue; colors never depend on rank.
 COUNTRY_COLORS: dict[str, str] = {
-    "CHN": "#2a78d6",  # blue
-    "USA": "#eb6834",  # orange
-    "DEU": "#1baf7a",  # aqua
-    "KOR": "#eda100",  # yellow
-    "JPN": "#e87ba4",  # magenta
-    "MEX": "#008300",  # green
-    "ITA": "#6250d6",  # violet
-    "FRA": "#e34948",  # red
+    "CHN": "#4366a9",  # blue
+    "USA": "#bf6f49",  # orange
+    "DEU": "#438e83",  # aqua
+    "KOR": "#c19d46",  # yellow
+    "JPN": "#ba7b8e",  # magenta
+    "MEX": "#a279a7",  # lavender
+    "ITA": "#687d90",  # slate
+    "FRA": "#a96060",  # red
     "GBR": "#0d9488",  # teal
     "CAN": "#8d5524",  # brown
-    "NLD": "#0e7490",  # cyan
+    "NLD": "#b59343",  # cyan
     "BEL": "#7c3aed",  # purple
     "RUS": "#b45309",  # amber-brown
     "S19": "#6b7280",  # slate
