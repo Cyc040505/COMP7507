@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-REGIONS = {"Africa", "America", "Asia", "Europe", "Pacific"}
+REGIONS = {"Africa", "America", "Asia", "Europe", "Pacific", "Oceania"}
 TIMELINE_COLUMNS = [
     "year",
     "country",

@@ -1,0 +1,6 @@
+Clean ZIP extraction: no raw CSVs, full bilateral HS2 table, Git worktree or local virtual environment included.
+Verified with the existing Python 3.12 dependency environment.
+----------------------------------------------------------------------
+Ran 85 tests in 3.907s
+
+OK

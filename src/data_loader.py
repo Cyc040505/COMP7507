@@ -1,8 +1,7 @@
 """Data access layer.
 
 Each loader prefers a pre-aggregated parquet table under ``data/processed/``
-(produced offline by ``scripts/build_analytics.py``) and falls back to a small,
-deterministic synthetic frame with the SAME schema when that artefact is missing.
+(produced offline by ``scripts/build_analytics.py``) and raises an explicit error when a real artefact is missing.
 Every returned frame carries ``df.attrs["demo"]`` (True for the fallback) so the
 UI can label itself honestly.
 
@@ -67,11 +66,11 @@ def _finish(df: pd.DataFrame, demo: bool) -> pd.DataFrame:
 
 
 def _load(filename: str, demo_fn, **kwargs) -> pd.DataFrame:
-    """Return the parquet analysis table if present, else the demo fallback."""
+    """Return a real table; never generate final findings from synthetic data."""
     path = config.processed_path(filename)
     if path.exists():
         return _finish(pd.read_parquet(path), False)
-    return _finish(demo_fn(**kwargs), True)
+    raise FileNotFoundError(f"Missing real analysis table: {path}. See docs/FINAL_REVIEW.md for data preparation; synthetic results are disabled.")
 
 
 # --- country metadata ---------------------------------------------------------

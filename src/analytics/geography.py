@@ -117,8 +117,8 @@ def partner_frame(
 
 def spearman_rho(frame: pd.DataFrame) -> float | None:
     """Spearman correlation between log(distance) and partner share."""
-    valid = frame.loc[frame["has_distance"] & frame["share_pct"].notna()]
-    if len(valid) < 2:
+    valid = frame.loc[frame["has_distance"] & frame["share_pct"].gt(0)]
+    if len(valid) < 3 or valid.distance.nunique() < 2 or valid.share_pct.nunique() < 2:
         return None
     # Rank-based correlation without a scipy dependency: rank both series and
     # take the ordinary (Pearson) correlation of the ranks.
@@ -130,7 +130,7 @@ def spearman_rho(frame: pd.DataFrame) -> float | None:
 def summarize(frame: pd.DataFrame, metric_used: str) -> dict:
     """Descriptive statistics for the current selection."""
     n = int(len(frame))
-    valid = frame.loc[frame["has_distance"] & frame["share_pct"].notna()]
+    valid = frame.loc[frame["has_distance"] & frame["share_pct"].gt(0)]
     n_missing = int((~frame["has_distance"]).sum())
     n_zero = int((frame["share_pct"] == 0).sum())
     total = float(frame["value"].sum()) if n else 0.0
@@ -226,7 +226,7 @@ def loglog_trend(frame: pd.DataFrame) -> tuple[float, float] | None:
         & frame["share_pct"].notna()
         & (frame["share_pct"] > 0)
     ]
-    if len(valid) < 2:
+    if len(valid) < 3 or valid.distance.nunique() < 2 or valid.share_pct.nunique() < 2:
         return None
     x = np.log10(valid["distance"])
     y = np.log10(valid["share_pct"])

@@ -15,3 +15,5 @@ data/GEODIST
 data/processed/analytics.duckdb
 data/processed/.staging_marker.json
 data/processed/country_pair_hs2_year.parquet
+
+.venv

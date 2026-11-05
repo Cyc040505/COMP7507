@@ -50,7 +50,9 @@ python scripts/build_analytics.py
 
 M1 的 `country_pair_hs2_year.parquet` 体积超过普通 Git 的单文件限制，
 不随代码提交。组员可使用上述脚本在本地生成，或通过单独的数据共享渠道获取后
-放入 `data/processed/`。该文件缺失时，M1 的单个 HS2 商品分析会使用演示数据。
+放入 `data/processed/`。日常运行使用已随仓库交付的 `country_pair_hs2_focus_year.parquet`（约26MB），包含六国与全球伙伴的完整双向明细，不做Top-N截取。全量文件可选；两份都缺失则明确报错，不使用演示数据。
+
+最终地区表和伙伴明细重建：`python scripts/prepare_final_data.py --source-root /path/to/CEPII-data`。官方逐年文件及派生表哈希、核验行数记录在 `data/processed/m5_source_manifest.json`；本轮结果见 `docs/FINAL_REVIEW.md`。
 
 ## 环境变量覆盖
 
