@@ -1,0 +1,652 @@
+{
+  "trade_source": "BACI HS92 V202601",
+  "gdp_source": "CHELEM GDP-VAL V202502",
+  "gdp_rows_checked": 7395,
+  "years": [
+    {
+      "year": 1995,
+      "export_country_keys": 213,
+      "max_relative_export_error": 6.335372804330583e-14,
+      "eligible_pairs": 182,
+      "matching_combinations_checked": 728,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            58
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1996,
+      "export_country_keys": 213,
+      "max_relative_export_error": 5.927535552498009e-14,
+      "eligible_pairs": 182,
+      "matching_combinations_checked": 728,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            58
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1997,
+      "export_country_keys": 213,
+      "max_relative_export_error": 1.2173729117008e-13,
+      "eligible_pairs": 182,
+      "matching_combinations_checked": 728,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            58
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1998,
+      "export_country_keys": 213,
+      "max_relative_export_error": 6.971982234228208e-14,
+      "eligible_pairs": 182,
+      "matching_combinations_checked": 728,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            58
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1999,
+      "export_country_keys": 214,
+      "max_relative_export_error": 1.8145148633383477e-13,
+      "eligible_pairs": 184,
+      "matching_combinations_checked": 736,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2000,
+      "export_country_keys": 223,
+      "max_relative_export_error": 3.164725957468551e-14,
+      "eligible_pairs": 191,
+      "matching_combinations_checked": 764,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2001,
+      "export_country_keys": 223,
+      "max_relative_export_error": 4.195368082802499e-14,
+      "eligible_pairs": 191,
+      "matching_combinations_checked": 764,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2002,
+      "export_country_keys": 223,
+      "max_relative_export_error": 3.822396920084316e-14,
+      "eligible_pairs": 191,
+      "matching_combinations_checked": 764,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2003,
+      "export_country_keys": 222,
+      "max_relative_export_error": 2.2871868516266573e-13,
+      "eligible_pairs": 191,
+      "matching_combinations_checked": 764,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2004,
+      "export_country_keys": 222,
+      "max_relative_export_error": 9.093502099116978e-14,
+      "eligible_pairs": 191,
+      "matching_combinations_checked": 764,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2005,
+      "export_country_keys": 222,
+      "max_relative_export_error": 1.515926210474246e-13,
+      "eligible_pairs": 191,
+      "matching_combinations_checked": 764,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2006,
+      "export_country_keys": 223,
+      "max_relative_export_error": 7.032490573394222e-14,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2007,
+      "export_country_keys": 223,
+      "max_relative_export_error": 1.9934314570840943e-14,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2008,
+      "export_country_keys": 223,
+      "max_relative_export_error": 4.035876069437739e-14,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2009,
+      "export_country_keys": 223,
+      "max_relative_export_error": 4.320344490524573e-14,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2010,
+      "export_country_keys": 223,
+      "max_relative_export_error": 2.892069020345298e-13,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2011,
+      "export_country_keys": 225,
+      "max_relative_export_error": 2.8862803663501816e-14,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            736
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2012,
+      "export_country_keys": 226,
+      "max_relative_export_error": 3.347743052266639e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2013,
+      "export_country_keys": 227,
+      "max_relative_export_error": 3.1142502091932914e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2014,
+      "export_country_keys": 226,
+      "max_relative_export_error": 7.122190827945978e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2015,
+      "export_country_keys": 226,
+      "max_relative_export_error": 3.329350265278298e-13,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2016,
+      "export_country_keys": 226,
+      "max_relative_export_error": 2.667946684549934e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2017,
+      "export_country_keys": 226,
+      "max_relative_export_error": 5.6765436558923175e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2018,
+      "export_country_keys": 226,
+      "max_relative_export_error": 3.121390263092356e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2019,
+      "export_country_keys": 226,
+      "max_relative_export_error": 4.6202925008727205e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2020,
+      "export_country_keys": 226,
+      "max_relative_export_error": 5.530743280466518e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2021,
+      "export_country_keys": 226,
+      "max_relative_export_error": 2.4002340422224853e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2022,
+      "export_country_keys": 226,
+      "max_relative_export_error": 3.1749629627026596e-14,
+      "eligible_pairs": 194,
+      "matching_combinations_checked": 776,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    },
+    {
+      "year": 2023,
+      "export_country_keys": 226,
+      "max_relative_export_error": 4.1585111846050404e-14,
+      "eligible_pairs": 193,
+      "matching_combinations_checked": 772,
+      "historical_codes": [
+        {
+          "country": "BEL",
+          "raw_codes": [
+            56
+          ]
+        },
+        {
+          "country": "SDN",
+          "raw_codes": [
+            729
+          ]
+        }
+      ]
+    }
+  ],
+  "default_2023": {
+    "DEU": {
+      "gdp_million_usd": 4456081.017,
+      "exports_thousand_usd": 1571537543.2340074,
+      "exports_gdp_ratio": 0.3526725697397722
+    },
+    "JPN": {
+      "gdp_million_usd": 4212944.753,
+      "exports_thousand_usd": 787818619.9179995,
+      "exports_gdp_ratio": 0.18699951366725165
+    },
+    "matches": {
+      "gdp_1.25": [
+        "JPN",
+        "IND"
+      ],
+      "gdp_1.5": [
+        "JPN",
+        "IND",
+        "GBR",
+        "FRA"
+      ],
+      "export_value_1.25": [
+        "USA"
+      ],
+      "export_value_1.5": [
+        "USA"
+      ]
+    }
+  },
+  "historical_scope_policy": "BEL <=1998 and SDN <=2011 excluded conservatively; no territorial GDP remapping.",
+  "input_sha256": {
+    "data/processed/country_year.parquet": "82db2d822437521aee9b5254de2df39d9ab8524da57fed8b08f1db982769774f",
+    "data/processed/gdp_year.parquet": "95761fcd3bcb24031929535e4374b4447910efeb076ffed54b393554907159e3",
+    "data/reference/m2_country_codes_V202601.csv": "c6892f28bea23d689b29b074d299cea7f5196c708b03026fbe419fa4ecb4e820"
+  }
+}
