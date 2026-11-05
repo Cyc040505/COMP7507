@@ -15,6 +15,7 @@ MODULE_ID = "M5"
 NAV_LABEL = "M5  Time Change"
 ORDER = 5
 YEARS = list(range(1995, 2025))
+FOCUS_COUNTRIES = ("USA", "DEU", "CHN", "MEX", "NLD", "ITA")
 CASE_COUNTRIES = ["CHN", "DEU", "MEX"]
 CASES = {
     "pandemic": (
@@ -104,6 +105,7 @@ def layout():
         children=[
             dcc.Store(id=cid("selected"), data=2024),
             dcc.Store(id=cid("rows")),
+            dcc.Store(id=cid("import-reset")),
             dcc.Download(id=cid("download")),
             html.Div(
                 [
@@ -136,12 +138,12 @@ def layout():
                     html.Div(
                         [
                             field(
-                                "Compare economies · up to 4",
+                                "Six focus economies · choose 1–4",
                                 dcc.Dropdown(
                                     id=cid("countries"),
                                     options=[
                                         {"label": f"{ns[c]} ({c})", "value": c}
-                                        for c in sorted(ns)
+                                        for c in FOCUS_COUNTRIES
                                     ],
                                     value=["CHN", "DEU", "MEX"],
                                     multi=True,
@@ -265,8 +267,8 @@ def layout():
                     ]
                 ),
             ),
-            components.card(
-                "03 / Recovery through the observation endpoint",
+            html.Details([
+                html.Summary("Recovery status · expand for the complete table"),
                 html.Div(
                     [
                         html.P(
@@ -308,7 +310,7 @@ def layout():
                         ),
                     ]
                 ),
-            ),
+            ], className="m5-methods"),
             html.Details(
                 [
                     html.Summary("Methods, provenance & evidence download"),
@@ -316,13 +318,13 @@ def layout():
                         "BACI HS92 V202601 · 1995–2024 · nominal merchandise exports, thousand current USD. Value index uses the selected product scope; product share always divides by ALL products. Annual records are not interpolated or filled with zeros."
                     ),
                     html.P(
-                        "Regions use the project’s fixed Africa / America / Asia / Europe / Pacific classification. Unknown destinations remain in the full denominator: observed intra-regional share is a lower bound; shading shows its possible range. Unknown origins have no regional share."
+                        "Regions use the project’s fixed Africa / America / Asia / Europe / Pacific (Oceania) classification. America includes the whole Americas, not only North America or a trade agreement area. Unknown destinations remain in the full denominator: observed intra-regional share is a lower bound; shading shows its possible range. Unknown origins have no regional share."
                     ),
                     html.P(
-                        "Bilateral inputs are a third-party redistribution from phbelov/world-trade-app data-v1. Pinned SHA256 files reconcile to every project exporter×HS2×year, country-year and world-year total. This is not an independent audit of official CSVs or partner allocation."
+                        "Bilateral inputs are a third-party redistribution from phbelov/world-trade-app data-v1. Pinned SHA256 files reconcile to every project exporter×HS2×year, country-year and world-year total. Official bilateral-source acceptance is BLOCKED pending the team’s shared-data audit. Reconciled redistribution is provisional evidence, not independent verification of official CSVs or partner allocation."
                     ),
                     html.P(
-                        "Event markers support before/after exploration, not causal attribution. Nominal recovery can reflect prices and exchange rates. These two shares do not describe the entire export basket or partner distribution. Similar-income matching belongs to M4."
+                        "Event markers support before/after exploration, not causal attribution. Nominal recovery can reflect prices and exchange rates. These two shares do not describe the entire export basket or partner distribution. The default CHN/DEU/MEX group is a time comparison, not a similar-income group. Similar-income matching belongs to M4."
                     ),
                     html.P(
                         "Recovery horizon ends at the displayed window endpoint. Baseline must precede the event and both must be in the window. Missing annual observations qualify timing."
@@ -420,6 +422,8 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         return empty("Select one to four economies to begin.")
     if len(countries) > 4:
         return empty("Select at most 4 economies for a readable comparison.")
+    if len(set(countries)) != len(countries) or any(c not in FOCUS_COUNTRIES for c in countries):
+        return empty("Choose distinct economies from USA, DEU, CHN, MEX, NLD, ITA only.")
     if not window or len(window) != 2:
         return empty("Select a valid observation window.")
     start, end = map(int, window)
@@ -637,7 +641,7 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         structure=structure,
         rows=json_records(f),
         summary=json_records(summary),
-        message=f"Reconciled real data · {manifest['source_version']} · {start}–{end} · "
+        message=f"Provisional regional evidence · official bilateral-source acceptance BLOCKED · {manifest['source_version']} · {start}–{end} · "
         + ("All products" if product == "TOTAL" else label(product)),
         finding=finding,
         implication=implication,
@@ -701,7 +705,35 @@ def describe_structure(summary, metric, product, baseline, end):
     )
 
 
+def validate_import(comparison, product):
+    """Reject incompatible handoffs atomically; never silently trim or change years."""
+    if not isinstance(comparison, dict):
+        raise ValueError("Open M4 and select a comparison first.")
+    countries = comparison.get("countries")
+    if not isinstance(countries, list) or not 1 <= len(countries) <= 4:
+        raise ValueError("M4 must display 1–4 economies before importing.")
+    if any(not isinstance(c, str) or c not in FOCUS_COUNTRIES for c in countries) or len(set(countries)) != len(countries):
+        raise ValueError("M4 economies must be distinct members of USA, DEU, CHN, MEX, NLD, ITA.")
+    year = comparison.get("year")
+    if isinstance(year, bool) or not isinstance(year, int) or not 2020 <= year <= 2024:
+        raise ValueError("M4 analysis year must be an integer from 2020 to 2024; M5 was unchanged.")
+    scope = "TOTAL" if product in (None, "", "TOTAL") else product
+    if not isinstance(scope, str) or (scope != "TOTAL" and scope not in chapters()):
+        raise ValueError("M4 product must be a valid HS2 chapter; M5 was unchanged.")
+    return list(countries), scope, year
+
+
 def register_callbacks(app):
+    @app.callback(
+        Output(cid("metric"), "value", allow_duplicate=True),
+        Input(cid("product"), "value"),
+        State(ACTIVE_MODULE, "data"),
+        prevent_initial_call=True,
+    )
+    def default_metric(product, active):
+        guard_active(MODULE_ID, active)
+        return "intra" if product == "TOTAL" else "product"
+
     @app.callback(
         Output(cid("countries"), "value"),
         Output(cid("product"), "value"),
@@ -710,6 +742,9 @@ def register_callbacks(app):
         Output(cid("window"), "value"),
         Output(cid("metric"), "value"),
         Output(cid("import-note"), "children"),
+        Output(cid("import-reset"), "data"),
+        Output(cid("index"), "clickData"),
+        Output(cid("structure"), "clickData"),
         Input(cid("pandemic"), "n_clicks"),
         Input(cid("vehicles"), "n_clicks"),
         Input(cid("crisis"), "n_clicks"),
@@ -723,44 +758,33 @@ def register_callbacks(app):
         guard_active(MODULE_ID, active)
         trigger = ctx.triggered_id
         if trigger == cid("import"):
-            c = comparison or {}
-            countries = c.get("countries") or []
-            if not countries:
-                return [no_update] * 6 + [
-                    "Open M4 and select a comparison first, then return and import it."
-                ]
-            if len(countries) > 4:
-                return [no_update] * 6 + [
-                    "M4 has more than 4 economies. Reduce its selection before importing."
-                ]
-            end = int(c.get("year", 2024))
-            if end < 2020:
-                return [no_update] * 6 + [
-                    "For this pandemic import, use an M4 year from 2020 onward; earlier history is available with the manual M5 controls."
-                ]
+            try:
+                countries, scope, end = validate_import(comparison, product)
+            except ValueError as exc:
+                return [no_update] * 6 + [str(exc)] + [no_update] * 3
             return (
-                countries,
-                product if product in chapters() else "TOTAL",
-                2019,
-                2020,
-                [2016, end],
-                "product",
-                f"Explicitly imported {', '.join(countries)} and HS{product} from M4. Further changes affect M5 only.",
+                countries, scope, 2019, 2020, [2016, end],
+                "intra" if scope == "TOTAL" else "product",
+                f"Explicitly imported {', '.join(countries)} · {scope} · 2016–{end}; baseline 2019, event 2020. M5 only; old year highlight cleared.",
+                imported, None, None,
             )
         key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
         scope, baseline, event, window, measure = CASES[key][:5]
-        return list(CASE_COUNTRIES), scope, baseline, event, list(window), measure, ""
+        return list(CASE_COUNTRIES), scope, baseline, event, list(window), measure, "", no_update, None, None
 
     @app.callback(
         Output(cid("selected"), "data"),
         Input(cid("index"), "clickData"),
         Input(cid("structure"), "clickData"),
         Input(cid("window"), "value"),
+        Input(cid("import-reset"), "data"),
         State(cid("selected"), "data"),
         State(ACTIVE_MODULE, "data"),
     )
-    def select_year(a, b, window, selected, active):
+    def select_year(a, b, window, reset, selected, active):
         guard_active(MODULE_ID, active)
+        if f"{cid('import-reset')}.data" in ctx.triggered_prop_ids:
+            return window[1]
         click = (
             a
             if ctx.triggered_id == cid("index")

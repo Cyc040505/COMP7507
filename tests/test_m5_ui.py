@@ -85,11 +85,11 @@ class TimeInterface(unittest.TestCase):
 
     def test_comparison_colors_are_distinct_and_linked(self):
         v = m.compute_view(
-            ["AUS", "BRA"], "87", 2019, 2020, [2016, 2024], "product", 2024
+            ["USA", "NLD"], "87", 2019, 2020, [2016, 2024], "product", 2024
         )
         main = {t.name: t.line.color for t in v["index"].data}
         detail = {t.name: t.line.color for t in v["structure"].data}
-        self.assertNotEqual(main["AUS"], main["BRA"])
+        self.assertNotEqual(main["USA"], main["NLD"])
         self.assertEqual(main, detail)
 
     def call(self, needle, values, changed):
@@ -146,6 +146,57 @@ class TimeInterface(unittest.TestCase):
         self.assertEqual(
             self.call("M5-index.figure", values, "active-module.data").status_code, 204
         )
+
+    def test_focus_pool_and_shared_colors(self):
+        view = m.layout().to_plotly_json()
+        self.assertTrue(view)
+        for country in m.FOCUS_COUNTRIES:
+            value = m.compute_view([country], "87", 2019, 2020, [2016, 2024], "product", 2024)
+            self.assertTrue(value["rows"], country)
+            self.assertEqual(value["index"].data[0].line.color, m.theme.country_color(country))
+        invalid = m.compute_view(["JPN"], "87", 2019, 2020, [2016, 2024], "product", 2024)
+        self.assertEqual(invalid["rows"], [])
+
+    def test_import_rejections_preserve_all_controls(self):
+        cases = [([], 2023, "87"), (["CHN"] * 2, 2023, "87"),
+                 (["JPN"], 2023, "87"), (list(m.FOCUS_COUNTRIES), 2023, "87"),
+                 (["CHN"], 2019, "87"), (["CHN"], 2025, "87"),
+                 (["CHN"], None, "87"), (["CHN"], "2023", "87"),
+                 (["CHN"], 2023, "invalid")]
+        for countries, year, product in cases:
+            with self.subTest(countries=countries, year=year, product=product):
+                res = self.call("M5-countries.value", {
+                    "active-module.data": "M5", "M5-import.n_clicks": 1,
+                    "M4-comparison.data": {"countries": countries, "year": year},
+                    "M4-inspect.value": product}, "M5-import.n_clicks")
+                self.assertEqual(res.status_code, 200)
+                self.assertEqual(set(res.json["response"]), {"M5-import-note"})
+
+    def test_import_order_total_and_reset_even_same_window(self):
+        for product, expected, metric in [(None, "TOTAL", "intra"), ("87", "87", "product")]:
+            res = self.call("M5-countries.value", {
+                "active-module.data": "M5", "M5-import.n_clicks": 2,
+                "M4-comparison.data": {"countries": ["MEX", "CHN"], "year": 2023},
+                "M4-inspect.value": product}, "M5-import.n_clicks")
+            data = res.json["response"]
+            self.assertEqual(data["M5-countries"]["value"], ["MEX", "CHN"])
+            self.assertEqual(data["M5-product"]["value"], expected)
+            self.assertEqual(data["M5-metric"]["value"], metric)
+            self.assertEqual(data["M5-window"]["value"], [2016, 2023])
+            self.assertIsNone(data["M5-index"]["clickData"])
+            self.assertIsNone(data["M5-structure"]["clickData"])
+        res = self.call("M5-selected.data", {
+            "active-module.data": "M5", "M5-window.value": [2016, 2023],
+            "M5-selected.data": 2018, "M5-import-reset.data": 2,
+            "M5-index.clickData": {"points": [{"x": 2018}]},
+            "M5-structure.clickData": {"points": [{"x": 2018}]}}, "M5-import-reset.data")
+        self.assertEqual(res.json["response"]["M5-selected"]["data"], 2023)
+
+    def test_product_change_sets_default_measure(self):
+        key = next(k for k in app.app.callback_map if k.startswith("M5-metric.value@"))
+        for product, metric in [("TOTAL", "intra"), ("85", "product")]:
+            res = self.call(key, {"active-module.data": "M5", "M5-product.value": product}, "M5-product.value")
+            self.assertEqual(res.json["response"]["M5-metric"]["value"], metric)
 
     def test_explicit_m4_import(self):
         res = self.call(
