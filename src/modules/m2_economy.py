@@ -47,60 +47,203 @@ def field(label, widget):
 
 
 def layout():
-    return html.Div(className="module-inner m2", children=[
-        dcc.Store(id=cid("context")), dcc.Download(id=cid("download")),
-        dcc.Store(id=cid("reference-lines-ready")),
-        html.Div([
-            html.Div("ECONOMIC SCALE / M2", className="m2-eyebrow"),
-            html.H2("Similar GDP. Similar exports?"),
-            html.P("Start with Germany and Japan in 2023, then reverse the question: at similar exports, how different is GDP?"),
-        ], className="m2-intro"),
-        components.card(None, html.Div([
-            html.Div([
-                field("Analysis year", dcc.Dropdown(id=cid("year"), options=list(range(1995, 2024)), value=2023, clearable=False)),
-                field("Match on one dimension", dcc.RadioItems(id=cid("mode"), options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}], value="gdp", className="m2-radio")),
-                field("Similarity window", dcc.RadioItems(id=cid("factor"), options=[{"label": "1.25×", "value": 1.25}, {"label": "1.5×", "value": 1.5}], value=1.25, className="m2-radio")),
-            ], className="m2-controls"),
-            field("Anchor economy · select one of the six focus countries", dcc.RadioItems(
-                id=cid("anchor"),
-                options=[{"label": name, "value": code} for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)],
-                value="DEU", className="m2-anchors")),
-            html.P("Choose an anchor from the six focus countries. Matching candidates and the scatter background cover all eligible global economies; Japan remains available as a comparison.", className="m2-note"),
-        ])),
-        components.card("Global context · GDP and goods exports", html.Div([
-            html.Div(id=cid("scope"), className="m2-note", role="status"),
-            dcc.Graph(id=cid("graph"), figure=theme.empty_figure("Select M2 to begin."),
-                      className="graph-interactive",
-                      config={"displayModeBar": True, "displaylogo": False,
-                              "responsive": True, "scrollZoom": True, "doubleClick": "reset",
-                              "modeBarButtonsToRemove": ["select2d", "lasso2d"]},
-                      style={"height": "510px", "minHeight": "510px"}),
-            html.P("Both axes are logarithmic and use billion current USD. Reference lines use darker blue for higher export/GDP ratios (10%, 50%, 100%). The band marks the selected matching dimension only. Click a matching point to compare it with the anchor.", className="m2-note"),
-            html.P("Scroll to zoom, or drag a rectangle to enlarge it. Use Pan in the chart toolbar to move the view; double-click or use Reset axes to restore it. Zooming does not change the matching pool.", className="m2-note"),
-        ])),
-        components.card("Compare two economies", html.Div([
-            field("Comparison economy · current matches", dcc.Dropdown(id=cid("comparator"), options=[{"label": "Japan · JPN", "value": "JPN"}], value="JPN", clearable=False)),
-            html.P(id=cid("match-status"), role="status", className="m2-note"),
-            html.Div(id=cid("cards"), className="m2-comparison"),
-            html.Div(id=cid("finding"), className="m2-finding"),
-            html.P(LIMITATION, className="m2-note"),
-        ])),
-        html.Details([
-            html.Summary("Matching list, exclusions and source evidence"),
-            html.P("All matches are listed, sorted by multiplicative distance from the anchor. No Top-N restriction or second-dimension filter is used.", className="m2-note"),
-            dash_table.DataTable(id=cid("table"), columns=[
-                {"name": "Economy", "id": "economy"},
-                {"name": "GDP · $bn", "id": "gdp"},
-                {"name": "Goods exports · $bn", "id": "exports"},
-                {"name": "Exports / GDP", "id": "ratio"},
-                {"name": "Matching value / anchor", "id": "matching_ratio"},
-            ], data=[], page_size=10, style_table={"overflowX": "auto"}, style_cell={"textAlign": "left", "fontFamily": "inherit", "fontSize": 12, "padding": "9px"}, style_header={"fontWeight": 600, "backgroundColor": theme.ACCENT_SOFT}),
-            html.Div(id=cid("exclusions"), className="m2-note"),
-            html.Button("Download current evidence CSV", id=cid("export"), n_clicks=0, className="m2-download", disabled=True),
-            html.P("CSV includes all source entities for the selected year, exclusion reasons, matching flags and unrounded amounts. Sources: BACI HS92 V202601 (thousand current USD); CHELEM GDP-VAL V202502 (million current USD). Exports/GDP = exports ÷ (GDP × 1,000).", className="m2-note"),
-            html.P("Country scope follows the BACI dictionary. Other Asia nes, Europe EFTA nes and SACU are excluded. Belgium–Luxembourg through 1998 and pre-split Sudan through 2011 are excluded from matching to avoid pairing historical trade territories with different GDP territories. No missing amount is treated as zero.", className="m2-note"),
-        ], className="card m2-details"),
-    ])
+    return html.Div(
+        className="module-inner m2",
+        children=[
+            dcc.Store(id=cid("context")),
+            dcc.Download(id=cid("download")),
+            dcc.Store(id=cid("reference-lines-ready")),
+            html.Div(
+                [
+                    html.Div("ECONOMIC SCALE / M2", className="m2-eyebrow"),
+                    html.H2("Similar GDP. Similar exports?"),
+                    html.P(
+                        "Start with Germany and Japan in 2023, then reverse the question: at similar exports, how different is GDP?"
+                    ),
+                ],
+                className="m2-intro",
+            ),
+            components.card(
+                None,
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                field(
+                                    "Analysis year",
+                                    dcc.Dropdown(
+                                        id=cid("year"),
+                                        options=list(range(1995, 2024)),
+                                        value=2023,
+                                        clearable=False,
+                                    ),
+                                ),
+                                field(
+                                    "Match on one dimension",
+                                    dcc.RadioItems(
+                                        id=cid("mode"),
+                                        options=[
+                                            {"label": "Similar GDP", "value": "gdp"},
+                                            {
+                                                "label": "Similar exports",
+                                                "value": "export_value",
+                                            },
+                                        ],
+                                        value="gdp",
+                                        className="m2-radio",
+                                    ),
+                                ),
+                                field(
+                                    "Similarity window",
+                                    dcc.RadioItems(
+                                        id=cid("factor"),
+                                        options=[
+                                            {"label": "1.25×", "value": 1.25},
+                                            {"label": "1.5×", "value": 1.5},
+                                        ],
+                                        value=1.25,
+                                        className="m2-radio",
+                                    ),
+                                ),
+                            ],
+                            className="m2-controls",
+                        ),
+                        field(
+                            "Anchor economy · select one of the six focus countries",
+                            dcc.RadioItems(
+                                id=cid("anchor"),
+                                options=[
+                                    {"label": name, "value": code}
+                                    for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)
+                                ],
+                                value="DEU",
+                                className="m2-anchors",
+                            ),
+                        ),
+                        html.P(
+                            "Choose an anchor from the six focus countries. Matching candidates and the scatter background cover all eligible global economies; Japan remains available as a comparison.",
+                            className="m2-note",
+                        ),
+                    ]
+                ),
+            ),
+            html.Div(
+                [
+                    components.card(
+                        "Global context · GDP and goods exports",
+                        html.Div(
+                            [
+                                html.Div(
+                                    id=cid("scope"), className="m2-note", role="status"
+                                ),
+                                dcc.Graph(
+                                    id=cid("graph"),
+                                    figure=theme.empty_figure("Select M2 to begin."),
+                                    className="graph-interactive",
+                                    config={
+                                        "displayModeBar": True,
+                                        "displaylogo": False,
+                                        "responsive": True,
+                                        "scrollZoom": True,
+                                        "doubleClick": "reset",
+                                        "modeBarButtonsToRemove": [
+                                            "select2d",
+                                            "lasso2d",
+                                        ],
+                                    },
+                                    style={"height": "510px", "minHeight": "510px"},
+                                ),
+                                html.P(
+                                    "Both axes are logarithmic and use billion current USD. Reference lines use darker blue for higher export/GDP ratios (10%, 50%, 100%). The band marks the selected matching dimension only. Click a matching point to compare it with the anchor.",
+                                    className="m2-note",
+                                ),
+                                html.P(
+                                    "Scroll to zoom, or drag a rectangle to enlarge it. Use Pan in the chart toolbar to move the view; double-click or use Reset axes to restore it. Zooming does not change the matching pool.",
+                                    className="m2-note",
+                                ),
+                            ]
+                        ),
+                    ),
+                    components.card(
+                        "Compare two economies",
+                        html.Div(
+                            [
+                                field(
+                                    "Comparison economy · current matches",
+                                    dcc.Dropdown(
+                                        id=cid("comparator"),
+                                        options=[
+                                            {"label": "Japan · JPN", "value": "JPN"}
+                                        ],
+                                        value="JPN",
+                                        clearable=False,
+                                    ),
+                                ),
+                                html.P(
+                                    id=cid("match-status"),
+                                    role="status",
+                                    className="m2-note",
+                                ),
+                                html.Div(id=cid("cards"), className="m2-comparison"),
+                                html.Div(id=cid("finding"), className="m2-finding"),
+                                html.P(LIMITATION, className="m2-note"),
+                            ]
+                        ),
+                    ),
+                ],
+                className="m2-analysis",
+            ),
+            html.Details(
+                [
+                    html.Summary("Matching list, exclusions and source evidence"),
+                    html.P(
+                        "All matches are listed, sorted by multiplicative distance from the anchor. No Top-N restriction or second-dimension filter is used.",
+                        className="m2-note",
+                    ),
+                    dash_table.DataTable(
+                        id=cid("table"),
+                        columns=[
+                            {"name": "Economy", "id": "economy"},
+                            {"name": "GDP · $bn", "id": "gdp"},
+                            {"name": "Goods exports · $bn", "id": "exports"},
+                            {"name": "Exports / GDP", "id": "ratio"},
+                            {"name": "Matching value / anchor", "id": "matching_ratio"},
+                        ],
+                        data=[],
+                        page_size=10,
+                        style_table={"overflowX": "auto"},
+                        style_cell={
+                            "textAlign": "left",
+                            "fontFamily": "inherit",
+                            "fontSize": 12,
+                            "padding": "9px",
+                        },
+                        style_header={
+                            "fontWeight": 600,
+                            "backgroundColor": theme.ACCENT_SOFT,
+                        },
+                    ),
+                    html.Div(id=cid("exclusions"), className="m2-note"),
+                    html.Button(
+                        "Download current evidence CSV",
+                        id=cid("export"),
+                        n_clicks=0,
+                        className="m2-download",
+                        disabled=True,
+                    ),
+                    html.P(
+                        "CSV includes all source entities for the selected year, exclusion reasons, matching flags and unrounded amounts. Sources: BACI HS92 V202601 (thousand current USD); CHELEM GDP-VAL V202502 (million current USD). Exports/GDP = exports ÷ (GDP × 1,000).",
+                        className="m2-note",
+                    ),
+                    html.P(
+                        "Country scope follows the BACI dictionary. Other Asia nes, Europe EFTA nes and SACU are excluded. Belgium–Luxembourg through 1998 and pre-split Sudan through 2011 are excluded from matching to avoid pairing historical trade territories with different GDP territories. No missing amount is treated as zero.",
+                        className="m2-note",
+                    ),
+                ],
+                className="card m2-details",
+            ),
+        ],
+    )
 
 
 def scatter_figure(rows, anchor, comparator, mode, factor):
@@ -150,8 +293,8 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
     fig.update_layout(
         template=theme.PLOT_TEMPLATE, height=510, margin={"l": 65, "r": 25, "t": 35, "b": 105},
         dragmode="zoom",
-        xaxis={"type": "log", "title": "GDP · billion current USD (log)", "autorange": True},
-        yaxis={"type": "log", "title": "Goods exports · billion current USD (log)", "autorange": True},
+        xaxis={"type": "log", "dtick": 1, "title": "GDP · billion current USD (log)", "autorange": True},
+        yaxis={"type": "log", "dtick": 1, "title": "Goods exports · billion current USD (log)", "autorange": True},
         legend={"orientation": "h", "y": -0.22, "x": 0, "font": {"size": 11}},
         uirevision=f"M2-{int(rows.year.iloc[0])}-{anchor}-{mode}-{factor}",
     )

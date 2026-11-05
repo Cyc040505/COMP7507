@@ -176,12 +176,19 @@ class FinalIntegration(unittest.TestCase):
                 selected, list(g.ranking_figure(res, show, selected).data[0].y)
             )
             self.assertEqual(
-                list(g._map_figure(res, "CHN", show, selected).data[-1].locations),
+                list(next(t for t in g._map_figure(res, "CHN", show, selected).data
+                          if t.name == "Selected partner").locations),
                 [selected],
             )
         f = g.scatter_figure(res, selected)
         i = list(f.data[0].customdata).index(selected)
-        self.assertEqual(f.data[0].marker.color[i], "#d56a24")
+        self.assertTrue(
+            all(
+                color != f.data[0].marker.color[i]
+                for j, color in enumerate(f.data[0].marker.color)
+                if j != i
+            )
+        )
         vals = {
             "active-module.data": "M1",
             "M1-year.value": 2023,

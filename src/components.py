@@ -15,7 +15,7 @@ def card(title: str | None, body, *, extra_class: str = "") -> html.Div:
     children = []
     if title:
         children.append(html.H3(title, className="card-title-text"))
-    children.append(body)
+    children.extend(body if isinstance(body, (list, tuple)) else [body])
     return html.Div(children, className=f"card {extra_class}".strip())
 
 
@@ -38,7 +38,10 @@ def control_bar(children, label: str = "Module controls") -> html.Div:
     """Per-module control strip (the second layer of the two-layer console)."""
     return html.Div(
         className="module-controls",
-        children=[html.Div(label, className="lbl"), html.Div(children, className="chips")],
+        children=[
+            html.Div(label, className="lbl"),
+            html.Div(children, className="chips"),
+        ],
     )
 
 
@@ -57,11 +60,13 @@ def verification_panel(
     update as the user explores.
     """
     return card(
-        "Verification · Hypothesis → Evidence → Conclusion",
+        "What the evidence shows",
         html.Ol(
             className="verify-list",
             children=[
-                html.Li([html.Span("Hypothesis", className="vtag vtag-h"), html.P(hypothesis)]),
+                html.Li(
+                    [html.Span("Question", className="vtag vtag-h"), html.P(hypothesis)]
+                ),
                 html.Li(
                     [
                         html.Span("Evidence", className="vtag vtag-e"),
@@ -70,7 +75,7 @@ def verification_panel(
                 ),
                 html.Li(
                     [
-                        html.Span("Conclusion", className="vtag vtag-c"),
+                        html.Span("Interpretation", className="vtag vtag-c"),
                         html.P(conclusion, id=conclusion_id),
                     ]
                 ),
@@ -114,7 +119,18 @@ def placeholder_graph(
     )
     return dcc.Graph(
         id=graph_id,
+        style={"height": f"{figure.layout.height or 420}px"},
         figure=figure,
         config={"displayModeBar": False, "responsive": True},
         **kwargs,
+    )
+
+
+def module_intro(title, description):
+    return html.Div([html.H2(title), html.P(description)], className="module-intro")
+
+
+def field(label, widget):
+    return html.Div(
+        [html.Label(label, htmlFor=widget.id), widget], className="control-field"
     )

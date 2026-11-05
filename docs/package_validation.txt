@@ -1,6 +1,6 @@
-Clean ZIP extraction: no raw CSVs, full bilateral HS2 table, Git worktree or local virtual environment included.
-Verified with the existing Python 3.12 dependency environment.
-----------------------------------------------------------------------
-Ran 85 tests in 3.907s
-
-OK
+M1 map correction · 2026-11-06
+Tested source commit: 0c269ff
+Clean ZIP independently extracted under /tmp/comp7507-map-package-check.
+Tests executed from the extracted folder using the existing locked Python environment.
+92 tests passed in 3.724s.
+Final archive changes only validation records after this check.

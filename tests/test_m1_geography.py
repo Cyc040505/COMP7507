@@ -173,6 +173,17 @@ class GeographyMapTests(unittest.TestCase):
             self.assertFalse(any("markers" in (getattr(t, "mode", "") or "")
                                  for t in figure.data))
 
+    def test_white_map_tooltip_has_dark_text_and_selected_partner_details(self):
+        result = self._map_result()
+        fig = _map_figure(result, "AAA", "top10", "P2")
+        self.assertNotEqual(fig.layout.hoverlabel.font.color, "white")
+        selected = next(t for t in fig.data if t.name == "Selected partner")
+        for value in ("Partner Two", "60.00%", "3,800 km", "Exports"):
+            self.assertIn(value, selected.hovertemplate)
+        label = next(t for t in fig.data if t.name == "Selected country label")
+        self.assertEqual(list(label.text), ["Partner Two"])
+        self.assertEqual(list(label.customdata), ["P2"])
+
     def test_nearest_country_fills_reverse_distance_scale_and_ranking(self):
         result = self._map_result()
         figure = _map_figure(result, "AAA", "nearest10")

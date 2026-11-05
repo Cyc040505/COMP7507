@@ -1,0 +1,402 @@
+{
+  "browser": "Microsoft Edge",
+  "desktop_only": true,
+  "observations": [
+    {
+      "graphs": [
+        {
+          "height": 420,
+          "id": "M0-total",
+          "top": 329.0390625,
+          "width": 636
+        },
+        {
+          "height": 420,
+          "id": "M0-share",
+          "top": 329.0390625,
+          "width": 636
+        }
+      ],
+      "module": "M0-panel",
+      "pageHeight": 1090,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 430,
+          "id": "M1-scatter",
+          "top": 447.5390625,
+          "width": 903.0859375
+        },
+        {
+          "height": 410,
+          "id": "M1-map",
+          "top": 1077.484375,
+          "width": 1064
+        },
+        {
+          "height": 410,
+          "id": "M1-ranking",
+          "top": 1077.484375,
+          "width": 253
+        }
+      ],
+      "module": "M1-panel",
+      "pageHeight": 1886,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 510,
+          "id": "M2-graph",
+          "top": 492.625,
+          "width": 811.7734375
+        }
+      ],
+      "module": "M2-panel",
+      "pageHeight": 1266,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 435,
+          "id": "M3-graph",
+          "top": 399.59375,
+          "width": 907.1953125
+        },
+        {
+          "height": 435,
+          "id": "M3-ranking",
+          "top": 418.5390625,
+          "width": 364.8046875
+        },
+        {
+          "height": 350,
+          "id": "M3-regions",
+          "top": 1025.1328125,
+          "width": 652.53125
+        }
+      ],
+      "module": "M3-panel",
+      "pageHeight": 1573,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 435,
+          "id": "M3-graph",
+          "top": 399.59375,
+          "width": 795.1953125
+        },
+        {
+          "height": 435,
+          "id": "M3-ranking",
+          "top": 418.5390625,
+          "width": 316.8046875
+        },
+        {
+          "height": 350,
+          "id": "M3-regions",
+          "top": 1025.1328125,
+          "width": 570.578125
+        }
+      ],
+      "module": "M3-panel",
+      "pageHeight": 1573,
+      "pageWidth": 1280,
+      "width": 1280
+    },
+    {
+      "graphs": [
+        {
+          "height": 435,
+          "id": "M3-graph",
+          "top": 399.59375,
+          "width": 795.1953125
+        },
+        {
+          "height": 435,
+          "id": "M3-ranking",
+          "top": 418.5390625,
+          "width": 316.8046875
+        },
+        {
+          "height": 350,
+          "id": "M3-regions",
+          "top": 1025.1328125,
+          "width": 570.578125
+        }
+      ],
+      "module": "M3-panel",
+      "pageHeight": 1573,
+      "pageWidth": 1280,
+      "width": 1280
+    },
+    {
+      "graphs": [
+        {
+          "height": 446,
+          "id": "M4-graph",
+          "top": 508.5390625,
+          "width": 668.28125
+        },
+        {
+          "height": 441,
+          "id": "M4-detail",
+          "top": 521.5390625,
+          "width": 603.71875
+        }
+      ],
+      "module": "M4-panel",
+      "pageHeight": 1568,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 446,
+          "id": "M4-graph",
+          "top": 517.625,
+          "width": 668.28125
+        },
+        {
+          "height": 441,
+          "id": "M4-detail",
+          "top": 521.5390625,
+          "width": 603.71875
+        }
+      ],
+      "module": "M4-panel",
+      "pageHeight": 1568,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 435,
+          "id": "M3-graph",
+          "top": 399.59375,
+          "width": 795.1953125
+        },
+        {
+          "height": 435,
+          "id": "M3-ranking",
+          "top": 418.5390625,
+          "width": 316.8046875
+        },
+        {
+          "height": 350,
+          "id": "M3-regions",
+          "top": 1016.5390625,
+          "width": 570.578125
+        }
+      ],
+      "module": "M3-panel",
+      "pageHeight": 1565,
+      "pageWidth": 1280,
+      "width": 1280
+    },
+    {
+      "graphs": [
+        {
+          "height": 446,
+          "id": "M4-graph",
+          "top": 508.5390625,
+          "width": 584.46875
+        },
+        {
+          "height": 441,
+          "id": "M4-detail",
+          "top": 521.5390625,
+          "width": 527.53125
+        }
+      ],
+      "module": "M4-panel",
+      "pageHeight": 1608,
+      "pageWidth": 1280,
+      "width": 1280
+    },
+    {
+      "graphs": [
+        {
+          "height": 330,
+          "id": "M5-index",
+          "top": 327.34375,
+          "width": 975
+        },
+        {
+          "height": 330,
+          "id": "M5-structure",
+          "top": 783.7890625,
+          "width": 975
+        }
+      ],
+      "module": "M5-panel",
+      "pageHeight": 1367,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 330,
+          "id": "M5-index",
+          "top": 367.34375,
+          "width": 975
+        },
+        {
+          "height": 330,
+          "id": "M5-structure",
+          "top": 823.7890625,
+          "width": 975
+        }
+      ],
+      "module": "M5-panel",
+      "pageHeight": 1407,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 420,
+          "id": "M0-total",
+          "top": 329.0390625,
+          "width": 636
+        },
+        {
+          "height": 420,
+          "id": "M0-share",
+          "top": 329.0390625,
+          "width": 636
+        }
+      ],
+      "module": "M0-panel",
+      "pageHeight": 1090,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 430,
+          "id": "M1-scatter",
+          "top": 447.5390625,
+          "width": 903.0859375
+        },
+        {
+          "height": 410,
+          "id": "M1-map",
+          "top": 1077.484375,
+          "width": 1064
+        },
+        {
+          "height": 260,
+          "id": "M1-ranking",
+          "top": 1077.484375,
+          "width": 253
+        }
+      ],
+      "module": "M1-panel",
+      "pageHeight": 1772,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 420,
+          "id": "M0-total",
+          "top": 329.0390625,
+          "width": 636
+        },
+        {
+          "height": 420,
+          "id": "M0-share",
+          "top": 329.0390625,
+          "width": 636
+        }
+      ],
+      "module": "M0-panel",
+      "pageHeight": 1090,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 435,
+          "id": "M3-graph",
+          "top": 399.59375,
+          "width": 907.1953125
+        },
+        {
+          "height": 435,
+          "id": "M3-ranking",
+          "top": 418.5390625,
+          "width": 364.8046875
+        },
+        {
+          "height": 350,
+          "id": "M3-regions",
+          "top": 1025.1328125,
+          "width": 652.53125
+        }
+      ],
+      "module": "M3-panel",
+      "pageHeight": 1573,
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "graphs": [
+        {
+          "height": 435,
+          "id": "M3-graph",
+          "top": 399.59375,
+          "width": 795.1953125
+        },
+        {
+          "height": 435,
+          "id": "M3-ranking",
+          "top": 418.5390625,
+          "width": 316.8046875
+        },
+        {
+          "height": 350,
+          "id": "M3-regions",
+          "top": 1025.1328125,
+          "width": 570.578125
+        }
+      ],
+      "module": "M3-panel",
+      "pageHeight": 1573,
+      "pageWidth": 1280,
+      "width": 1280
+    }
+  ],
+  "long_ranking": {
+    "module": "M1",
+    "bars": 40,
+    "graph_height": 880,
+    "scroll_container_height": 550,
+    "overflow_y": "auto"
+  },
+  "final_checks": {
+    "m3_matrix_graph_and_svg_height": 435,
+    "m3_import_remaining_share": "9.8%",
+    "m5_plot_left": 108,
+    "m5_plot_width": 890,
+    "selected_radio_text_color": "rgb(49, 92, 136)"
+  }
+}
