@@ -101,6 +101,9 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
     subset = _focus_subset(res["frame"], show)
     fig = go.Figure()
 
+    names = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")["name"].to_dict()
+    exporter_name = names.get(exporter, exporter)
+
     # Exporter identity is separate from the partner colour scale.
     fig.add_trace(
         go.Choropleth(
@@ -111,7 +114,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             showscale=False,
             marker_line_color=_EXPORTER_COLOR,
             marker_line_width=1.2,
-            hovertemplate=f"<b>{exporter}</b><br>Selected exporter<extra></extra>",
+            hovertemplate=f"<b>{exporter_name} ({exporter})</b><br>Selected exporter<extra></extra>",
             showlegend=False,
         )
     )
@@ -188,8 +191,8 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             **_geo_positions([exporter]),
             mode="text",
             name="Exporter",
-            text=[exporter],
-            textposition="top left",
+            text=[exporter_name],
+            textposition="bottom center",
             textfont=dict(size=11, color="#9b5b1b"),
             hoverinfo="skip",
             showlegend=False,
@@ -201,7 +204,8 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
         margin=dict(l=4, r=4, t=6, b=62),
         paper_bgcolor="#f5f9fb",
         font=dict(family="Segoe UI, sans-serif", color=theme.INK),
-        hoverlabel=dict(bgcolor="white", bordercolor="#d4e3e9", font_size=12),
+        hoverlabel=dict(bgcolor="white", bordercolor="#b4c3d2",
+                        font=dict(size=13, color=theme.INK, family=theme.FONT), align="left"),
         geo=dict(
             projection=dict(type="natural earth", scale=1, rotation=dict(lon=0, lat=0)),
             center=dict(lon=0, lat=13.5),
@@ -225,6 +229,10 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
         ),
     )
     if selected in set(res["frame"].get("partner", [])):
+        row = res["frame"].set_index("partner").loc[selected]
+        distance_text = f"{row.distance:,.0f} km" if pd.notna(row.distance) else "Unavailable"
+        selected_hover = (f"<b>{row['name']} ({selected})</b><br>Export share  {row.share_pct:.2f}%"
+                          f"<br>Exports  {theme.fmt_usd(row.value)}<br>Distance  {distance_text}<extra></extra>")
         fig.add_trace(
             go.Choropleth(
                 locations=[selected],
@@ -232,9 +240,16 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
                 colorscale=[[0, "#c79750"], [1, "#c79750"]],
                 showscale=False,
                 marker_line_color="#713410",
-                hovertemplate=selected + " · selected partner<extra></extra>",
+                hovertemplate=selected_hover,
+                name="Selected partner", showlegend=False,
             )
         )
+        fig.add_trace(go.Scattergeo(
+            **_geo_positions([selected]), mode="text", text=[row["name"]],
+            textposition="top center", textfont=dict(size=12, color="#633e16"),
+            customdata=[selected], hovertemplate=selected_hover,
+            name="Selected country label", showlegend=False,
+        ))
     return fig
 
 
@@ -978,8 +993,9 @@ def ranking_figure(res, show, selected):
     )
     fig.update_layout(
         height=max(260, len(d) * 22),
-        margin=dict(l=40, r=10, t=10, b=40),
+        margin=dict(l=98, r=10, t=10, b=40),
         xaxis_title="All-partner share (%)",
-        yaxis_autorange="reversed",
+        yaxis=dict(autorange="reversed", tickmode="array", tickvals=d.partner,
+                   ticktext=[name if len(name) < 19 else code for name, code in zip(d.name, d.partner)]),
     )
     return fig

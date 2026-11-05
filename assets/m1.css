@@ -22,3 +22,14 @@
 .m1-eyebrow { font-size:11px; color:var(--muted); margin:0; }
 .m1-map-finding p { font-size:13px; color:var(--muted); margin:0; }
 .m1-empty { color:var(--muted); }
+/* Keep country names legible across coastlines and choropleth boundaries. */
+#M1-map .scattergeo text {
+  paint-order:stroke fill;
+  stroke:#f5f9fb;
+  stroke-width:2.5px;
+  stroke-linejoin:round;
+  font-weight:600!important;
+  pointer-events:none;
+}
+.m1-map-grid { gap:8px; }
+#M1-map { border-radius:6px; overflow:hidden; }
