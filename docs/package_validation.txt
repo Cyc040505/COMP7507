@@ -1,9 +1,12 @@
-Desktop visual review · completed 2026-11-06
-Clean ZIP extracted independently under /tmp/comp7507-desktop-package-check.
-Imported app.py from the extracted folder (resolved macOS /private/tmp path).
+Desktop redesign · completed 2026-11-06
+Tested source commit: 5204747
+Clean ZIP extracted independently under /tmp/comp7507-redesign-package-check.
 No raw CSVs, full bilateral HS2 table, Git worktree or local virtual environment included.
 Verified using the existing Python 3.12 locked dependency environment, from the extracted working directory.
+Final archive differs from the tested archive only in this validation record.
+Confirmed extracted app: /private/tmp/comp7507-redesign-package-check/COMP7507-final-review/app.py
+...........................................................................................
 ----------------------------------------------------------------------
-Ran 91 tests in 3.765s
+Ran 91 tests in 3.706s
 
 OK
