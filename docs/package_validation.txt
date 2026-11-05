@@ -1,12 +1,6 @@
-Desktop redesign · completed 2026-11-06
-Tested source commit: 5204747
-Clean ZIP extracted independently under /tmp/comp7507-redesign-package-check.
-No raw CSVs, full bilateral HS2 table, Git worktree or local virtual environment included.
-Verified using the existing Python 3.12 locked dependency environment, from the extracted working directory.
-Final archive differs from the tested archive only in this validation record.
-Confirmed extracted app: /private/tmp/comp7507-redesign-package-check/COMP7507-final-review/app.py
-...........................................................................................
-----------------------------------------------------------------------
-Ran 91 tests in 3.706s
-
-OK
+M1 map correction · 2026-11-06
+Tested source commit: 0c269ff
+Clean ZIP independently extracted under /tmp/comp7507-map-package-check.
+Tests executed from the extracted folder using the existing locked Python environment.
+92 tests passed in 3.724s.
+Final archive changes only validation records after this check.

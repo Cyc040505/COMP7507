@@ -28,7 +28,8 @@
     "src/analytics/product.py": "d4f8e54927a7adfc67f01071ddc189d9e4f6030f832880d785620095d8e9cae4",
     "src/analytics/time_change.py": "ea04ac167dfacc5f7f05bf62f334b5aa6b6305fc5c491d23746664ec4d29b25b"
   },
-  "tests_passed": 91,
+  "tests_passed": 92,
   "scope": "Trace type/x/y/z/customdata and M3 export records, M1 statistics, M5 recovery rows and summary unchanged. Capitals, flow directions and amount-width relation tested separately.",
-  "redesign_baseline_commit": "437d7639103d050973fe4a684abb6271b89bebad"
+  "redesign_baseline_commit": "437d7639103d050973fe4a684abb6271b89bebad",
+  "m1_map_fix": "Explicit dark tooltip text; full selected details and country labels. Analytical snapshot unchanged."
 }
