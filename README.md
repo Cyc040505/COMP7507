@@ -4,16 +4,15 @@ Interactive visual-analytics application for **COMP7507 Visualization & Visual A
 
 Data sources: CEPII **BACI** (bilateral goods trade) / **CHELEM** (macroeconomic indicators) /
 **GeoDist** (geographic distances).
-Stack: Plotly Dash single-page app + dash-cytoscape (M3 force-directed network) + DuckDB offline
-pre-aggregation.
+Stack: Plotly Dash single-page app + DuckDB offline pre-aggregation. M3 uses a directed geographic map, with a fixed partner matrix as an alternate view.
 
-> Status: **partially implemented**. Overview (M0), Product Structure (M4), and Time Change (M5) have data-backed views; M1, M2 and M3 retain their framework placeholders. M4 includes its required compact inputs and a separate validation record.
+> Status: **M0–M5 integrated for final review**. M3 is implemented; M1 has a linked distance/share scatter, map and ranking. Official 1995–2024 bilateral sources have been reconciled. See [final review and demo guide](docs/FINAL_REVIEW.md) for evidence and scope.
 
 ## Quick start
 
 ```bash
 # 1) Dependencies (use the course conda env `vis_env` if it already has them)
-pip install -r requirements.txt
+pip install -r requirements-lock.txt
 
 # 2) Start (from the project root)
 python app.py
@@ -37,8 +36,8 @@ src/
   theme.py             # colours / Plotly template / empty_figure placeholder
   components.py        # reusable building blocks: card / KPI / module control bar / verification panel
   module_base.py       # shared module helpers: guard_active / describe_filters
-  layout.py            # app shell: header + left column (nav + global console) + right view area
-  data_loader.py       # data access layer: parquet first, demo fallback (lru_cache)
+  layout.py            # app shell: header + local-module navigation + right view area
+  data_loader.py       # data access layer: real parquet only (lru_cache)
   modules/             # one file per module + registry
 scripts/build_analytics.py   # DuckDB offline pre-aggregation (run manually)
 data/                  # raw sources (already present)
@@ -59,9 +58,15 @@ Each output maps to a loader in `src/data_loader.py`: `flow_year`, `country_year
 `country_pair_year`, `exporter_hs2_year`, `country_pair_hs2_year`, `gdp_year`, `geodist`,
 `country_meta`.
 
-When a table is missing, `data_loader` returns a deterministic demo frame with the **same column
-schema**, so the skeleton always runs. After building the tables, set `DATA_READY = True` in
-`src/config.py`.
+Missing real tables raise an explicit error; final findings never use synthetic fallback data. All compact runtime tables are included, including the six focal economies’ complete worldwide inbound/outbound HS2 flows. The full 23-million-row bilateral table and raw sources are optional for independent rebuilding.
+
+To rebuild and audit the official bilateral and regional inputs, run:
+
+```bash
+python scripts/prepare_final_data.py --source-root /path/to/CEPII-data
+python scripts/audit_final_examples.py --source-root /path/to/CEPII-data
+python -m unittest discover -s tests
+```
 
 ## Module development conventions
 

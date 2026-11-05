@@ -5,3 +5,15 @@ __pycache__/
 data/sources/
 data/processed/*.duckdb*
 data/processed/country_pair_year.parquet
+
+# Local raw CEPII sources and offline-build caches. These are large or
+# machine-specific and must not be committed; each contributor keeps a local
+# copy (or symlink) instead. See docs/DATA.md.
+data/BACI
+data/CHELEM
+data/GEODIST
+data/processed/analytics.duckdb
+data/processed/.staging_marker.json
+data/processed/country_pair_hs2_year.parquet
+
+.venv

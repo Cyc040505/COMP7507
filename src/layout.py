@@ -144,9 +144,9 @@ def register_shell_callbacks(app) -> None:
                         return;
                     }
                     if (window.Plotly.Plots) { window.Plotly.Plots.resize(gd); }
-                    // M2 explicitly enables zoom/pan. Resize it on navigation,
-                    // but preserve its own interaction config and current view.
-                    if (wrap && wrap.classList.contains('graph-interactive')) {
+                    // Maps and other opt-in interactive views own their gestures.
+                    // Resize them on navigation without applying the shell lock.
+                    if (wrap && wrap.classList && wrap.classList.contains('graph-interactive')) {
                         return;
                     }
                     if (gd.locked !== true) {

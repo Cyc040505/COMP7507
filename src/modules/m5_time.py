@@ -321,7 +321,7 @@ def layout():
                         "Regions use the project’s fixed Africa / America / Asia / Europe / Pacific (Oceania) classification. America includes the whole Americas, not only North America or a trade agreement area. Unknown destinations remain in the full denominator: observed intra-regional share is a lower bound; shading shows its possible range. Unknown origins have no regional share."
                     ),
                     html.P(
-                        "Bilateral inputs are a third-party redistribution from phbelov/world-trade-app data-v1. Pinned SHA256 files reconcile to every project exporter×HS2×year, country-year and world-year total. Official bilateral-source acceptance is BLOCKED pending the team’s shared-data audit. Reconciled redistribution is provisional evidence, not independent verification of official CSVs or partner allocation."
+                        "Regional inputs were rebuilt from official BACI HS92 V202601 annual CSVs for 1995–2024. Every exporter×importer×HS2 allocation and exporter×HS2 total was independently reconciled; source and output SHA256 hashes are recorded in the audit manifest."
                     ),
                     html.P(
                         "Event markers support before/after exploration, not causal attribution. Nominal recovery can reflect prices and exchange rates. These two shares do not describe the entire export basket or partner distribution. The default CHN/DEU/MEX group is a time comparison, not a similar-income group. Similar-income matching belongs to M4."
@@ -331,8 +331,8 @@ def layout():
                     ),
                     html.P(id=cid("limits")),
                     html.A(
-                        "Data redistribution & source attribution",
-                        href="https://github.com/phbelov/world-trade-app/releases/tag/data-v1",
+                        "CEPII BACI source attribution",
+                        href="https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37",
                         target="_blank",
                     ),
                     html.Button(
@@ -641,7 +641,7 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         structure=structure,
         rows=json_records(f),
         summary=json_records(summary),
-        message=f"Provisional regional evidence · official bilateral-source acceptance BLOCKED · {manifest['source_version']} · {start}–{end} · "
+        message=f"Official bilateral source audited · {manifest['source_version']} · {start}–{end} · "
         + ("All products" if product == "TOTAL" else label(product)),
         finding=finding,
         implication=implication,
