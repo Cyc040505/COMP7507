@@ -7,7 +7,7 @@ Data sources: CEPII **BACI** (bilateral goods trade) / **CHELEM** (macroeconomic
 Stack: Plotly Dash single-page app + dash-cytoscape (M3 force-directed network) + DuckDB offline
 pre-aggregation.
 
-> Status: **partially implemented**. Overview (M0) and Product Structure (M4) have data-backed views; M1, M2, M3 and M5 retain their framework placeholders. M4 includes its required compact inputs and a separate validation record.
+> Status: **partially implemented**. Overview (M0), Product Structure (M4), and Time Change (M5) have data-backed views; M1, M2 and M3 retain their framework placeholders. M4 includes its required compact inputs and a separate validation record.
 
 ## Quick start
 
@@ -19,6 +19,12 @@ pip install -r requirements.txt
 python app.py
 # open http://127.0.0.1:8050
 ```
+
+## M5 · Time change
+
+Open **M5 Time Change** in the same app as M4. Three guided cases compare nominal exports with a baseline, trace HS87’s role in the export basket, and compare regional partners around the financial crisis. **Customize this comparison** opens the local controls. Using the M4 selection explicitly carries the current countries and product into M5. The two charts, findings, implications and CSV use the selected window.
+
+For direct access run  `python launch_m5.py`. On Windows, double-click `启动M5.bat`. The compact inputs for normal use are included. See [M5 implementation plan](docs/M5_Feishu_notes.md), [examples and sources](docs/M5_README.md) and [checks](docs/M5_validation.md).
 
 ## Directory layout
 

@@ -1,0 +1,195 @@
+{
+  "source_version": "BACI HS92 V202601",
+  "years": [
+    1995,
+    2024
+  ],
+  "source_type": "Third-party redistribution; not an independent official-CSV audit",
+  "source_repository": "https://github.com/phbelov/world-trade-app",
+  "source_release": "data-v1",
+  "upstream": "https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37",
+  "license": "CEPII Etalab 2.0; attribution retained",
+  "unit": "thousand current USD; release value_usd divided by 1000",
+  "region_definition": "Fixed project country_meta regions: Africa/America/Asia/Europe/Pacific. No/unmapped remains unknown.",
+  "partner_allocation_limit": "Matching exporter-product marginals does not independently audit partner allocation.",
+  "max_product_relative_error": 2.4408905274928844e-14,
+  "keys_reconciled": 566165,
+  "bilateral_keys_reconciled": 870755,
+  "project_inputs_sha256": {
+    "exporter_hs2_year.parquet": "a64944319b8766f66675a205eaf00d07509ba9b49aa5ffccb00aa563418dcf97",
+    "country_year.parquet": "82db2d822437521aee9b5254de2df39d9ab8524da57fed8b08f1db982769774f",
+    "flow_year.parquet": "fa94e543d9360121d1082035a92d249bc96f6fbbe26db003a87b0a4b90707d00",
+    "country_meta.parquet": "9b54b043ed81695e5ace1614402cfc2ff97c06adfaa9a59b64fe04c898771d26"
+  },
+  "checks": [
+    {
+      "year": 1995,
+      "bilateral_product_rows": 456458,
+      "product_keys": 16314
+    },
+    {
+      "year": 1996,
+      "bilateral_product_rows": 487960,
+      "product_keys": 16605
+    },
+    {
+      "year": 1997,
+      "bilateral_product_rows": 512461,
+      "product_keys": 16866
+    },
+    {
+      "year": 1998,
+      "bilateral_product_rows": 531973,
+      "product_keys": 16862
+    },
+    {
+      "year": 1999,
+      "bilateral_product_rows": 548527,
+      "product_keys": 17085
+    },
+    {
+      "year": 2000,
+      "bilateral_product_rows": 649540,
+      "product_keys": 18527
+    },
+    {
+      "year": 2001,
+      "bilateral_product_rows": 667304,
+      "product_keys": 18657
+    },
+    {
+      "year": 2002,
+      "bilateral_product_rows": 685970,
+      "product_keys": 18788
+    },
+    {
+      "year": 2003,
+      "bilateral_product_rows": 704174,
+      "product_keys": 18799
+    },
+    {
+      "year": 2004,
+      "bilateral_product_rows": 731076,
+      "product_keys": 18928
+    },
+    {
+      "year": 2005,
+      "bilateral_product_rows": 749610,
+      "product_keys": 18990
+    },
+    {
+      "year": 2006,
+      "bilateral_product_rows": 772763,
+      "product_keys": 19099
+    },
+    {
+      "year": 2007,
+      "bilateral_product_rows": 793814,
+      "product_keys": 19203
+    },
+    {
+      "year": 2008,
+      "bilateral_product_rows": 807829,
+      "product_keys": 19382
+    },
+    {
+      "year": 2009,
+      "bilateral_product_rows": 805857,
+      "product_keys": 19392
+    },
+    {
+      "year": 2010,
+      "bilateral_product_rows": 823325,
+      "product_keys": 19291
+    },
+    {
+      "year": 2011,
+      "bilateral_product_rows": 831311,
+      "product_keys": 19386
+    },
+    {
+      "year": 2012,
+      "bilateral_product_rows": 847159,
+      "product_keys": 19417
+    },
+    {
+      "year": 2013,
+      "bilateral_product_rows": 861188,
+      "product_keys": 19564
+    },
+    {
+      "year": 2014,
+      "bilateral_product_rows": 865360,
+      "product_keys": 19450
+    },
+    {
+      "year": 2015,
+      "bilateral_product_rows": 883751,
+      "product_keys": 19574
+    },
+    {
+      "year": 2016,
+      "bilateral_product_rows": 900055,
+      "product_keys": 19515
+    },
+    {
+      "year": 2017,
+      "bilateral_product_rows": 917335,
+      "product_keys": 19648
+    },
+    {
+      "year": 2018,
+      "bilateral_product_rows": 925059,
+      "product_keys": 19625
+    },
+    {
+      "year": 2019,
+      "bilateral_product_rows": 929131,
+      "product_keys": 19521
+    },
+    {
+      "year": 2020,
+      "bilateral_product_rows": 904917,
+      "product_keys": 19280
+    },
+    {
+      "year": 2021,
+      "bilateral_product_rows": 945674,
+      "product_keys": 19611
+    },
+    {
+      "year": 2022,
+      "bilateral_product_rows": 945239,
+      "product_keys": 19648
+    },
+    {
+      "year": 2023,
+      "bilateral_product_rows": 945333,
+      "product_keys": 19707
+    },
+    {
+      "year": 2024,
+      "bilateral_product_rows": 890119,
+      "product_keys": 19431
+    }
+  ],
+  "files": [
+    {
+      "file": "dims-baci-hs92-202601-countries.parquet",
+      "url": "https://github.com/phbelov/world-trade-app/releases/download/data-v1/dims-baci-hs92-202601-countries.parquet",
+      "sha256": "138a5ded9aa25b59890f29f93791d55090f2180cc25c573fcd4d4b31a6014bce"
+    },
+    {
+      "file": "cube-baci-hs92-202601-bilateral.parquet",
+      "url": "https://github.com/phbelov/world-trade-app/releases/download/data-v1/cube-baci-hs92-202601-bilateral.parquet",
+      "sha256": "a95669d80e4a3698f24eef9aa6f3d370cae2219fb36bdab1799144b5c66c524d"
+    },
+    {
+      "file": "cube-baci-hs92-202601-bilateral_hs2.parquet",
+      "url": "https://github.com/phbelov/world-trade-app/releases/download/data-v1/cube-baci-hs92-202601-bilateral_hs2.parquet",
+      "sha256": "8c236bd9d35105427c3348911e61cb45e520177821a09efaaf0cfef0f1fba892"
+    }
+  ],
+  "output_sha256": "8f67576071b8a7033a117c553bd66063864196ee6b2e8251258905eea453d547",
+  "downloaded_utc": "2026-11-04T05:53:49.752350+00:00"
+}

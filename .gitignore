@@ -2,3 +2,6 @@ __pycache__/
 *.py[cod]
 .venv/
 .DS_Store
+data/sources/
+data/processed/*.duckdb*
+data/processed/country_pair_year.parquet
