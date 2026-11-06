@@ -108,13 +108,14 @@ class EconomyMath(unittest.TestCase):
             fig = m.scatter_figure(rows, "DEU", peers.iloc[0].country, mode, 1.25)
             self.assertEqual(fig.layout.xaxis.type, "log")
             self.assertEqual(fig.layout.yaxis.type, "log")
-            self.assertEqual(len(fig.layout.shapes), 4)
+            self.assertEqual(len(fig.layout.shapes), 1)
             self.assertEqual(fig.layout.shapes[-1].yref if mode == "gdp" else fig.layout.shapes[-1].xref, "y domain" if mode == "gdp" else "x domain")
-            for shape, trace, ratio in zip(fig.layout.shapes[:3], fig.data[:3], [.1, .5, 1]):
-                self.assertEqual(float(shape.name.removeprefix("m2-ratio-")), ratio)
-                self.assertEqual(shape.xref, "x domain")
-                self.assertEqual(shape.yref, "y domain")
-                self.assertEqual(list(trace.x), [None])
+            for trace, ratio in zip(fig.data[:3], [.1, .5, 1]):
+                self.assertEqual(trace.meta["m2_ratio"], ratio)
+                np.testing.assert_allclose(np.array(trace.y) / np.array(trace.x), ratio)
+            self.assertGreater(fig.layout.xaxis.autorangeoptions.clipmin, 0)
+            self.assertLess(fig.data[0].x[0], fig.layout.xaxis.autorangeoptions.clipmin)
+            self.assertGreater(fig.data[0].x[1], fig.layout.xaxis.autorangeoptions.clipmax)
             self.assertEqual(sum(len(t.x) for t in fig.data[3:]), int(rows.valid.sum()))
 
 
@@ -176,6 +177,37 @@ class EconomyCallbacks(unittest.TestCase):
             self.assertTrue(z["M2-graph"]["figure"]["layout"]["xaxis"]["autorange"])
         z = self.request(changes={**inputs, "M2-graph.relayoutData": {"xaxis.autorange": True, "yaxis.autorange": True}})
         self.assertTrue(z["M2-graph"]["figure"]["layout"]["xaxis"]["autorange"])
+
+    def test_relative_comparison_values_range_and_empty_state(self):
+        def graph(result):
+            children = result["M2-relative"]["children"]["props"]["children"]
+            return next(c["props"]["figure"] for c in children if c["type"] == "Graph")
+        z = self.request()
+        f = graph(z)
+        r = m.data_for_year(2023).set_index("country")
+        expected = [100 * r.loc["JPN", k] / r.loc["DEU", k] for k in ("gdp", "export_value")]
+        np.testing.assert_allclose(f["data"][0]["x"], expected)
+        self.assertEqual(f["layout"]["shapes"][0]["x0"], 100)
+        self.assertIn("16.57 percentage points lower", str(z["M2-relative"]))
+        z = self.request(changes={"M2-mode.value": "export_value"})
+        f = graph(z)
+        self.assertGreater(f["data"][0]["x"][0], 600)
+        self.assertGreater(f["layout"]["xaxis"]["range"][1], max(f["data"][0]["x"]))
+        for changes in [{"M2-anchor.value": "USA"}, {"M2-year.value": 2010}, {"M2-anchor.value": "XXX"}]:
+            self.assertEqual(self.request(changes=changes)["M2-relative"]["children"], [])
+
+    def test_relative_equal_values_and_export_agreement(self):
+        rows = prepare_year(*sample(), m.reference(), 2023)
+        a = rows[rows.country.eq("DEU")].iloc[0]
+        text = str(m.relative_comparison(a, a, 2023))
+        self.assertIn("Same at displayed precision", text)
+        self.assertIn("equal at displayed precision", text)
+        r = m.data_for_year(2023)
+        exported = evidence_frame(r, "DEU", "JPN", "gdp", 1.25).set_index("country")
+        values = r.set_index("country")
+        self.assertAlmostEqual(exported.loc["JPN", "gdp_anchor_100"], 100 * values.loc["JPN", "gdp"] / values.loc["DEU", "gdp"])
+        self.assertAlmostEqual(exported.loc["JPN", "exports_anchor_100"], 100 * values.loc["JPN", "export_value"] / values.loc["DEU", "export_value"])
+        self.assertAlmostEqual(exported.loc["JPN", "export_gdp_gap_pp"], 100 * (values.loc["JPN", "export_gdp_ratio"] - values.loc["DEU", "export_gdp_ratio"]))
 
     def test_switch_dimension_replaces_ineligible_comparator(self):
         z = self.request(changes={"M2-mode.value": "export_value"}, changed="M2-mode.value")

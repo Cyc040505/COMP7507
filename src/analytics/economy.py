@@ -100,6 +100,14 @@ def evidence_frame(rows, anchor, comparator, mode, factor):
     out["matching_dimension"] = mode
     out["factor"] = factor
     out["matching_ratio"] = out.country.map(peers.set_index("country").matching_ratio)
+    for key in ("gdp_anchor_100", "exports_anchor_100", "export_gdp_gap_pp"):
+        out[key] = np.nan
+    a = rows[rows.valid & rows.country.eq(anchor)]
+    if not a.empty:
+        a = a.iloc[0]
+        out.loc[out.valid, "gdp_anchor_100"] = 100 * out.loc[out.valid, "gdp"] / a.gdp
+        out.loc[out.valid, "exports_anchor_100"] = 100 * out.loc[out.valid, "export_value"] / a.export_value
+        out.loc[out.valid, "export_gdp_gap_pp"] = 100 * (out.loc[out.valid, "export_gdp_ratio"] - a.export_gdp_ratio)
     out["trade_source"] = "BACI HS92 V202601"
     out["gdp_source"] = "CHELEM GDP-VAL V202502"
     return out.rename(columns={"gdp": "gdp_million_current_usd", "export_value": "exports_thousand_current_usd"})
