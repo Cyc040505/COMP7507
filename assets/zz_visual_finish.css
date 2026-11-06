@@ -1,0 +1,49 @@
+/* Appearance-only finishing pass over 82ab3f5.
+   Preserve chart geometry, semantic colors, data, layout and interaction logic. */
+:root { --line: #dce3eb; --muted: #596b7d; }
+.app-chrome { border-bottom-color: #d4dee8; }
+.nav-item { border-radius: 6px 6px 0 0; }
+.nav-code { opacity: 1; color: #627488; }
+.nav-item.on { background: #edf3f9; border-bottom-color: #315c88; }
+.nav-item.on .nav-code { color: #315c88; }
+.nav-item:hover { background: #f0f5fa; }
+.card, .m5-analysis-rail { border-color: #dce3eb; box-shadow: 0 2px 6px #1b355008; }
+.card-title-text { color: #24394f; letter-spacing: -.2px; }
+.card.m3-map-card:not(.m3-matrix-card) { border-color: #132b3e; box-shadow: 0 3px 9px #102a3b12; }
+.m3-map-card:not(.m3-matrix-card) .card-title-text { color: #eef5fa; }
+.control-field > label, .m2-field > label, .m3-field > label,
+.m4-field > label, .m5-field, .lbl { color: #53677b; font-weight: 550; }
+.m4-chart .m4-field > label { font-size: 12px; }
+.dash-dropdown { border-color: #c3d0dd !important; }
+.dash-dropdown:hover { border-color: #7f9bb8 !important; }
+.dash-dropdown:focus-within { outline: 2px solid #315c88; outline-offset: 2px; }
+.radio-row label { color: #53677b; }
+.radio-row label:has(input:checked), .m4-step.on {
+  background: #eaf1f8; border-color: #97b0c9; color: #274f77;
+}
+.m4-step-number { opacity: 1; color: #627488; }
+.m4-step.on .m4-step-number { color: #315c88; }
+.m5-presets.pandemic #M5-pandemic,
+.m5-presets.vehicles #M5-vehicles,
+.m5-presets.crisis #M5-crisis {
+  background: #eaf1f8; border-color: #97b0c9; color: #274f77; font-weight: 600;
+}
+.m3-map-card:not(.m3-matrix-card) .radio-row > label { color: #c4d3df; border-color: #546f84; }
+.m3-map-card:not(.m3-matrix-card) .radio-row > label:has(input:checked) {
+  background: #31536c; color: #fff; border-color: #88a9bf;
+}
+.m3-map-card:not(.m3-matrix-card) .modebar-btn path { fill: #bfd0de !important; }
+.m3-map-card:not(.m3-matrix-card) .modebar-btn:hover path { fill: #fff !important; }
+.m3-matrix-card .radio-row > label { color: #53677b; border-color: #bccbda; background: #fff; }
+.m3-matrix-card .radio-row > label:has(input:checked) {
+  color: #274f77; border-color: #97b0c9; background: #eaf1f8;
+}
+.kpi-card strong, .m2-economy dd, .m3-flow-value { font-variant-numeric: tabular-nums; }
+.kpi-card span, .chart-subtitle, .m4-note, .m5-hint, .scope-note { color: #596b7d; }
+.m3-map-card:not(.m3-matrix-card) .m3-map-caption { color: #bdcedb; }
+details { border-color: #dce3eb; }
+details > summary { color: #315c88; font-weight: 550; }
+details > summary:hover { color: #173e67; }
+:focus-visible { outline: 3px solid #4777a7; outline-offset: 3px; }
+/* Intentionally no chart size/order/axis/trace/fill overrides, fonts to download,
+   DOM changes, sticky navigation, animation, new rows or new columns. */

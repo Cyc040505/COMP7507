@@ -1,0 +1,35 @@
+.m1-module .chips { display:grid; grid-template-columns:.55fr 1.15fr 1.2fr 1fr 1fr; gap:12px; }
+.m1-analysis { display:grid; grid-template-columns:minmax(0,2.3fr) minmax(280px,1fr); gap:20px; align-items:stretch; }
+.stats-body .kpi-row { margin-bottom:9px; }
+.m1-notes { margin:4px 0; padding-left:18px; }
+.stats-body p { margin:4px 0 0; }
+.m1-map-legend { display:flex; gap:18px; align-items:center; font-size:12px; color:var(--muted); margin-bottom:5px; }
+.m1-map-legend>span { display:inline-flex; align-items:center; gap:6px; }
+.m1-map-legend i { width:8px; height:8px; border-radius:2px; display:inline-block; }
+.m1-key-exporter { background:#f3d6ac; border:1px solid #db8b35; }
+.m1-key-selected { background:#c79750; border:1px solid #713410; }
+.m1-key-partner { background:#315c88; }
+.m1-encoding-key { margin-left:auto; }
+.m1-map-help { color:var(--muted); font-size:12px; margin-bottom:12px; }
+.m1-map-grid { display:grid; grid-template-columns:minmax(0,1fr) 270px; align-items:start; }
+.m1-map-grid>.dash-graph { height:410px; }
+.m1-map-rail { padding-left:16px; border-left:1px solid var(--line); min-width:0; max-height:550px; overflow:auto; }
+.m1-map-rail .m1-rank-list,.m1-map-rail .m1-eyebrow { display:none; }
+.m1-map-total { display:flex; align-items:baseline; gap:8px; margin:6px 0 0; }
+.m1-map-total strong { font-size:25px; font-weight:600; color:var(--accent); }
+.m1-map-total span,.m1-map-scope,.m1-rail-note { font-size:12px; color:var(--muted); }
+.m1-map-finding { display:flex; align-items:baseline; gap:12px; border-top:1px solid var(--line); padding-top:14px; margin-top:10px; }
+.m1-eyebrow { font-size:11px; color:var(--muted); margin:0; }
+.m1-map-finding p { font-size:13px; color:var(--muted); margin:0; }
+.m1-empty { color:var(--muted); }
+/* Keep country names legible across coastlines and choropleth boundaries. */
+#M1-map .scattergeo text {
+  paint-order:stroke fill;
+  stroke:#f5f9fb;
+  stroke-width:2.5px;
+  stroke-linejoin:round;
+  font-weight:600!important;
+  pointer-events:none;
+}
+.m1-map-grid { gap:8px; }
+#M1-map { border-radius:6px; overflow:hidden; }

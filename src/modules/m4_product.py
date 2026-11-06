@@ -16,7 +16,6 @@ from src.analytics.product import (
     income_peers,
     income_allowed,
     income_policy,
-    candidate_pool,
     two_year_metrics,
     spread_finding,
 )
@@ -26,7 +25,8 @@ from src.module_base import guard_active
 MODULE_ID = "M4"
 NAV_LABEL = "M4  Product Structure"
 ORDER = 4
-DEFAULTS = ["CHN", "RUS", "MEX"]
+FOCUS_COUNTRIES = ("USA", "DEU", "CHN", "MEX", "NLD", "ITA")
+DEFAULTS = ["CHN", "MEX"]
 GRAPH_CONFIG = {"displayModeBar": False, "responsive": True}
 STEPS = {
     "structure": {
@@ -41,11 +41,11 @@ STEPS = {
     },
     "specialization": {
         "question": "Does a large export share mean stronger specialization?",
-        "action": "Inspect Russia’s fuels and fertilizers. Compare their shares and RCA.",
+        "action": "Inspect China’s electrical equipment (HS85) and toys/games (HS95). Compare their shares and RCA.",
         "metric": "rca",
         "mode": "income",
-        "focus": "RUS",
-        "product": "31",
+        "focus": "CHN",
+        "product": "95",
         "view": "world",
         "countries": DEFAULTS,
     },
@@ -125,227 +125,260 @@ def layout():
                     ),
                 ],
             ),
-            field(
-                "Analysis year",
-                dcc.Dropdown(
-                    id=cid("year"),
-                    options=[{"label": str(y), "value": y} for y in range(1995, 2025)],
-                    value=2023,
-                    clearable=False,
-                    className="ctl-dropdown",
-                ),
+            html.Div(
+                [
+                    field(
+                        "Analysis year",
+                        dcc.Dropdown(
+                            id=cid("year"),
+                            options=[
+                                {"label": str(y), "value": y} for y in range(1995, 2025)
+                            ],
+                            value=2023,
+                            clearable=False,
+                            className="ctl-dropdown",
+                        ),
+                    ),
+                    html.Div(
+                        className="m4-steps",
+                        children=[
+                            html.Button(
+                                [
+                                    html.Span(f"0{i}", className="m4-step-number"),
+                                    html.Strong(title),
+                                ],
+                                id=cid("step-" + key),
+                                n_clicks=0,
+                                className="m4-step",
+                            )
+                            for i, (key, title) in enumerate(
+                                [
+                                    ("structure", "Compare structure"),
+                                    ("specialization", "Test specialization"),
+                                    ("change", "Check change"),
+                                ],
+                                1,
+                            )
+                        ],
+                    ),
+                    html.Details(
+                        className="module-controls m4-advanced",
+                        children=[
+                            html.Summary("Customize this comparison"),
+                            html.Div(
+                                className="m4-controls",
+                                children=[
+                                    field(
+                                        "Comparison rule",
+                                        dcc.RadioItems(
+                                            id=cid("mode"),
+                                            options=[
+                                                {
+                                                    "label": "Selected economies",
+                                                    "value": "selected",
+                                                },
+                                                {
+                                                    "label": "Similar income",
+                                                    "value": "income",
+                                                },
+                                            ],
+                                            value="income",
+                                            className="radio-row",
+                                        ),
+                                    ),
+                                    field(
+                                        "Economies · up to 6 in manual mode",
+                                        dcc.Dropdown(
+                                            id=cid("countries"),
+                                            multi=True,
+                                            value=DEFAULTS,
+                                            options=[],
+                                            placeholder="Search economies",
+                                            className="ctl-dropdown",
+                                        ),
+                                    ),
+                                    field(
+                                        "Income reference economy",
+                                        dcc.Dropdown(
+                                            id=cid("anchor"),
+                                            options=[],
+                                            value="CHN",
+                                            clearable=False,
+                                            className="ctl-dropdown",
+                                        ),
+                                    ),
+                                    field(
+                                        "Income candidates",
+                                        dcc.Dropdown(
+                                            id=cid("pool"),
+                                            options=[
+                                                {
+                                                    "label": "Six project case economies",
+                                                    "value": "focus",
+                                                }
+                                            ],
+                                            value="focus",
+                                            clearable=False,
+                                            className="ctl-dropdown",
+                                        ),
+                                    ),
+                                    field(
+                                        "Income range · anchor ÷ factor to anchor × factor",
+                                        dcc.Dropdown(
+                                            id=cid("factor"),
+                                            options=[
+                                                {
+                                                    "label": "1.25 × (narrow)",
+                                                    "value": 1.25,
+                                                },
+                                                {"label": "1.5 ×", "value": 1.5},
+                                            ],
+                                            value=1.25,
+                                            clearable=False,
+                                            className="ctl-dropdown",
+                                        ),
+                                    ),
+                                    field(
+                                        "Products · blank = union of each economy’s top 5",
+                                        dcc.Dropdown(
+                                            id=cid("products"),
+                                            multi=True,
+                                            options=products,
+                                            placeholder="Search HS2 chapter",
+                                            className="ctl-dropdown",
+                                        ),
+                                    ),
+                                    html.Button(
+                                        "Reset guided case",
+                                        id=cid("reset"),
+                                        n_clicks=0,
+                                        className="m4-button",
+                                    ),
+                                ],
+                            ),
+                            html.P(
+                                "All controls here affect M4 only. The income reference is used only in Similar income mode; Detail economy changes only the second chart. All-product denominators stay fixed. Changing the preset conditions switches the narrative to custom exploration.",
+                                className="m4-note",
+                            ),
+                        ],
+                    ),
+                ],
+                className="m4-toolbar",
             ),
             html.Div(
-                className="m4-steps",
-                children=[
-                    html.Button(
-                        [
-                            html.Span(f"0{i}", className="m4-step-number"),
-                            html.Strong(title),
-                        ],
-                        id=cid("step-" + key),
-                        n_clicks=0,
-                        className="m4-step",
-                    )
-                    for i, (key, title) in enumerate(
-                        [
-                            ("structure", "Compare structure"),
-                            ("specialization", "Test specialization"),
-                            ("change", "Check change"),
-                        ],
-                        1,
-                    )
+                [
+                    html.Div(id=cid("question"), className="m4-question"),
+                    html.Div(id=cid("kpis"), className="m4-kpis"),
                 ],
+                className="m4-context",
             ),
-            html.Div(id=cid("question"), className="m4-question"),
-            html.Details(
-                className="module-controls m4-advanced",
-                children=[
-                    html.Summary("Customize this comparison"),
-                    html.Div(
-                        className="m4-controls",
-                        children=[
-                            field(
-                                "Comparison rule",
-                                dcc.RadioItems(
-                                    id=cid("mode"),
-                                    options=[
-                                        {
-                                            "label": "Selected economies",
-                                            "value": "selected",
-                                        },
-                                        {"label": "Similar income", "value": "income"},
-                                    ],
-                                    value="income",
-                                    className="radio-row",
-                                ),
-                            ),
-                            field(
-                                "Economies · up to 6 in manual mode",
-                                dcc.Dropdown(
-                                    id=cid("countries"),
-                                    multi=True,
-                                    value=DEFAULTS,
-                                    options=[],
-                                    placeholder="Search economies",
-                                    className="ctl-dropdown",
-                                ),
-                            ),
-                            field(
-                                "Income reference economy",
-                                dcc.Dropdown(
-                                    id=cid("anchor"),
-                                    options=[],
-                                    value="CHN",
-                                    clearable=False,
-                                    className="ctl-dropdown",
-                                ),
-                            ),
-                            field(
-                                "Income candidates",
-                                dcc.Dropdown(
-                                    id=cid("pool"),
-                                    options=[
-                                        {
-                                            "label": "Overview · ever Top10 exporters",
-                                            "value": "overview",
-                                        },
-                                        {
-                                            "label": "All named economies",
-                                            "value": "all",
-                                        },
-                                    ],
-                                    value="overview",
-                                    clearable=False,
-                                    className="ctl-dropdown",
-                                ),
-                            ),
-                            field(
-                                "Income range · anchor ÷ factor to anchor × factor",
-                                dcc.Dropdown(
-                                    id=cid("factor"),
-                                    options=[
-                                        {"label": "1.25 × (narrow)", "value": 1.25},
-                                        {"label": "1.5 ×", "value": 1.5},
-                                        {"label": "2 × (broad)", "value": 2.0},
-                                    ],
-                                    value=1.25,
-                                    clearable=False,
-                                    className="ctl-dropdown",
-                                ),
-                            ),
-                            field(
-                                "Products · blank = union of each economy’s top 5",
-                                dcc.Dropdown(
-                                    id=cid("products"),
-                                    multi=True,
-                                    options=products,
-                                    placeholder="Search HS2 chapter",
-                                    className="ctl-dropdown",
-                                ),
-                            ),
-                            html.Button(
-                                "Reset guided case",
-                                id=cid("reset"),
-                                n_clicks=0,
-                                className="m4-button",
-                            ),
-                        ],
-                    ),
-                    html.P(
-                        "All controls here affect M4 only. The income reference is used only in Similar income mode; Detail economy changes only the second chart. All-product denominators stay fixed. Changing the preset conditions switches the narrative to custom exploration.",
-                        className="m4-note",
-                    ),
-                ],
-            ),
-            html.Div(id=cid("scope"), className="m4-scope", role="status"),
-            html.Div(id=cid("kpis"), className="m4-kpis"),
-            components.card(
-                "01 / Compare the same products",
-                html.Div(
-                    [
-                        field(
-                            "Heatmap measure",
-                            dcc.RadioItems(
-                                id=cid("metric"),
-                                options=[
-                                    {"label": "Export share", "value": "share"},
-                                    {"label": "RCA", "value": "rca"},
-                                ],
-                                value="share",
-                                className="radio-row",
-                            ),
-                        ),
-                        html.Div(id=cid("heat-note"), className="m4-note"),
-                        graph("graph"),
-                        html.P(
-                            "Click a cell to inspect it below. Grey cells indicate no recorded value, not an assumed zero.",
-                            className="m4-note",
-                        ),
-                    ]
-                ),
-                extra_class="m4-chart",
-            ),
-            components.card(
-                "02 / Check the evidence",
-                html.Div(
-                    [
-                        field(
-                            "Detail view",
-                            dcc.RadioItems(
-                                id=cid("detail-view"),
-                                options=[
-                                    {"label": "Economy vs world", "value": "world"},
-                                    {"label": "Two-year comparison", "value": "change"},
-                                ],
-                                value="world",
-                                className="radio-row",
-                            ),
-                        ),
+            html.Div(
+                [
+                    components.card(
+                        "01 / Compare the same products",
                         html.Div(
-                            className="m4-detail-controls",
-                            children=[
-                                field(
-                                    "Detail economy",
-                                    dcc.Dropdown(
-                                        id=cid("focus"),
-                                        options=[],
-                                        value="CHN",
-                                        clearable=False,
-                                        className="ctl-dropdown",
-                                    ),
+                            [
+                                html.Div(
+                                    [
+                                        field(
+                                            "Heatmap measure",
+                                            dcc.RadioItems(
+                                                id=cid("metric"),
+                                                options=[
+                                                    {
+                                                        "label": "Export share",
+                                                        "value": "share",
+                                                    },
+                                                    {"label": "RCA", "value": "rca"},
+                                                ],
+                                                value="share",
+                                                className="radio-row",
+                                            ),
+                                        ),
+                                        html.Div(
+                                            id=cid("heat-note"), className="m4-note"
+                                        ),
+                                    ],
+                                    className="m4-heat-controls",
                                 ),
-                                field(
-                                    "Highlight product",
-                                    dcc.Dropdown(
-                                        id=cid("inspect"),
-                                        options=products,
-                                        value="85",
-                                        clearable=False,
-                                        className="ctl-dropdown",
-                                    ),
+                                graph("graph"),
+                                html.P(
+                                    "Click a cell to inspect it in the comparison. Grey cells indicate no recorded value, not an assumed zero.",
+                                    className="m4-note",
                                 ),
-                                field(
-                                    "Baseline · used in two-year view",
-                                    dcc.Dropdown(
-                                        id=cid("baseline"),
-                                        options=[
-                                            {"label": str(y), "value": y}
-                                            for y in range(1995, 2025)
-                                        ],
-                                        value=2010,
-                                        clearable=False,
-                                        className="ctl-dropdown",
-                                    ),
-                                ),
-                            ],
+                            ]
                         ),
-                        html.Div(id=cid("detail-note"), className="m4-note"),
-                        graph("detail"),
-                        html.Div(id=cid("cell-stats"), className="m4-kpis"),
-                    ]
-                ),
-                extra_class="m4-chart",
+                        extra_class="m4-chart",
+                    ),
+                    components.card(
+                        "02 / Check the evidence",
+                        html.Div(
+                            [
+                                field(
+                                    "Detail view",
+                                    dcc.RadioItems(
+                                        id=cid("detail-view"),
+                                        options=[
+                                            {
+                                                "label": "Economy vs world",
+                                                "value": "world",
+                                            },
+                                            {
+                                                "label": "Two-year comparison",
+                                                "value": "change",
+                                            },
+                                        ],
+                                        value="world",
+                                        className="radio-row",
+                                    ),
+                                ),
+                                html.Div(
+                                    className="m4-detail-controls",
+                                    children=[
+                                        field(
+                                            "Detail economy",
+                                            dcc.Dropdown(
+                                                id=cid("focus"),
+                                                options=[],
+                                                value="CHN",
+                                                clearable=False,
+                                                className="ctl-dropdown",
+                                            ),
+                                        ),
+                                        field(
+                                            "Highlight product",
+                                            dcc.Dropdown(
+                                                id=cid("inspect"),
+                                                options=products,
+                                                value="85",
+                                                clearable=False,
+                                                className="ctl-dropdown",
+                                            ),
+                                        ),
+                                        field(
+                                            "Baseline year",
+                                            dcc.Dropdown(
+                                                id=cid("baseline"),
+                                                options=[
+                                                    {"label": str(y), "value": y}
+                                                    for y in range(1995, 2025)
+                                                ],
+                                                value=2010,
+                                                clearable=False,
+                                                className="ctl-dropdown",
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                                graph("detail"),
+                                html.Div(id=cid("detail-note"), className="m4-note"),
+                                html.Div(id=cid("cell-stats"), className="m4-kpis"),
+                            ]
+                        ),
+                        extra_class="m4-chart",
+                    ),
+                ],
+                className="m4-analysis",
             ),
             components.card(
                 "Finding / Implication / Limits",
@@ -361,6 +394,7 @@ def layout():
                     ],
                 ),
             ),
+            html.Div(id=cid("scope"), className="m4-scope", role="status"),
             html.Details(
                 className="card m4-method",
                 children=[
@@ -372,7 +406,7 @@ def layout():
                         "World totals include all recorded BACI exporters, including special/historical entities. Display selection never changes the world reference. Amounts are thousand current USD; goods only, not services or domestic value added. HS85 is broader than chips; HS87 is broader than cars."
                     ),
                     html.P(
-                        "Income: CHELEM GDP-CAP in current USD/person. The default Overview candidate pool is the union of annual Top10 exporters after metadata matching, not an S-prefix filter. Matching retains positive same-year GDP-CAP within the displayed multiplicative range; at most six nearest log ratios are shown. The complete qualified list and a 1.25/1.5 sensitivity comparison are reported below. This is an exploratory rule, not an official income grouping or control for other country differences."
+                        "Income: CHELEM GDP-CAP in current USD/person. The comparison pool is USA, DEU, CHN, MEX, NLD and ITA: purposefully selected project cases, not a representative world sample. Matching retains positive same-year GDP-CAP within the displayed multiplicative range; at most six nearest log ratios are shown. The complete qualified list and a 1.25/1.5 sensitivity comparison are reported below. Similarity is relative to the anchor, not necessarily between every pair of peers. This is an exploratory rule, not an official income grouping or control for other country differences."
                     ),
                     html.P(
                         "Income comparisons use 1995–2023 only: this release’s CHELEM trade data end in 2023 and later GDP values may be projections/IMF estimates. Historical estimates can remain; the source has no per-cell status flags, so historical values are not certified final observations. Income mode at 2024 produces a notice and no matched group; it never substitutes a previous year. BACI-only analysis still extends to 2024."
@@ -562,10 +596,10 @@ def heat_figure(d, countries, products, metric):
             hovertemplate="<b>%{customdata[0]} · HS%{customdata[1]}</b><br>%{customdata[2]}<br>Exports: %{customdata[3]:,.0f} thousand USD<br>Economy share: %{customdata[4]:.2f}%<br>World share: %{customdata[5]:.2f}%<br>RCA: %{customdata[6]:.3f}<extra></extra>",
         )
     )
-    base_style(fig, max(370, 110 + 34 * len(products)))
+    base_style(fig, max(370, 110 + 42 * len(products)))
     ticks = [label(p) for p in products]
     # Wrap long UN descriptions without concealing their codes.
-    ticks = ["<br>".join(wrap(s, 34)) for s in ticks]
+    ticks = ["<br>".join(wrap(s, 24)) for s in ticks]
     fig.update_layout(
         plot_bgcolor="#e8edf2",
         margin=dict(l=20, r=22, t=60, b=20),
@@ -577,6 +611,7 @@ def heat_figure(d, countries, products, metric):
             fixedrange=True,
         ),
         yaxis=dict(
+            type="category",
             tickmode="array",
             tickvals=products,
             ticktext=ticks,
@@ -597,10 +632,10 @@ def highlight_product(fig, product):
         return fig
     index = codes.index(product)
     for trace in fig.data:
-        trace.marker.opacity = [1.0 if p == product else 0.48 for p in codes]
+        trace.marker.opacity = [1.0 if p == product else 0.72 for p in codes]
         trace.marker.line.color = theme.ACCENT
         trace.marker.line.width = [1.5 if p == product else 0 for p in codes]
-    ticks = ["<br>".join(wrap(label(p), 32)) for p in codes]
+    ticks = ["<br>".join(wrap(label(p), 24)) for p in codes]
     ticks[index] = "<b>" + ticks[index] + "</b>"
     fig.update_yaxes(tickmode="array", tickvals=codes, ticktext=ticks)
     fig.add_shape(
@@ -613,7 +648,7 @@ def highlight_product(fig, product):
         y1=index + 0.46,
         layer="below",
         fillcolor="rgba(29,78,216,0.06)",
-        line=dict(color=theme.ACCENT, width=1),
+        line=dict(color=theme.ACCENT, width=0),
     )
     return fig
 
@@ -664,9 +699,10 @@ def detail_figure(d, focus, product):
             title="Share of all-product exports (%)", rangemode="tozero", ticksuffix="%"
         ),
         yaxis=dict(
+            type="category",
             tickmode="array",
             tickvals=codes,
-            ticktext=["<br>".join(wrap(label(p), 32)) for p in codes],
+            ticktext=["<br>".join(wrap(label(p), 24)) for p in codes],
             autorange="reversed",
             automargin=True,
         ),
@@ -675,14 +711,13 @@ def detail_figure(d, focus, product):
     return highlight_product(fig, product)
 
 
-@lru_cache(maxsize=1)
-def overview_pool():
-    return candidate_pool(data_loader.load_country_year(), eligible(trade()))
+def case_pool(d):
+    return [c for c in FOCUS_COUNTRIES if c in set(d.exporter)]
 
 
 def recipe(step):
     settings = STEPS[step]
-    products = sorted(set(product_set(metrics(2023), DEFAULTS)) | {"31"})
+    products = sorted(set(product_set(metrics(2023), DEFAULTS)) | {"85", "95", "87"})
     return dict(
         settings,
         step=step,
@@ -690,7 +725,7 @@ def recipe(step):
         anchor="CHN",
         products=products,
         baseline=2010,
-        pool="overview",
+        pool="focus",
         factor=1.25,
     )
 
@@ -767,9 +802,10 @@ def comparison_figure(rows, baseline, year, product=None):
             title="Share of all-product exports (%)", rangemode="tozero", ticksuffix="%"
         ),
         yaxis=dict(
+            type="category",
             tickmode="array",
             tickvals=list(rows.hs2),
-            ticktext=["<br>".join(wrap(label(p), 32)) for p in rows.hs2],
+            ticktext=["<br>".join(wrap(label(p), 24)) for p in rows.hs2],
             autorange="reversed",
             automargin=True,
         ),
@@ -835,7 +871,7 @@ def register_callbacks(app):
     )
     def sync(active, case, current, products, previous):
         guard_active(MODULE_ID, active)
-        opts = eligible(trade())
+        opts = case_pool(trade())
         ns = names()
         options = [{"label": f"{ns.get(c,c)} ({c})", "value": c} for c in opts]
         apply = case and (ctx.triggered_id == cid("case") or not previous)
@@ -910,7 +946,7 @@ def register_callbacks(app):
         year = int(filters.get("year", 2024))
         baseline = int(baseline or 2010)
         factor = float(factor or 1.25)
-        pool = pool or "overview"
+        pool = "focus"  # A single project-wide case scope; stale browser values cannot expand it.
         mode = mode or "selected"
         metric = metric or "share"
         d = metrics(year)
@@ -922,15 +958,17 @@ def register_callbacks(app):
         anchor = filters.get("country", "CHN")
         income_status = "Not used"
         cases = case or {}
-        chosen = list(dict.fromkeys(selected or []))[:6]
+        chosen = [c for c in dict.fromkeys(selected or []) if c in FOCUS_COUNTRIES][:6]
+        excluded = sorted(set(selected or []) - set(FOCUS_COUNTRIES))
+        if excluded:
+            messages.append(
+                "Outside the six project cases: " + ", ".join(excluded) + "."
+            )
         if len(selected or []) > 6:
             messages.append(
                 "First six manual selections shown; reduce the list to include different cases."
             )
-        candidates = overview_pool() if pool == "overview" else eligible(d)
-        candidates = sorted(
-            set(candidates) | ({anchor} if anchor in eligible(d) else set())
-        )
+        candidates = case_pool(d)
         if mode == "income":
             chosen = []
             g = data_loader.load_gdp_year()
@@ -944,10 +982,10 @@ def register_callbacks(app):
                 messages.append(
                     "Income analysis requires both real trade and real GDP inputs."
                 )
-            elif anchor == "WLD":
+            elif anchor not in FOCUS_COUNTRIES:
                 income_status = "Unavailable: select an economy"
                 messages.append(
-                    "Select an individual income reference economy; World is not an economy."
+                    "Select one of the six project case economies as the income reference."
                 )
             else:
                 all_peers, peer_rows, base = income_peers(
@@ -977,6 +1015,10 @@ def register_callbacks(app):
         chosen = [c for c in chosen if c in set(d.exporter)]
         if missing:
             messages.append("No recorded trade this year: " + ", ".join(missing) + ".")
+        if mode == "income" and len(chosen) == 1:
+            messages.append(
+                "Only the anchor qualifies; no peer comparison is available. The income range has not been widened automatically."
+            )
         products = product_set(d, chosen, requested)
         absent = sorted(set(requested or []) - set(products))
         if absent:
@@ -1054,7 +1096,7 @@ def register_callbacks(app):
         )
         figure = heat_figure(d, chosen, products, metric)
         note = (
-            "Fixed chapters from the income-case economies’ Top5, including HS31; retained across guided steps. "
+            "Fixed chapters from the China/Mexico Top5 plus HS85, HS95 and HS87; retained across guided steps. "
             if guided
             else "Displayed chapter scope; all-product reference totals stay fixed. "
         ) + (
@@ -1104,13 +1146,13 @@ def register_callbacks(app):
         elif len(chosen) == 1:
             finding = f"{chosen[0]} is selected; add another economy for a cross-country finding."
         if guided and cases.get("step") == "specialization":
-            a = d[d.exporter.eq("RUS")].set_index("hs2")
-            if {"27", "31"} <= set(a.index) & set(products):
-                x = a.loc["27"]
-                y = a.loc["31"]
-                finding = f"RUS HS27: share {x.share:.2%}, RCA {x.rca:.2f}; HS31: share {y.share:.2%}, RCA {y.rca:.2f}."
+            a = d[d.exporter.eq("CHN")].set_index("hs2")
+            if {"85", "95"} <= set(a.index) & set(products):
+                x = a.loc["85"]
+                y = a.loc["95"]
+                finding = f"CHN HS85: share {x.share:.2%}, RCA {x.rca:.2f}; HS95: share {y.share:.2%}, RCA {y.rca:.2f}."
                 implication = (
-                    "Fertilizers have a smaller export share but a higher RCA than fuels in this case. A large domestic share and strong relative specialization answer different questions."
+                    "Toys, games and sports equipment (HS95) have a smaller export share but a higher RCA than electrical machinery (HS85) in this case. A large domestic share and strong relative specialization answer different questions."
                     if y.share < x.share and y.rca > x.rca
                     else "The current values do not support the preset share/RCA reversal; inspect the displayed evidence."
                 )

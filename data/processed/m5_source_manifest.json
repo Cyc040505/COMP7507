@@ -1,0 +1,296 @@
+{
+  "source_version": "BACI HS92 V202601",
+  "source_type": "Official local annual CSVs; all bilateral HS2 allocations independently reaggregated",
+  "years": [
+    1995,
+    2024
+  ],
+  "unit": "thousand current USD",
+  "region_definition": "GEODIST continents; Pacific\u2192Oceania; unknown retained",
+  "checks": [
+    {
+      "year": 1995,
+      "bilateral_product_rows": 456458,
+      "product_keys": 16314
+    },
+    {
+      "year": 1996,
+      "bilateral_product_rows": 487960,
+      "product_keys": 16605
+    },
+    {
+      "year": 1997,
+      "bilateral_product_rows": 512461,
+      "product_keys": 16866
+    },
+    {
+      "year": 1998,
+      "bilateral_product_rows": 531973,
+      "product_keys": 16862
+    },
+    {
+      "year": 1999,
+      "bilateral_product_rows": 548527,
+      "product_keys": 17085
+    },
+    {
+      "year": 2000,
+      "bilateral_product_rows": 649540,
+      "product_keys": 18527
+    },
+    {
+      "year": 2001,
+      "bilateral_product_rows": 667304,
+      "product_keys": 18657
+    },
+    {
+      "year": 2002,
+      "bilateral_product_rows": 685970,
+      "product_keys": 18788
+    },
+    {
+      "year": 2003,
+      "bilateral_product_rows": 704174,
+      "product_keys": 18799
+    },
+    {
+      "year": 2004,
+      "bilateral_product_rows": 731076,
+      "product_keys": 18928
+    },
+    {
+      "year": 2005,
+      "bilateral_product_rows": 749610,
+      "product_keys": 18990
+    },
+    {
+      "year": 2006,
+      "bilateral_product_rows": 772763,
+      "product_keys": 19099
+    },
+    {
+      "year": 2007,
+      "bilateral_product_rows": 793814,
+      "product_keys": 19203
+    },
+    {
+      "year": 2008,
+      "bilateral_product_rows": 807829,
+      "product_keys": 19382
+    },
+    {
+      "year": 2009,
+      "bilateral_product_rows": 805857,
+      "product_keys": 19392
+    },
+    {
+      "year": 2010,
+      "bilateral_product_rows": 823325,
+      "product_keys": 19291
+    },
+    {
+      "year": 2011,
+      "bilateral_product_rows": 831311,
+      "product_keys": 19386
+    },
+    {
+      "year": 2012,
+      "bilateral_product_rows": 847159,
+      "product_keys": 19417
+    },
+    {
+      "year": 2013,
+      "bilateral_product_rows": 861188,
+      "product_keys": 19564
+    },
+    {
+      "year": 2014,
+      "bilateral_product_rows": 865360,
+      "product_keys": 19450
+    },
+    {
+      "year": 2015,
+      "bilateral_product_rows": 883751,
+      "product_keys": 19574
+    },
+    {
+      "year": 2016,
+      "bilateral_product_rows": 900055,
+      "product_keys": 19515
+    },
+    {
+      "year": 2017,
+      "bilateral_product_rows": 917335,
+      "product_keys": 19648
+    },
+    {
+      "year": 2018,
+      "bilateral_product_rows": 925059,
+      "product_keys": 19625
+    },
+    {
+      "year": 2019,
+      "bilateral_product_rows": 929131,
+      "product_keys": 19521
+    },
+    {
+      "year": 2020,
+      "bilateral_product_rows": 904917,
+      "product_keys": 19280
+    },
+    {
+      "year": 2021,
+      "bilateral_product_rows": 945674,
+      "product_keys": 19611
+    },
+    {
+      "year": 2022,
+      "bilateral_product_rows": 945239,
+      "product_keys": 19648
+    },
+    {
+      "year": 2023,
+      "bilateral_product_rows": 945333,
+      "product_keys": 19707
+    },
+    {
+      "year": 2024,
+      "bilateral_product_rows": 890119,
+      "product_keys": 19431
+    }
+  ],
+  "files": [
+    {
+      "file": "BACI_HS92_Y1995_V202601.csv",
+      "sha256": "ac27db551563e3c07432e35e6855499bd430c035128e1800510950f25e8f95ab"
+    },
+    {
+      "file": "BACI_HS92_Y1996_V202601.csv",
+      "sha256": "fc7c4dae9401687137a44332cb54edbebecbda40e700408d91a96bbed91f3475"
+    },
+    {
+      "file": "BACI_HS92_Y1997_V202601.csv",
+      "sha256": "ee2b5f7fd586f565be2d3aa14c807ac08dc7b829f396529a83a818906205c2fb"
+    },
+    {
+      "file": "BACI_HS92_Y1998_V202601.csv",
+      "sha256": "13990fd6dc0bec96475f0c609dd04e2a80c60917721c66021c1e17a2c7b54d1f"
+    },
+    {
+      "file": "BACI_HS92_Y1999_V202601.csv",
+      "sha256": "f77a03a63f08988760892a3aa63fcd6988c9d34540dec322fab0c7e75475b96c"
+    },
+    {
+      "file": "BACI_HS92_Y2000_V202601.csv",
+      "sha256": "926feb394927df415aeac03cbe83a0a5e55d34a565adc140d7830efb1a5ed85c"
+    },
+    {
+      "file": "BACI_HS92_Y2001_V202601.csv",
+      "sha256": "7bd5d61f56f9e60756195e4d5d7e644ee45f742578ec34b6847221b90b7525b7"
+    },
+    {
+      "file": "BACI_HS92_Y2002_V202601.csv",
+      "sha256": "6abc06426803995be4acf1b11d7939de3e695b766eb1bb9304640056fa7c0a36"
+    },
+    {
+      "file": "BACI_HS92_Y2003_V202601.csv",
+      "sha256": "6ce3900086d3c7b6d8b596745492efbc444ed60384b90f44b610b4d9cb9f0848"
+    },
+    {
+      "file": "BACI_HS92_Y2004_V202601.csv",
+      "sha256": "48282919002411f5dcd87a004deda0d98351964dafcc0c54f85109d4fcb68386"
+    },
+    {
+      "file": "BACI_HS92_Y2005_V202601.csv",
+      "sha256": "9db63815f109605df3a678feb3d552f444f9471580ff3dcf37b160cd3c065073"
+    },
+    {
+      "file": "BACI_HS92_Y2006_V202601.csv",
+      "sha256": "cffcb10e2f4e58c84ff757a4cec93cfba91a502b8298f23de93725f2390823fe"
+    },
+    {
+      "file": "BACI_HS92_Y2007_V202601.csv",
+      "sha256": "ee30b6fc7efb254307b5b224c1b32f79205c6690dace104dda612d41f3bff47a"
+    },
+    {
+      "file": "BACI_HS92_Y2008_V202601.csv",
+      "sha256": "ca0bf902599003eaf03f46689c5d49740821ab9712da8a27636acb323b17e615"
+    },
+    {
+      "file": "BACI_HS92_Y2009_V202601.csv",
+      "sha256": "e2356ca1c8067ede1a3d4ffa4240b724abbe1dd980f5592065d10d20726a6a50"
+    },
+    {
+      "file": "BACI_HS92_Y2010_V202601.csv",
+      "sha256": "26d66b21b867b9244cf9e21ea05782e282ecb245b5dedd541894f80709607934"
+    },
+    {
+      "file": "BACI_HS92_Y2011_V202601.csv",
+      "sha256": "d8f1837b2893c60afd6895bae8d1aac36e4369e9f7b815b0006930439165095f"
+    },
+    {
+      "file": "BACI_HS92_Y2012_V202601.csv",
+      "sha256": "e6a438f93dcd4e770906f27f561a7cdf7b67562d0e6d80d969edb0a5269f69b3"
+    },
+    {
+      "file": "BACI_HS92_Y2013_V202601.csv",
+      "sha256": "a732aa536d47f06b77ee7809b00f7cd19be060b9bcea34bb7d60c71fa9a4fa0d"
+    },
+    {
+      "file": "BACI_HS92_Y2014_V202601.csv",
+      "sha256": "35867db5626f61a91000e5c218fdece95c7326efe204461e9333455485ecbc6f"
+    },
+    {
+      "file": "BACI_HS92_Y2015_V202601.csv",
+      "sha256": "2ae6f549c6d60b9ee07d7662f883a0f31af12a221ad9c73657bf3ccf4ba20a79"
+    },
+    {
+      "file": "BACI_HS92_Y2016_V202601.csv",
+      "sha256": "2be53432324bb0f57cd976b5e5df1342f339f7e08c26fd38ff62b9c1074962b8"
+    },
+    {
+      "file": "BACI_HS92_Y2017_V202601.csv",
+      "sha256": "a70eefcf6a1056f0f5e21604fd611dda71db82f5b080aa46ac867b5642dc1294"
+    },
+    {
+      "file": "BACI_HS92_Y2018_V202601.csv",
+      "sha256": "a2bb6e2718422910c82c6451cd8a5c3f6254c5c52de8dbb5cbf00114c666e60a"
+    },
+    {
+      "file": "BACI_HS92_Y2019_V202601.csv",
+      "sha256": "03365b70687b0e9ff896cc741b54188bd978665f0c6b608825bf17077e767a0c"
+    },
+    {
+      "file": "BACI_HS92_Y2020_V202601.csv",
+      "sha256": "6bc746b05b66cf2610bcde60ba2d1892e89308427d20d7635fd75a85fdade9e9"
+    },
+    {
+      "file": "BACI_HS92_Y2021_V202601.csv",
+      "sha256": "e2ad1814e47eeb1292373539e9dfd53b19793418089af0f6cb07736133666bc7"
+    },
+    {
+      "file": "BACI_HS92_Y2022_V202601.csv",
+      "sha256": "fcda6ce77668f45e323bbbb14542d2c11095dcf4ffb6f023e06cce5eed0f31a2"
+    },
+    {
+      "file": "BACI_HS92_Y2023_V202601.csv",
+      "sha256": "8bc8ac3fa5640ddf39d8859c33df4966293cb353873e96620f7e3dcaee00e15e"
+    },
+    {
+      "file": "BACI_HS92_Y2024_V202601.csv",
+      "sha256": "e652e91842fee8a5f81a5a95c00a486959a46157ee8c850c76a2fd1f48390b26"
+    }
+  ],
+  "project_inputs_sha256": {
+    "exporter_hs2_year.parquet": "a64944319b8766f66675a205eaf00d07509ba9b49aa5ffccb00aa563418dcf97",
+    "country_meta.parquet": "6c90644cb5eceb95edf68b2a1959a5f4123f557fae2c8b429d2c30a702324944",
+    "country_year.parquet": "82db2d822437521aee9b5254de2df39d9ab8524da57fed8b08f1db982769774f",
+    "flow_year.parquet": "fa94e543d9360121d1082035a92d249bc96f6fbbe26db003a87b0a4b90707d00"
+  },
+  "output_sha256": "8251c0a5fb4deab9bb238dd261f92e79ae9042ced521c21ec4aa70b044db35f6",
+  "bilateral_inputs_sha256": {
+    "country_pair_year.parquet": "bc51768ca5b53b706e69644d4ca4ec36e2d33a7d9beb807187dd788d06c3aa29",
+    "country_pair_hs2_focus_year.parquet": "d0587506629c56adff799b679f9278a4eddfcda3908a7d231e9d5d303a81b26e"
+  },
+  "focus_scope": "Complete worldwide inbound and outbound HS2 flows for USA DEU CHN MEX NLD ITA; no Top-N filter."
+}

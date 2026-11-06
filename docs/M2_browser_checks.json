@@ -1,0 +1,20 @@
+{
+  "checks_passed": [
+    "Default Germany/Japan cards, finding and desktop screenshot",
+    "Wheel zoom, box zoom, pan and reset; comparison/navigation preserve zoom; matching remains unchanged",
+    "All three ratio lines reach viewport edges with correct ratios after zoom, pan and reset",
+    "Rendered lines align within 1px during mouse-down pan and successive wheel zoom; no extra redraws during dragging or endpoint restyles during ordinary zoom",
+    "Distant viewport extends native reference endpoints; reset ignores extended endpoints",
+    "USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x, including reset",
+    "Both matching dimensions and both threshold choices",
+    "Actual India scatter point click updates comparison",
+    "Year change clears an ineligible comparison and stale point selection",
+    "No-match state without automatic widening or stale cards",
+    "Single six-country anchor selector with selected state; global comparison candidates",
+    "Navigation away and back preserves M2 state",
+    "Downloaded CSV agrees with visible matches and selected comparison",
+    "Relative GDP/export bars, percentage-point gap and CSV agree; >100 values remain visible; empty comparisons clear the chart",
+    "390px viewport without horizontal page overflow or graph/card overlap; mobile screenshot"
+  ],
+  "browser_errors": []
+}
