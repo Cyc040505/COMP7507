@@ -5,7 +5,6 @@ pandas>=3.0
 numpy>=2.4
 
 # Needed once modules are wired to real data / built out (installed lazily by module authors)
-dash-cytoscape>=1.0     # M3 force-directed trade network
 duckdb>=1.1             # offline pre-aggregation (scripts/build_analytics.py)
 pyarrow>=26             # read/write parquet analysis tables
 openpyxl>=3.1           # read GeoDist .xls
