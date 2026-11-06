@@ -236,7 +236,7 @@ def layout():
                                 html.Div(
                                     [
                                         html.P(
-                                            "100 = selected baseline. Dashed marker = event year. Click a point to inspect the same year in both charts.",
+                                    "Dotted horizontal line: baseline = 100. Dashed vertical line: event year. Click a point to inspect that year in both charts.",
                                             className="m5-hint",
                                         ),
                                         dcc.Graph(
@@ -560,15 +560,17 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
                 line=dict(color=colors[c], width=2.5, dash=dashes[c]),
                 marker=dict(size=5),
                 customdata=d[["region_coverage"]].to_numpy() * 100,
-                hovertemplate=f"<b>{c}</b> · %{{x}}<br>Share: %{{y:.2f}}%<br>Known-region coverage: %{{customdata[0]:.2f}}%<extra></extra>",
+                hovertemplate=(
+                    f"<b>{c}</b> · %{{x}}<br>Product share: %{{y:.2f}}%<extra></extra>"
+                    if metric == "product"
+                    else f"<b>{c}</b> · %{{x}}<br>Same-region lower bound: %{{y:.2f}}%<br>Known-region coverage: %{{customdata[0]:.2f}}%<extra></extra>"
+                ),
             )
         )
     fig.add_hline(
         y=100,
         line_dash="dot",
         line_color="#64748b",
-        annotation_text="Baseline = 100",
-        annotation_position="bottom left",
     )
     style(fig, start, end, event, selected, "Nominal export index")
     if metric == "product" and product == "TOTAL":
@@ -604,21 +606,29 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
     for row in f[f.year.eq(selected)].itertuples():
         value = theme.fmt_usd(row.value) if pd.notna(row.value) else "No recorded value"
         product_txt = (
-            f"product {row.product_share:.1%}"
+            f"Product share {row.product_share:.1%}"
             if pd.notna(row.product_share)
-            else "product share not applicable / missing"
+            else "Product share unavailable"
         )
         intra_txt = (
-            f"intra-region {row.intra_share:.1%}–{row.intra_upper:.1%}; region coverage {row.region_coverage:.1%}"
+            f"Same-region share {row.intra_share:.1%}–{row.intra_upper:.1%}"
             if pd.notna(row.intra_share)
-            else "region share unavailable"
+            else "Same-region share unavailable"
+        )
+        coverage_txt = (
+            f"Known-region coverage {row.region_coverage:.1%}"
+            if pd.notna(row.region_coverage)
+            else None
         )
         details.append(
             html.Div(
                 [
                     html.Strong(f"{row.country} · {selected} · {value}"),
-                    html.Span(f"{product_txt}; {intra_txt}"),
-                ]
+                    html.Span(product_txt) if product != "TOTAL" else None,
+                    html.Span(intra_txt),
+                    html.Span(coverage_txt) if coverage_txt else None,
+                ],
+                style={"--country-color": colors[row.country]},
             )
         )
     below = summary.loc[valid & summary.end_index.lt(100 - 1e-9), "country"]
