@@ -25,13 +25,14 @@
 .m5-finding>strong { display:block; color:var(--muted); font-size:12px; font-weight:600; margin-bottom:6px; }
 .m5-finding>div+strong { margin-top:16px; }
 #M5-finding { font-size:15px; color:var(--accent); }
-.m5-analysis-rail .kpi-row { flex-direction:column; gap:12px; }
+.m5-analysis-rail .kpi-row { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
 .m5-analysis-rail .kpi-card { border:0; border-top:1px solid var(--line); padding:12px 0 0; }
+.m5-analysis-rail .kpi-card:first-child { grid-column:1 / -1; }
 .m5-analysis-rail .kpi-card strong { font-size:23px; }
 .m5-radio { display:flex; gap:20px; font-size:12px; margin:6px 0; }
 .m5-radio input { margin-right:6px; }
-.m5-detail { display:flex; flex-direction:column; gap:14px; }
-.m5-detail>div { border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:6px; font-size:12px; }
+.m5-detail { display:flex; flex-direction:column; gap:8px; }
+.m5-detail>div { border:1px solid var(--line); border-inline-start:3px solid var(--country-color,var(--accent)); border-radius:5px; padding:9px 11px; background:#f8fafc; display:flex; flex-direction:column; gap:2px; font-size:12px; }
 .m5-detail span { color:var(--muted); line-height:1.6; }
 .m5-methods { font-size:12px; line-height:1.7; }
 .m5-methods button { display:block; margin-top:12px; }
