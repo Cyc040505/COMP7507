@@ -115,7 +115,13 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
     peers = match_candidates(rows, anchor, mode, factor)
     matched = set(peers.country)
     fig = go.Figure()
-    xmin, xmax = valid.gdp_billion_usd.min() / 1.5, valid.gdp_billion_usd.max() * 1.5
+    # Reference endpoints must not set the axis range, but the rightmost
+    # comparison's marker and ISO3 label still need room inside the clip box.
+    # Reserve 0.6 decades when the comparison is the rightmost economy;
+    # otherwise retain the usual spacing between the background points.
+    rightmost = valid.loc[valid.gdp_billion_usd.idxmax(), "country"]
+    right_padding = 4 if comparator == rightmost else 1.5
+    xmin, xmax = valid.gdp_billion_usd.min() / 1.5, valid.gdp_billion_usd.max() * right_padding
     ymin, ymax = valid.exports_billion_usd.min() / 1.5, valid.exports_billion_usd.max() * 1.5
     span = max(log10(xmax / xmin), log10(ymax / ymin))
     for ratio, color in [(0.1, "#9dbad5"), (0.5, "#547fa8"), (1, "#254d73")]:

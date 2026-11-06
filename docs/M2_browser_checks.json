@@ -5,6 +5,7 @@
     "All three ratio lines reach viewport edges with correct ratios after zoom, pan and reset",
     "Rendered lines align within 1px during mouse-down pan and successive wheel zoom; no extra redraws during dragging or endpoint restyles during ordinary zoom",
     "Distant viewport extends native reference endpoints; reset ignores extended endpoints",
+    "USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x, including reset",
     "Both matching dimensions and both threshold choices",
     "Actual India scatter point click updates comparison",
     "Year change clears an ineligible comparison and stale point selection",

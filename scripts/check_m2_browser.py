@@ -183,6 +183,33 @@ def main():
         expect(page.locator("#M2-finding")).to_contain_text("USA")
         expect(page.locator("#M2-comparator")).to_contain_text("USA")
         expect(page.locator("#M2-relative")).to_contain_text("USA compared with Germany")
+        def check_usa_label():
+            page.wait_for_function("""() => {
+                const graph = document.querySelector('#M2-graph');
+                const plot = graph.querySelector('.nsewdrag').getBoundingClientRect();
+                const label = [...graph.querySelectorAll('.textpoint text')]
+                    .find(t => t.textContent === 'USA');
+                if (!label) return false;
+                const box = label.getBoundingClientRect();
+                return box.width > 0 && box.left >= plot.left &&
+                    box.right <= plot.right - 2 && box.top >= plot.top && box.bottom <= plot.bottom;
+            }""")
+        # This case puts the comparison at the largest GDP. Check actual SVG
+        # text bounds: data-point visibility alone missed the clipped label.
+        check_usa_label()
+        for width in [1280, 1440]:
+            page.set_viewport_size({"width": width, "height": 1100})
+            page.wait_for_load_state("networkidle")
+            page.wait_for_function("""() => {
+                const graph = document.querySelector('#M2-graph');
+                return Math.abs(graph.clientWidth - graph.querySelector('.js-plotly-plot')._fullLayout.width) < 2;
+            }""")
+            check_usa_label()
+        page.locator('#M2-graph [data-title="Reset axes"]').click()
+        check_usa_label()
+        check_reference_edges()
+        page.screenshot(path=str(screenshots / "M2_similar_exports.png"), full_page=True)
+        checks.append("USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x, including reset")
         page.wait_for_function("""() => {
             const g = document.querySelector('#M2-relative-graph .js-plotly-plot');
             return g.data[0].x[0] > 600 && g._fullLayout.xaxis.range[1] > Math.max(...g.data[0].x);
