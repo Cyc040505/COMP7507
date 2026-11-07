@@ -3,7 +3,7 @@
 .m3-summary>div:first-child { flex:1; }
 .m3-actions { display:flex; gap:8px; flex-shrink:0; }
 .m3-primary { display:grid; grid-template-columns:minmax(0,7fr) minmax(280px,3fr); gap:20px; align-items:stretch; }
-.m3-secondary { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:20px; align-items:stretch; }
+.m3-secondary { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:20px; align-items:stretch; }
 .m3-primary>.card,.m3-secondary>.card { min-width:0; margin:0; }
 .card.m3-map-card { position:relative; background:#132b3e; color:#e8f0f5; border-color:#132b3e; padding:18px 20px 14px; overflow:hidden; }
 .m3-map-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -41,3 +41,15 @@
 .m3-flow-value { font-size:21px; font-weight:600; letter-spacing:-.4px; }
 .m3-flow-share { font-size:12px; }
 .m3-matrix-card .m3-flow-name { color:var(--muted); }
+
+.m3-palette-controls { margin-top:10px; }
+.m3-palette-controls .m3-field>label { font-size:11px; }
+.card.m3-light-card { background:white; border-color:var(--line); color:var(--ink); }
+.m3-light-card .card-title-text { color:var(--ink); }
+.m3-light-card .radio-row>label,.m3-matrix-card .radio-row>label { color:var(--muted); background:white; border-color:var(--line); }
+.m3-light-card .radio-row>label:has(input:checked),.m3-matrix-card .radio-row>label:has(input:checked) { color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line); }
+.m3-light-card .m3-selection { background:#f3f6f8; color:var(--ink); }
+.m3-light-card .m3-flow-name,.m3-light-card .m3-map-caption { color:var(--muted); }
+.m3-secondary .radio-row { margin:8px 0; }
+
+.m3-region-caption { color:var(--muted); }
