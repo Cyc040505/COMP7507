@@ -200,6 +200,7 @@ def layout():
                                 "HS85 · Electrical equipment  /  HS87 · Vehicles & parts",
                                 className="chart-subtitle",
                             ),
+                            html.H4(id=cid("regional-takeaway"), className="m3-takeaway"),
                             field("Regional chart", dcc.RadioItems(
                                 id=cid("region-view"),
                                 options=[{"label": "Compare · new", "value": "compare"},
@@ -727,6 +728,13 @@ def regional_comparison(country, year, direction):
                    showgrid=False, tickmode="array", tickvals=order,
                    ticktext=["Americas" if r == "America" else r for r in order]),
     )
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    home = meta.loc[country,"region"]
+    home = "Oceania" if home == "Pacific" else home
+    if home in order and home != "Unknown":
+        i = order.index(home)
+        fig.add_shape(type="rect", xref="paper", x0=0, x1=1, y0=i-.46, y1=i+.46,
+                      fillcolor="rgba(212,161,91,.12)", line_width=0, layer="below")
     if any(r is None for r in summaries.values()):
         missing = ", ".join("HS" + c for c, r in summaries.items() if r is None)
         fig.add_annotation(x=0, y=-.2, xref="paper", yref="paper", xanchor="left",
@@ -734,7 +742,32 @@ def regional_comparison(country, year, direction):
     return fig
 
 
+def regional_takeaway(country, year, direction):
+    a, b = regional(country, year, "85", direction), regional(country, year, "87", direction)
+    if a is None or b is None:
+        return "Regional comparison unavailable: a product has no positive trade total."
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    home = meta.loc[country,"region"]
+    home = "Oceania" if home == "Pacific" else home
+    if home not in REGIONS or home == "Unknown":
+        return "Compare each region; the focal economy’s region is unknown."
+    name = meta.loc[country,"name"]
+    noun = "exports going to" if direction == "export" else "imports coming from"
+    return f"{name}, {year} — {noun} {home}: vehicles & parts {b[0][home]:.1%}, electrical equipment {a[0][home]:.1%}. Identified shares; see unknown-region bounds alongside."
+
+
 def register_callbacks(app):
+    @app.callback(Output(cid("regional-takeaway"), "children"),
+                  Input(cid("country"), "value"), Input(cid("year"), "value"),
+                  Input(cid("direction"), "value"), Input(ACTIVE_MODULE, "data"))
+    def takeaway(country, year, direction, active):
+        guard_active(MODULE_ID, active)
+        try:
+            return regional_takeaway(country, year, direction)
+        except (KeyError, ValueError, FileNotFoundError):
+            return "No regional comparison available for this selection."
+
+
     @app.callback(Output(cid("table"), "data"), Input(cid("records"), "data"))
     def table(rows):
         return rows or []
@@ -841,7 +874,7 @@ def register_callbacks(app):
             "card m3-map-card" + (" m3-matrix-card" if view == "matrix" else " m3-light-card" if palette == "light" else ""),
             "01  Six-economy partner matrix" if view == "matrix" else "01  Trade flows",
             (
-                "Fixed partner columns · All-partner shares · Common 0–100% scale. Other includes partners outside the fixed columns."
+                "Rows = six focal economies; columns = partner economies. Each cell is the partner’s share of that row’s trade, not a flow between continents. Common 0–100% scale; Other retains partners outside the fixed columns."
                 if view == "matrix"
                 else "Arrows point to importers · Width encodes value. Capitals locate economies; curves are not transport routes."
             ),

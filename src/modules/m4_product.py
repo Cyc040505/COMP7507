@@ -21,6 +21,7 @@ from src.analytics.product import (
 )
 from src.ids import ACTIVE_MODULE, mid
 from src.module_base import guard_active
+from src.modules.m4_presentation import presentation, story_guide, RCA_GUIDE
 
 MODULE_ID = "M4"
 NAV_LABEL = "M4  Product Structure"
@@ -155,7 +156,7 @@ def layout():
                                 [
                                     ("structure", "Compare structure"),
                                     ("specialization", "Test specialization"),
-                                    ("change", "Check change"),
+                                    ("change", "Optional: change"),
                                 ],
                                 1,
                             )
@@ -270,8 +271,20 @@ def layout():
                     html.Div(id=cid("question"), className="m4-question"),
                     html.Div(id=cid("kpis"), className="m4-kpis"),
                 ],
-                className="m4-context",
+                className="m4-context", id=cid("context-summary"),
             ),
+            dcc.RadioItems(id=cid("presentation-mode"), options=[
+                {"label": "Key findings", "value": "key"},
+                {"label": "Full analysis · all original charts", "value": "full"}],
+                value="key", className="radio-row"),
+            html.Div([
+                html.P(id=cid("story-question"), className="m4-story-question"),
+                html.H3(id=cid("story-title"), className="m4-story-title"),
+                html.P(id=cid("story-evidence"), className="m4-story-evidence"),
+                html.Div(id=cid("story-rca"), className="m4-story-rca"),
+                dcc.Graph(id=cid("story"), config=GRAPH_CONFIG),
+                html.P(id=cid("story-note"), className="m4-note"),
+            ], id=cid("story-card"), className="card m4-story"),
             html.Div(
                 [
                     components.card(
@@ -379,7 +392,7 @@ def layout():
                                                 {"label": "Dumbbell · new", "value": "dumbbell"},
                                                 {"label": "Grouped bars · original", "value": "bars"},
                                             ],
-                                            value="dumbbell",
+                                            value="bars",
                                             className="radio-row",
                                         ),
                                     ),
@@ -394,7 +407,7 @@ def layout():
                         extra_class="m4-chart",
                     ),
                 ],
-                className="m4-analysis",
+                className="m4-analysis", id=cid("full-analysis"), style={"display":"none"},
             ),
             components.card(
                 "Finding / Implication / Limits",
@@ -881,7 +894,48 @@ def dumbbell_figure(rows, baseline, year, product=None):
     return fig
 
 
+def rca_explainer():
+    return [
+        html.Div([
+            html.Strong("RCA", className="m4-rca-symbol"),
+            html.Span("=", className="m4-rca-equals", **{"aria-hidden": "true"}),
+            html.Div([
+                html.Span("Product’s share of country exports", className="m4-rca-numerator"),
+                html.Span("Product’s share of world exports"),
+            ], className="m4-rca-fraction", **{"aria-hidden": "true"}),
+        ], className="m4-rca-formula", role="img", **{
+            "aria-label": "RCA equals a product’s share of country exports divided by its share of world exports."
+        }),
+        html.Div([
+            html.Div([html.Strong("1×"), html.Span("World benchmark")]),
+            html.Div([html.Strong("Above 1×"), html.Span("More concentrated in this product")]),
+        ], className="m4-rca-reading"),
+        html.P("Compares export shares — not export amounts or product quality.", className="m4-rca-boundary"),
+    ]
+
+
 def register_callbacks(app):
+    @app.callback(
+        Output(cid("story-title"), "children"), Output(cid("story"), "figure"),
+        Output(cid("story-note"), "children"), Output(cid("story-card"), "style"),
+        Output(cid("full-analysis"), "style"), Output(cid("context-summary"), "style"),
+        Output(cid("story-question"), "children"), Output(cid("story-evidence"), "children"),
+        Output(cid("story-rca"), "children"),
+        Input(cid("comparison"), "data"), Input(cid("presentation-mode"), "value"),
+        Input(ACTIVE_MODULE, "data"),
+    )
+    def show_story(comparison, mode, active):
+        guard_active(MODULE_ID, active)
+        comparison = comparison or {}
+        title, figure, note = presentation(comparison, metrics(comparison.get("year",2023)), trade(), names())
+        question, evidence, rca = story_guide(comparison, metrics(comparison.get("year",2023)), names())
+        return title, figure, note, {"display":"none" if mode=="full" else "block"}, {"display":"grid" if mode=="full" else "none"}, {"display":"grid" if mode=="full" else "none"}, question, evidence, rca_explainer() if rca else ""
+
+    @app.callback(Output(cid("presentation-mode"), "value"), Input(cid("story"), "clickData"), prevent_initial_call=True)
+    def inspect_story(click):
+        return "full" if click else no_update
+
+
     @app.callback(Output(cid("change-style-controls"), "style"), Input(cid("detail-view"), "value"))
     def change_style_visibility(view):
         return {"display": "block" if view == "change" else "none"}
@@ -1176,6 +1230,8 @@ def register_callbacks(app):
             if metric == "share"
             else "RCA colours use log₂ centred at 1, saturating below 0.125 / above 8. Cell numbers and hover retain actual values."
         )
+        if metric == "rca":
+            note += " " + RCA_GUIDE
         records = []
         lookup = shown.set_index(["exporter", "hs2"])
         meta = context_metadata(context)
@@ -1298,11 +1354,12 @@ def register_callbacks(app):
         Input(cid("comparison"), "data"),
         Input(cid("case"), "data"),
         Input(ACTIVE_MODULE, "data"),
+        Input(cid("story"), "clickData"),
         State(cid("focus"), "value"),
         State(cid("inspect"), "value"),
         State(cid("detail-context"), "data"),
     )
-    def select(click, comparison, case, active, focus, product, previous):
+    def select(click, comparison, case, active, story_click, focus, product, previous):
         guard_active(MODULE_ID, active)
         comparison = comparison or {}
         case = case or {}
@@ -1310,6 +1367,10 @@ def register_callbacks(app):
         previous = previous or {}
         step = case.get("step")
         context = {"step": step}
+        if ctx.triggered_id == cid("story") and story_click:
+            point = story_click["points"][0].get("customdata", [])
+            if len(point) == 2 and point[0] in valid and point[1] in chapters():
+                return point[0], point[1], context
         if ctx.triggered_id == cid("graph") and click:
             pt = click["points"][0]
             c, p = pt.get("x"), pt.get("y")

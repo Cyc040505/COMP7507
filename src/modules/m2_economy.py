@@ -68,6 +68,7 @@ def layout():
                 value="DEU", className="m2-anchors")),
             html.P("Compare your chosen economy with similar economies around the world. Select 1.5× to explore a wider range.", className="m2-note"),
         ])),
+        html.Div(id=cid("takeaway"), className="m2-takeaway", role="status"),
         html.Div([
             components.card("GDP and goods exports around the world", html.Div([
                 html.Div(id=cid("scope"), className="m2-note", role="status"),
@@ -78,13 +79,14 @@ def layout():
                                   "modeBarButtonsToRemove": ["select2d", "lasso2d"]},
                           style={"height": "510px", "minHeight": "510px"}),
                 html.P("Each dot is an economy. Both axes use logarithmic scales: equal distances represent equal ratios. Darker blue lines indicate higher exports/GDP (10%, 50%, 100%). The shaded band shows your similarity range; click a highlighted dot to compare.", className="m2-note"),
-                html.P("Scroll to zoom or drag a box to enlarge an area. Choose Pan to move around; double-click or choose Reset axes to return to the full view.", className="m2-note"),
+                html.Details([html.Summary("How to explore this chart"), html.P("Scroll to zoom or drag a box to enlarge an area. Choose Pan to move around; double-click or choose Reset axes to return to the full view.", className="m2-note")]),
             ])),
             components.card("Compare two economies", html.Div([
                 field("Choose an economy to compare", dcc.Dropdown(id=cid("comparator"), options=[{"label": "Japan · JPN", "value": "JPN"}], value="JPN", clearable=False)),
                 html.P(id=cid("match-status"), role="status", className="m2-note"),
-                html.Div(id=cid("cards"), className="m2-comparison"),
                 html.Div(id=cid("relative")),
+                html.Details([html.Summary("Exact amounts for both economies"),
+                              html.Div(id=cid("cards"), className="m2-comparison")]),
                 html.Div(id=cid("finding"), className="m2-finding"),
                 html.P(LIMITATION, className="m2-note"),
             ])),
@@ -120,7 +122,7 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
     # Reserve 0.6 decades when the comparison is the rightmost economy;
     # otherwise retain the usual spacing between the background points.
     rightmost = valid.loc[valid.gdp_billion_usd.idxmax(), "country"]
-    right_padding = 4 if comparator == rightmost else 1.5
+    right_padding = 8 if comparator == rightmost else 1.5
     xmin, xmax = valid.gdp_billion_usd.min() / 1.5, valid.gdp_billion_usd.max() * right_padding
     ymin, ymax = valid.exports_billion_usd.min() / 1.5, valid.exports_billion_usd.max() * 1.5
     span = max(log10(xmax / xmin), log10(ymax / ymin))
@@ -154,7 +156,7 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
         custom = [[r.country, r.name, r.export_gdp_ratio] for r in data.itertuples()]
         fig.add_trace(go.Scatter(
             x=data.gdp_billion_usd.tolist(), y=data.exports_billion_usd.tolist(),
-            customdata=custom, text=data.country.tolist(), name=role,
+            customdata=custom, text=[dict(zip(FOCUS_COUNTRIES, FOCUS_NAMES)).get(r.country,r.name) for r in data.itertuples()] if labels else data.country.tolist(), name=role,
             mode="markers+text" if labels else "markers",
             textposition="top left" if role == "Anchor" else "bottom right",
             textfont={"size": 12, "color": theme.INK},
@@ -239,6 +241,24 @@ def relative_comparison(a, b, year):
 
 
 def register_callbacks(app):
+    @app.callback(Output(cid("takeaway"), "children"), Input(cid("context"), "data"), Input(ACTIVE_MODULE, "data"))
+    def takeaway(context, active):
+        guard_active(MODULE_ID, active)
+        if not context or not context.get("comparator"):
+            return html.H3("Choose two economies with comparable data")
+        try:
+            d = data_for_year(context["year"]).set_index("country")
+            a, b = d.loc[context["anchor"]], d.loc[context["comparator"]]
+            full_names = dict(zip(FOCUS_COUNTRIES, FOCUS_NAMES))
+            aname = full_names.get(context["anchor"], a['name'])
+            bname = full_names.get(context["comparator"], b['name'])
+            return html.Div([
+                html.H3(f"{bname} has {100*b.gdp/a.gdp:.1f}% of {aname}’s GDP, but {100*b.export_value/a.export_value:.1f}% of its goods exports"),
+                html.P(f"{context['year']} · Matched by {MODES[context['mode']]}. Each percentage compares the same measure between the two economies; it is not exports divided by GDP.")])
+        except (KeyError, ValueError, FileNotFoundError):
+            return html.H3("No comparable pair in this selection")
+
+
     app.clientside_callback(
         ClientsideFunction(namespace="m2", function_name="extendReferenceLines"),
         Output(cid("reference-lines-ready"), "data"),

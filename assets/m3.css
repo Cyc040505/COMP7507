@@ -53,3 +53,4 @@
 .m3-secondary .radio-row { margin:8px 0; }
 
 .m3-region-caption { color:var(--muted); }
+.m3-takeaway { font-size:17px; font-weight:600; line-height:1.5; margin:12px 0; color:var(--accent); }
