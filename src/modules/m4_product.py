@@ -370,6 +370,22 @@ def layout():
                                         ),
                                     ],
                                 ),
+                                html.Div(
+                                    field(
+                                        "Two-year chart style",
+                                        dcc.RadioItems(
+                                            id=cid("change-style"),
+                                            options=[
+                                                {"label": "Dumbbell · new", "value": "dumbbell"},
+                                                {"label": "Grouped bars · original", "value": "bars"},
+                                            ],
+                                            value="dumbbell",
+                                            className="radio-row",
+                                        ),
+                                    ),
+                                    id=cid("change-style-controls"),
+                                    style={"display": "none"},
+                                ),
                                 graph("detail"),
                                 html.Div(id=cid("detail-note"), className="m4-note"),
                                 html.Div(id=cid("cell-stats"), className="m4-kpis"),
@@ -813,7 +829,63 @@ def comparison_figure(rows, baseline, year, product=None):
     return highlight_product(fig, product)
 
 
+def dumbbell_figure(rows, baseline, year, product=None):
+    """Paired shares on one scale; missing endpoints never become zero or a line."""
+    if rows.empty:
+        return theme.empty_figure("Select products recorded in at least one comparison year.")
+    rows = rows.sort_values(["change_pp", "hs2"], ascending=[False, True], na_position="last")
+    fig = go.Figure()
+    ys = list(range(len(rows)))
+    line_x, line_y = [], []
+    for i, r in enumerate(rows.itertuples()):
+        if pd.notna(r.share_base) and pd.notna(r.share_current):
+            line_x.extend([r.share_base * 100, r.share_current * 100, None])
+            line_y.extend([i, i, None])
+    fig.add_trace(go.Scatter(x=line_x, y=line_y, mode="lines", line=dict(color="#a8b5c2", width=2),
+                             hoverinfo="skip", showlegend=False, connectgaps=False))
+    for suffix, title, symbol, color in [
+        ("base", f"{baseline} · open", "circle-open", "#65758b"),
+        ("current", f"{year} · filled", "circle", theme.ACCENT),
+    ]:
+        fig.add_trace(go.Scatter(
+            x=rows["share_" + suffix] * 100, y=ys, mode="markers", name=title,
+            marker=dict(symbol=symbol, size=10, color=color, line=dict(width=2)),
+            customdata=[[r.hs2, number(getattr(r, "rca_" + suffix))] for r in rows.itertuples()],
+            hovertemplate=f"{title.split(' · ')[0]} · HS%{{customdata[0]}}<br>Share: %{{x:.3f}}%<br>RCA: %{{customdata[1]}}<extra></extra>",
+        ))
+    def share_text(v):
+        return "—" if pd.isna(v) else "<0.01%" if 0 < v * 100 < 0.01 else f"{v * 100:.2f}%"
+    for x, title in [(0.69, str(baseline)), (0.84, str(year)), (1, "Change")]:
+        fig.add_annotation(x=x, y=1.08, xref="paper", yref="paper", text=f"<b>{title}</b>",
+                           showarrow=False, xanchor="right", font=dict(size=12))
+    for i, r in enumerate(rows.itertuples()):
+        delta = "—" if pd.isna(r.change_pp) else f"{r.change_pp:+.2f} pp"
+        for x, text in [(0.69, share_text(r.share_base)), (0.84, share_text(r.share_current)), (1, delta)]:
+            fig.add_annotation(x=x, y=i, xref="paper", yref="y", text=text,
+                               showarrow=False, xanchor="right", font=dict(size=12, color=theme.INK))
+        if r.hs2 == product:
+            fig.add_shape(type="rect", xref="paper", x0=0, x1=1, y0=i-.42, y1=i+.42,
+                          fillcolor="rgba(212,161,91,0.15)", line_width=0, layer="below")
+    values = pd.concat([rows.share_base, rows.share_current]).dropna() * 100
+    upper = max(1, float(values.max()) * 1.12) if len(values) else 1
+    ticks = ["<br>".join(wrap(label(p), 22)) for p in rows.hs2]
+    ticks = [f"<b>{t}</b>" if p == product else t for p, t in zip(rows.hs2, ticks)]
+    base_style(fig, max(450, 120 + 48 * len(rows)))
+    fig.update_layout(
+        margin=dict(l=15, r=12, t=65, b=60),
+        legend=dict(orientation="h", y=1.23, x=0, font=dict(size=12)),
+        xaxis=dict(domain=[0, .54], range=[0, upper], title="Export share (%)", ticksuffix="%", nticks=5, fixedrange=True),
+        yaxis=dict(tickmode="array", tickvals=ys, ticktext=ticks, range=[len(rows)-.5, -.5],
+                   automargin=True, fixedrange=True, showgrid=False, zeroline=False),
+    )
+    return fig
+
+
 def register_callbacks(app):
+    @app.callback(Output(cid("change-style-controls"), "style"), Input(cid("detail-view"), "value"))
+    def change_style_visibility(view):
+        return {"display": "block" if view == "change" else "none"}
+
     @app.callback(
         Output(cid("case"), "data"),
         Input(ACTIVE_MODULE, "data"),
@@ -1264,8 +1336,9 @@ def register_callbacks(app):
         Input(cid("detail-view"), "value"),
         Input(cid("baseline"), "value"),
         Input(ACTIVE_MODULE, "data"),
+        Input(cid("change-style"), "value"),
     )
-    def detail(c, p, comparison, view, baseline, active):
+    def detail(c, p, comparison, view, baseline, active, chart_style=None):
         guard_active(MODULE_ID, active)
         comparison = comparison or {}
         year = int(comparison.get("year", 2023))
@@ -1294,7 +1367,8 @@ def register_callbacks(app):
                 )
             codes = list(dict.fromkeys(comparison.get("products", []) + [p]))
             rows = two_year_metrics(trade(), c, year, baseline, codes)
-            figure = comparison_figure(rows, baseline, year, p)
+            render = dumbbell_figure if chart_style == "dumbbell" else comparison_figure
+            figure = render(rows, baseline, year, p)
             note = f"{names().get(c,c)} ({c}) · {baseline} vs {year}. Fixed displayed chapters plus HS{p}; sorted by share change (pp). Each year uses its own full world reference. Missing endpoints are not filled."
         else:
             if a.empty:
@@ -1309,6 +1383,8 @@ def register_callbacks(app):
             codes = list(figure.data[0].y)
             rows = two_year_metrics(trade(), c, year, baseline, codes)
             note = f"{names().get(c,c)} ({c}) · {year} · HS{p}. Top8 chapters by exports plus inspected chapter; same-year economy and world shares. Other chapters remain in the denominators."
+        if view == "change" and chart_style == "dumbbell":
+            note += " Open point = baseline; filled point = current year. A connector joins two observations, not a continuous trend. — means missing."
         r = rows[rows.hs2.eq(p)]
         notice = ""
         if r.empty or pd.isna(r.iloc[0].share_current):
