@@ -1,21 +1,25 @@
 """M5: continuous nominal export recovery and structural indicators."""
 
+import hashlib
+import json
+import math
 from functools import lru_cache
-import hashlib, json, math
+
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, State, ctx, dcc, html, dash_table, no_update
-from src import components, data_loader, theme, config
-from src.ids import ACTIVE_MODULE, mid
-from src.module_base import guard_active
+from dash import Input, Output, State, ctx, dash_table, dcc, html, no_update
+
+from src import components, config, data_loader, theme
 from src.analytics.product import chapters, label
 from src.analytics.time_change import build_timeline, summarize_recovery
+from src.ids import ACTIVE_MODULE, mid
+from src.m5_portraits import FOCUS_COUNTRIES, finite, portrait_cards
+from src.module_base import guard_active
 
 MODULE_ID = "M5"
 NAV_LABEL = "M5  Time Change"
 ORDER = 5
 YEARS = list(range(1995, 2025))
-FOCUS_COUNTRIES = ("USA", "DEU", "CHN", "MEX", "NLD", "ITA")
 CASE_COUNTRIES = ["CHN", "DEU", "MEX"]
 CASES = {
     "pandemic": (
@@ -101,7 +105,7 @@ def field(title, control):
 def layout():
     ns = country_names()
     return html.Div(
-        className="module-inner m5",
+        className="module-inner m5 m5-fieldnotes",
         children=[
             dcc.Store(id=cid("selected"), data=2024),
             dcc.Store(id=cid("rows")),
@@ -227,28 +231,81 @@ def layout():
                 className="m5-toolbar",
             ),
             html.Div(id=cid("import-note"), className="m5-hint"),
+            html.Div(id=cid("context"), className="m5-context"),
+            html.Div(
+                [
+                    html.H3("01 / Compare the recovery"),
+                    html.Span("Common scales · click any annual point to inspect"),
+                ],
+                className="m5-section-heading",
+            ),
+            html.Div(
+                id=cid("portraits"),
+                className="m5-country-grid",
+                children=portrait_cards(
+                    [],
+                    [],
+                    [],
+                    2019,
+                    2020,
+                    [2016, 2024],
+                    "intra",
+                    "TOTAL",
+                    2024,
+                    message="Loading the selected comparison…",
+                ),
+            ),
+            html.Section(
+                [
+                    html.Div(
+                        [
+                            html.H3("Read the comparison"),
+                            html.P("Findings describe the full displayed window."),
+                        ],
+                        className="m5-reading-heading",
+                    ),
+                    html.Div(
+                        [
+                            html.Strong("Finding"),
+                            html.Div(id=cid("finding")),
+                            html.Strong("Implication"),
+                            html.Div(id=cid("implication")),
+                        ],
+                        className="m5-finding",
+                        role="status",
+                    ),
+                    html.Div(id=cid("kpis"), className="m5-reading-summary"),
+                ],
+                className="m5-reading",
+            ),
             html.Div(
                 [
                     html.Div(
                         [
-                            components.card(
-                                "01 / Follow nominal value recovery",
-                                html.Div(
-                                    [
-                                        html.P(
-                                    "Dotted horizontal line: baseline = 100. Dashed vertical line: event year. Click a point to inspect that year in both charts.",
-                                            className="m5-hint",
+                            html.Details(
+                                [
+                                    html.Summary("Overlay country recovery lines"),
+                                    components.card(
+                                        "01 / Follow nominal value recovery",
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    "Dotted horizontal line: baseline = 100. Dashed vertical line: event year. Click a point to inspect that year in both charts.",
+                                                    className="m5-hint",
+                                                ),
+                                                dcc.Graph(
+                                                    id=cid("index"),
+                                                    style={"height": "330px"},
+                                                    config={
+                                                        "displayModeBar": False,
+                                                        "responsive": True,
+                                                    },
+                                                ),
+                                            ]
                                         ),
-                                        dcc.Graph(
-                                            id=cid("index"),
-                                            style={"height": "330px"},
-                                            config={
-                                                "displayModeBar": False,
-                                                "responsive": True,
-                                            },
-                                        ),
-                                    ]
-                                ),
+                                    ),
+                                ],
+                                className="m5-overlay",
                             ),
                             components.card(
                                 "02 / Check structural indicators",
@@ -290,23 +347,46 @@ def layout():
                     ),
                     html.Aside(
                         [
-                            html.Div(
-                                [
-                                    html.Strong("Finding"),
-                                    html.Div(id=cid("finding")),
-                                    html.Strong("Implication"),
-                                    html.Div(id=cid("implication")),
-                                ],
-                                className="m5-finding",
-                                role="status",
+                            html.H3(
+                                ["Annual detail", html.Span(id=cid("detail-year"))],
+                                className="m5-detail-heading",
                             ),
-                            html.Div(id=cid("kpis")),
                             html.Div(id=cid("detail"), className="m5-detail"),
                         ],
                         className="m5-analysis-rail",
                     ),
                 ],
                 className="m5-analysis",
+            ),
+            html.Section(
+                [
+                    html.Div(
+                        [
+                            html.Label("Inspect year", htmlFor=cid("inspect-year")),
+                            html.Strong(id=cid("year-label")),
+                        ],
+                        className="m5-inspect-caption",
+                    ),
+                    html.Div(
+                        dcc.Slider(
+                            id=cid("inspect-year"),
+                            min=2016,
+                            max=2024,
+                            value=2024,
+                            step=1,
+                            marks={2016: "2016", 2024: "2024"},
+                            tooltip={"placement": "bottom"},
+                            updatemode="mouseup",
+                        ),
+                        role="group",
+                        **{"aria-label": "Inspect year across M5 charts"},
+                    ),
+                    html.P(
+                        "Choose a year here or click a point in a country card or either chart. "
+                        "All inspected values use the same year."
+                    ),
+                ],
+                className="m5-inspect-control",
             ),
             html.Div(id=cid("message"), className="m5-source"),
             html.Details(
@@ -362,14 +442,34 @@ def layout():
             html.Details(
                 [
                     html.Summary("Methods, provenance & evidence download"),
-                    html.P(
-                        "BACI HS92 V202601 · 1995–2024 · nominal merchandise exports, thousand current USD. Value index uses the selected product scope; product share always divides by ALL products. Annual records are not interpolated or filled with zeros."
-                    ),
-                    html.P(
-                        "Regions use the project’s fixed Africa / America / Asia / Europe / Pacific (Oceania) classification. America includes the whole Americas, not only North America or a trade agreement area. Unknown destinations remain in the full denominator: observed intra-regional share is a lower bound; shading shows its possible range. Unknown origins have no regional share."
-                    ),
-                    html.P(
-                        "Regional inputs were rebuilt from official BACI HS92 V202601 annual CSVs for 1995–2024. Every exporter×importer×HS2 allocation and exporter×HS2 total was independently reconciled; source and output SHA256 hashes are recorded in the audit manifest."
+                    html.Div(
+                        [
+                            html.Section(
+                                [
+                                    html.H4("01 / Measurement"),
+                                    html.P(
+                                        "BACI HS92 V202601 · 1995–2024 · nominal merchandise exports, thousand current USD. Value index uses the selected product scope; product share always divides by ALL products. Annual records are not interpolated or filled with zeros."
+                                    ),
+                                ]
+                            ),
+                            html.Section(
+                                [
+                                    html.H4("02 / Region uncertainty"),
+                                    html.P(
+                                        "Regions use the project’s fixed Africa / America / Asia / Europe / Pacific (Oceania) classification. America includes the whole Americas, not only North America or a trade agreement area. Unknown destinations remain in the full denominator: observed intra-regional share is a lower bound; shading shows its possible range. Unknown origins have no regional share."
+                                    ),
+                                ]
+                            ),
+                            html.Section(
+                                [
+                                    html.H4("03 / Provenance"),
+                                    html.P(
+                                        "Regional inputs were rebuilt from official BACI HS92 V202601 annual CSVs for 1995–2024. Every exporter×importer×HS2 allocation and exporter×HS2 total was independently reconciled; source and output SHA256 hashes are recorded in the audit manifest."
+                                    ),
+                                ]
+                            ),
+                        ],
+                        className="m5-methods-grid",
                     ),
                     html.P(
                         "Event markers support before/after exploration, not causal attribution. Nominal recovery can reflect prices and exchange rates. These two shares do not describe the entire export basket or partner distribution. The default CHN/DEU/MEX group is a time comparison, not a similar-income group. Similar-income matching belongs to M4."
@@ -464,6 +564,24 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
             detail=[],
             limits="",
             structure_note="",
+            portraits=portrait_cards(
+                [],
+                [],
+                [],
+                baseline,
+                event,
+                [1995, 2024],
+                metric,
+                product,
+                selected,
+                message=message,
+            ),
+            context="Choose valid comparison settings to inspect annual evidence.",
+            year_min=1995,
+            year_max=2024,
+            year_marks={1995: "1995", 2024: "2024"},
+            year_label="—",
+            detail_year="",
         )
 
     if not countries:
@@ -698,11 +816,12 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         on="country",
         how="left",
     )
+    records, summaries = json_records(f), json_records(summary)
     return dict(
         index=fig,
         structure=structure,
-        rows=json_records(f),
-        summary=json_records(summary),
+        rows=records,
+        summary=summaries,
         message=f"Official bilateral source audited · {manifest['source_version']} · {start}–{end} · "
         + ("All products" if product == "TOTAL" else label(product)),
         finding=finding,
@@ -719,6 +838,29 @@ def compute_view(countries, product, baseline, event, window, metric, selected):
         detail=details,
         limits="HS2 is broad; nominal USD includes price, exchange-rate and re-export effects. Neither event attribution nor full structural recovery is established by these indicators.",
         structure_note=note,
+        portraits=portrait_cards(
+            countries,
+            records,
+            summaries,
+            baseline,
+            event,
+            [start, end],
+            metric,
+            product,
+            selected,
+        ),
+        context=[
+            html.Span(" · ".join(countries)),
+            html.Span(
+                "All merchandise exports" if product == "TOTAL" else label(product)
+            ),
+            html.Span(f"{baseline} baseline · {event} event · {start}–{end}"),
+        ],
+        year_min=start,
+        year_max=end,
+        year_marks={y: str(y) for y in sorted({start, baseline, event, end})},
+        year_label=str(selected),
+        detail_year=str(selected),
     )
 
 
@@ -859,30 +1001,51 @@ def register_callbacks(app):
 
     @app.callback(
         Output(cid("selected"), "data"),
+        Output(cid("inspect-year"), "value"),
         Input(cid("index"), "clickData"),
         Input(cid("structure"), "clickData"),
         Input(cid("window"), "value"),
         Input(cid("import-reset"), "data"),
+        Input(cid("inspect-year"), "value"),
+        *[
+            Input(cid("portrait-" + country), "clickData")
+            for country in FOCUS_COUNTRIES
+        ],
         State(cid("selected"), "data"),
         State(ACTIVE_MODULE, "data"),
     )
-    def select_year(a, b, window, reset, selected, active):
+    def select_year(a, b, window, reset, slider, *values):
+        *portrait_clicks, selected, active = values
         guard_active(MODULE_ID, active)
+        if not window or len(window) != 2:
+            return no_update, no_update
+        trigger = ctx.triggered_id
         if f"{cid('import-reset')}.data" in ctx.triggered_prop_ids:
-            return window[1]
-        click = (
-            a
-            if ctx.triggered_id == cid("index")
-            else b if ctx.triggered_id == cid("structure") else None
+            return window[1], window[1]
+        sources = {cid("index"): a, cid("structure"): b}
+        sources.update(
+            zip((cid("portrait-" + c) for c in FOCUS_COUNTRIES), portrait_clicks)
         )
-        if click and click.get("points"):
-            year = click["points"][0].get("x")
-            if isinstance(year, (int, float)) and window[0] <= year <= window[1]:
-                return int(year)
+        click = sources.get(trigger)
+        candidate = slider if trigger == cid("inspect-year") else None
+        if isinstance(click, dict) and click.get("points"):
+            candidate = click["points"][0].get("x")
+        valid = (
+            finite(candidate)
+            and candidate == int(candidate)
+            and window[0] <= candidate <= window[1]
+        )
+        if valid:
+            year = int(candidate)
+        elif finite(selected) and window[0] <= selected <= window[1]:
+            year = selected
+        else:
+            year = window[1]
+        # Re-created graphs emit empty clickData. Returning no_update here is
+        # essential: selected -> render cards -> empty clickData must terminate.
         return (
-            selected
-            if selected is not None and window[0] <= selected <= window[1]
-            else window[1]
+            year if year != selected else no_update,
+            year if year != slider else no_update,
         )
 
     @app.callback(
@@ -899,6 +1062,13 @@ def register_callbacks(app):
         Output(cid("detail"), "children"),
         Output(cid("limits"), "children"),
         Output(cid("structure-note"), "children"),
+        Output(cid("portraits"), "children"),
+        Output(cid("context"), "children"),
+        Output(cid("inspect-year"), "min"),
+        Output(cid("inspect-year"), "max"),
+        Output(cid("inspect-year"), "marks"),
+        Output(cid("year-label"), "children"),
+        Output(cid("detail-year"), "children"),
         Input(cid("countries"), "value"),
         Input(cid("product"), "value"),
         Input(cid("baseline"), "value"),
@@ -927,6 +1097,13 @@ def register_callbacks(app):
                 "detail",
                 "limits",
                 "structure_note",
+                "portraits",
+                "context",
+                "year_min",
+                "year_max",
+                "year_marks",
+                "year_label",
+                "detail_year",
             ]
         )
 
