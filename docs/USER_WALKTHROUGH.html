@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出口卖向哪里？—— 一个跨 30 年的地区规律 · COMP7507 用户操作流程</title>
+<style>
+  :root{
+    --ink:#202d40; --muted:#657185; --line:#e0e5eb; --bg:#f5f6f8; --panel:#fff;
+    --accent:#315c88; --accent-soft:#edf2f7;
+    --ok:#2f7d5b; --ok-soft:#e8f3ee;
+    --no:#8a5a12; --no-soft:#fbf1dd;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Avenir Next","Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+    font-size:15px;line-height:1.75}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 24px 80px}
+  h1{font-size:30px;line-height:1.2;letter-spacing:-.5px;margin:0}
+  h2{font-size:22px;letter-spacing:-.4px;margin:0}
+  h3{font-size:16px;margin:14px 0 6px}
+  .lead{color:var(--muted);max-width:78ch;margin:10px 0 18px;font-size:15px}
+  .tag{display:inline-block;font-size:11px;letter-spacing:2px;color:#9a4517;margin-bottom:12px}
+
+  .title{background:#0f1c2e;color:#eaf1f8;border-radius:14px;padding:24px 28px;margin-bottom:24px}
+  .title .k{font-size:12px;letter-spacing:1.5px;color:#8fb0c8;margin-bottom:8px}
+  .title h1{color:#fff}
+  .title .sub{color:#b9cbdb;font-size:14px;margin-top:10px}
+  .title .thesis{margin-top:14px;padding:12px 16px;background:#14293f;border:1px solid #2f4763;
+    border-radius:10px;font-size:14px;color:#dfeaf5;line-height:1.7}
+  .title .thesis b{color:#9fe0b8}
+
+  /* stepper */
+  .stepper{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}
+  .stepper a{display:flex;flex-direction:column;gap:2px;text-decoration:none;background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:148px;cursor:pointer}
+  .stepper a .code{font-size:12px;color:var(--muted);letter-spacing:.5px}
+  .stepper a .nm{font-size:13px;font-weight:600;color:var(--ink)}
+  .stepper a:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(49,92,136,.12)}
+  .stepper a.active{border-color:var(--accent);background:var(--accent-soft)}
+
+  .sec{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:24px 28px;margin:22px 0;scroll-margin-top:16px}
+  .sec.aha{border:2px solid var(--ok);box-shadow:0 0 0 4px var(--ok-soft)}
+  .sec .num{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:1.5px}
+  .sec .mod{font-size:13px;color:var(--muted);font-weight:600;margin-left:8px}
+  .sec .subq{color:var(--muted);font-size:14px;margin:8px 0 0}
+
+  .hyp{background:var(--accent-soft);border:1px solid #c6d5e6;border-radius:10px;
+    padding:14px 18px;margin:14px 0}
+  .hyp .qh{font-size:11px;letter-spacing:1.5px;font-weight:700;color:var(--accent);margin:0 0 8px}
+  .hyp p{margin:6px 0}
+
+  .op{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:10px 0}
+  .op .oh{font-size:11px;letter-spacing:1.5px;color:var(--muted);font-weight:700;margin:0 0 6px}
+  .op ol{margin:0;padding-left:20px}.op ol li{margin:5px 0}
+  .op ol li b{color:#1f3b5c}
+  .op .hl{background:var(--ok-soft);border-radius:6px;padding:4px 9px;display:inline-block;font-weight:600;color:#1f3b5c}
+
+  .verdict{border-radius:10px;padding:14px 18px;margin:12px 0}
+  .verdict .vh{font-size:11px;letter-spacing:1.5px;font-weight:700;margin:0 0 8px}
+  .verdict.no{background:var(--no-soft);border:1px solid #ecdcb8}
+  .verdict.no .vh{color:var(--no)}
+  .verdict.yes{background:var(--ok-soft);border:1px solid #c7e0d3}
+  .verdict.yes .vh{color:var(--ok)}
+  .verdict p{margin:6px 0}
+  .verdict .num{color:#1f3b5c;font-weight:600}
+
+  .ev{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  .ev th,.ev td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  .ev th{background:var(--accent-soft);color:#1f3b5c;font-weight:600}
+  .ev td.yes{color:var(--ok);font-weight:700}
+  .ev .lead{color:#1f3b5c;font-weight:700}
+  .ev .note{font-size:12.5px;color:var(--muted)}
+
+  .concl{margin-top:16px;background:var(--ok-soft);border:1px solid #c7e0d3;
+    border-radius:10px;padding:14px 16px}
+  .concl .ch{font-size:11px;letter-spacing:1.5px;font-weight:700;color:var(--ok);margin:0 0 6px}
+  .concl p{margin:6px 0}
+  .concl .num{color:#1f3b5c;font-weight:600}
+
+  .link{display:inline-block;margin-top:14px;font-size:13px;color:var(--accent);text-decoration:underline}
+  .link b{font-weight:600}
+
+  .final{background:#0f1c2e;color:#dfeaf5;border-radius:14px;padding:28px 30px;margin-top:24px}
+  .final h2{color:#fff}
+  .final .lead{color:#9fb6c9}
+  .final ol{margin:14px 0;padding-left:22px}.final li{margin:9px 0}.final li b{color:#fff}
+  .final .patline{background:#14293f;border:1px solid #2f4763;border-radius:10px;padding:14px 18px;margin:14px 0}
+  .final .patline b{color:#9fe0b8}
+  .final .bounds{margin-top:16px;border-top:1px solid #2a3f54;padding-top:16px}
+  .final .bounds h3{color:#8fb0c8;font-size:13px;letter-spacing:1px;margin:0 0 8px}
+  .final .bounds li{color:#c3d4e3;font-size:13.5px}
+  .pill{display:inline-block;background:#1c2e44;border:1px solid #2f4763;
+    border-radius:6px;padding:2px 8px;font-size:12px;color:#9fc3e0;margin-right:6px}
+
+  footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== TITLE ===================== -->
+  <div class="title">
+    <div class="k">COMP7507 · GROUP 7 · VISUAL ANALYTICS REPORT</div>
+    <h1>出口卖向哪里？<br><span style="font-size:20px;font-weight:500">—— 一个跨 30 年的地区规律</span></h1>
+    <div class="sub">六个经济体的出口规模差异很大。它们在"卖向哪里"上有没有共同点？如果有，换一种商品、或经历一次经济冲击，这个共同点还能保持到什么程度？</div>
+    <div class="thesis">
+      <b>核心论点：</b>按已识别目的地，六国的全商品出口在 1995–2024 年 30 年里<b>始终</b>由本国地区居首——地区是稳定的锚。
+      走近看，单个伙伴与单个商品会出现例外；沿时间看，金额恢复后结构是否恢复仍需单独检验。
+    </div>
+    <div class="sub" style="margin-top:12px">
+      所有数值来自随仓库发布的真实分析表 · 运行 <code>python app.py</code> 打开交互应用。
+      本报告按 <b>M0 → M2 → M3 → M1 → M4 → M5</b> 顺序讲解；网页导航可按原 M0–M5 顺序浏览。
+    </div>
+  </div>
+
+  <!-- ===================== STEPPER ===================== -->
+  <div class="stepper" id="stepper">
+    <a href="#m0"><span class="code">M0</span><span class="nm">引出问题 · 全球背景</span></a>
+    <a href="#m2"><span class="code">M2</span><span class="nm">证伪 · 经济规模</span></a>
+    <a href="#m3"><span class="code">M3</span><span class="nm">确认 · 地区集中</span></a>
+    <a href="#m1"><span class="code">M1</span><span class="nm">解释 · 地理距离</span></a>
+    <a href="#m4"><span class="code">M4</span><span class="nm">划界 · 商品结构</span></a>
+    <a href="#m5"><span class="code">M5</span><span class="nm">追问 · 时间变化</span></a>
+    <a href="#final"><span class="code">✓</span><span class="nm">结论与边界</span></a>
+  </div>
+
+  <!-- ===================== M0 · INTRODUCE THE QUESTION ===================== -->
+  <section class="sec" id="m0">
+    <div class="num">STEP 1</div><div class="mod">M0 · Overview</div>
+    <h2>从全球增长讲到国家差异</h2>
+    <p class="subq">1995–2024 年全球货物出口从 <span style="color:#1f3b5c;font-weight:600">$5.1 万亿</span> 涨到 <span style="color:#1f3b5c;font-weight:600">$23.0 万亿</span>。但增长不是均匀分配的——各经济体的世界出口份额位次在变（中国 4.51%→14.88%↑，德国 9.74%→6.85%↓）。</p>
+
+    <div class="op">
+      <p class="oh">用户操作</p>
+      <ol>
+        <li>进 M0，看 <b>全球出口总额折线</b>（1995 → 2024），确认"在增长"。</li>
+        <li>切「<b>六国世界份额</b>」视图，看 30 年走势——增长方向不同。</li>
+        <li>把增长的事实<b>升级成问题</b>：出口规模与结构由什么决定？</li>
+      </ol>
+    </div>
+
+    <div class="hyp">
+      <p class="qh">提出假设（两条腿，要分别检验，不是非此即彼）</p>
+      <p><b>A. 经济规模假说：</b>出口主要由 <b>GDP / 经济体量</b> 决定——GDP 越大，出口越大。</p>
+      <p><b>B. 地理区域假说：</b>出口主要流向 <b>本国所在大洲</b>——贸易向本土地区集中。</p>
+      <p style="color:var(--muted);font-size:13.5px;margin-top:8px">注意：A 被证伪<b>不等于</b> B 就成立——两条腿各自检验。M2 只回答"出口多少光看 GDP 行不行"，M3 起才回答"卖向哪里"。</p>
+    </div>
+
+    <div class="verdict yes">
+      <p class="vh">M0 留下的问题</p>
+      <p>世界贸易在扩大，但每个国家在世界出口中的<b>相对位置</b>走向不同。这让我们必须追问：<b>一个国家"卖向哪里"，是由经济体量决定的，还是由地理区域决定的？</b></p>
+    </div>
+    <a class="link" href="#m2"><b>下一步 → M2 先检验"经济规模"这条腿（A）</b></a>
+  </section>
+
+  <!-- ===================== M2 · REFUTE GDP ===================== -->
+  <section class="sec" id="m2">
+    <div class="num">STEP 2</div><div class="mod">M2 · 经济体量 · 出口规模</div>
+    <h2>证伪：经济规模与出口规模之间没有稳定的固有规律</h2>
+    <p class="subq">M2 是"出口由什么决定"里最直觉的一支。答案：用 GDP 相近、出口相近作为筛选条件，用<b>交互比较两国</b>来判——GDP 相近的国，出口可以差 2 倍；出口相近的国，GDP 可以差 6 倍。M2 只把"出口多少"从 GDP 这条假设里摘出来，<b>不替后续"卖向哪里"排优先级</b>。</p>
+
+    <div class="op">
+      <p class="oh">用户操作（用交互比较判断，而不是读一张图）</p>
+      <ol>
+        <li>进 M2，看<b>全球 GDP–出口额双对数散点</b>（10%/50%/100% 出口/GDP 参考线）。</li>
+        <li>选<b>起始经济体 = 德国</b>、匹配维度 = <b>相似 GDP</b>、窗口 = <b>1.25×</b>；在匹配圈里<b>点日本</b>比较：两国 GDP 接近（以德国=100，日本 94.5），出口却差 1.99 倍（50.1）。</li>
+        <li>换匹配维度为 <b>相似出口</b>，以美国为锚、1.25× 内<b>点德国</b>反向比较：德国出口 0.83× 美国，GDP 却只有 0.16×。</li>
+      </ol>
+    </div>
+
+    <div class="verdict no">
+      <p class="vh">M2 给出的数据（Finding）</p>
+      <p><b>GDP 相近 ≠ 出口相近。</b>以德国=100：日本 GDP 94.5，出口却只有 50.1——经济体量接近，出口规模差将近一倍。</p>
+      <p><b>出口相近 ≠ GDP 相近。</b>以美国为锚、"相似出口" 1.25× 内：德国出口 0.83× 美国，但 GDP 只有美国的 0.16×。</p>
+    </div>
+
+    <div class="concl" style="background:var(--accent-soft);border-color:#c6d5e6">
+      <p class="ch" style="color:var(--accent)">说明什么（Implication）</p>
+      <p>出口规模<b>不能</b>仅由 GDP 推出——经济规模只是一个观察角度，不是决定因素。<b>这条腿（A）被证伪。</b>但它只解决"出口多少"，不解决"卖向哪里"。带着"地区这条腿还成立吗"的问题进入 M3。</p>
+    </div>
+    <a class="link" href="#m3"><b>下一步 → M3 检验"地理区域"这条腿（B）</b></a>
+  </section>
+
+  <!-- ===================== M3 · CONFIRM REGION ===================== -->
+  <section class="sec aha" id="m3">
+    <div class="num">STEP 3</div><div class="mod">M3 · 地区格局 · 核心发现</div>
+    <h2>发现：六国的全商品出口，本国地区总是排第一</h2>
+    <p class="subq">这是整场展示最重要的一页。把每个案例经济体的<b>全部商品出口</b>按目的地区汇总——180 个"国×年"观察中，按已识别目的地计算，<b>本地区每年都排第一</b>。即使把全部未知目的地金额都算给第二名地区，仍是 180/180。</p>
+
+    <div class="op">
+      <p class="oh">用户操作</p>
+      <ol>
+        <li>进 M3，默认<b>出口方向</b>，在「地区份额」卡里读 <b>HS85 / HS87</b> 的堆叠条。</li>
+        <li>切到「<b>全部商品</b>」+「地图」，看<b>伙伴份额排名</b>（02）里各大洲的累计占比。</li>
+        <li><b>逐个切换六个焦点国</b>（美国 / 德国 / 中国 / 墨西哥 / 荷兰 / 意大利），每次都记下"本国所在大洲"在第几名。</li>
+        <li>核对下方证据表：份额、领先第二名、是否 30/30、换商品后是否仍第一。</li>
+      </ol>
+    </div>
+
+    <h3>六国 · 2023 年全商品出口 · 本土地区份额</h3>
+    <table class="ev">
+      <thead>
+        <tr>
+          <th>经济体</th><th>本土地区</th>
+          <th>出口份额（全商品·2023）</th>
+          <th>领先第二名</th>
+          <th>30/30 年第一</th>
+          <th>换到 HS87 仍第一</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>USA</td><td>America</td><td class="lead">38%</td><td>+7 pp</td><td class="yes">30/30</td><td class="yes">57%</td></tr>
+        <tr><td>DEU</td><td>Europe</td><td class="lead">65%</td><td>+48 pp</td><td class="yes">30/30</td><td class="yes">63%</td></tr>
+        <tr><td>CHN</td><td>Asia</td><td class="lead">46%</td><td>+21 pp</td><td class="yes">30/30</td><td class="yes">41%</td></tr>
+        <tr><td>MEX</td><td>America</td><td class="lead">85%</td><td>+78 pp</td><td class="yes">30/30</td><td class="yes">89%</td></tr>
+        <tr><td>NLD</td><td>Europe</td><td class="lead">77%</td><td>+67 pp</td><td class="yes">30/30</td><td class="yes">87%</td></tr>
+        <tr><td>ITA</td><td>Europe</td><td class="lead">62%</td><td>+46 pp</td><td class="yes">30/30</td><td class="yes">71%</td></tr>
+      </tbody>
+      <tr><td colspan="6" class="note">口径：按已识别目的地计算；美洲按一个地区；未知目的地保留在分母中。即使把全部未知金额都分给第二名地区，180/180 个观察本地区仍第一。</td></tr>
+    </table>
+
+    <h3>同一商品会给出不同首位地区（美国 2023）</h3>
+    <table class="ev">
+      <thead>
+        <tr><th>商品</th><th>美国 2023 出口首地区</th><th>份额</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>全商品</td><td class="lead">America</td><td>37.7%</td></tr>
+        <tr><td>HS85 电气设备</td><td class="lead">Asia</td><td>40.5%</td></tr>
+        <tr><td>HS87 车辆与零部件</td><td class="lead">America</td><td>57.4%</td></tr>
+      </tbody>
+      <tr><td colspan="3" class="note">同一年、同一国、两个商品给出不同首位地区——这是"地区集中有边界"的直接证据，也为 M4 留了伏笔。</td></tr>
+    </table>
+
+    <div class="concl">
+      <p class="ch">本阶段发现（Finding）</p>
+      <p><b>贸易在地区上是区域化的</b>：每个经济体的第一大出口地区 = 本土地区，<b>6/6</b> 全中、<b>1995–2024 共 30 年 180/180 观察</b>成立，<b>单一商品 HS87 仍成立</b>。强度因国而异——美国领先 7 pp（"第一但不主导"），墨西哥领先 78 pp（"强区域化"）。但换到 HS85，美国首位地区会从美洲跳到亚洲。</p>
+      <p style="margin-top:8px"><b>说明什么（Implication）：</b>地区这条腿（B）站得住——出口的结构有一个<b>稳定的地区锚</b>。但锚是"地区"，不是"商品"（同一章不同国首位会分叉），也不是"伙伴"（下文 M1 会看到强例外）。规律必须带着边界陈述。</p>
+    </div>
+    <a class="link" href="#m1"><b>下一步 → M1 解释"为什么"：地理邻近</b></a>
+  </section>
+
+  <!-- ===================== M1 · EXPLAIN BY DISTANCE ===================== -->
+  <section class="sec" id="m1">
+    <div class="num">STEP 4</div><div class="mod">M1 · 地理距离 · 伙伴层面</div>
+    <h2>解释：本国地区近，所以份额高（但有伙伴层面的强例外）</h2>
+    <p class="subq">M3 看到的"地区第一"落到<b>伙伴层面</b>：距离近的国家份额普遍更高，但具体贸易关系有明显例外——中国对美国（10,994 km）的份额 12.8%，高于对日本（2,098 km）的 5.0%。</p>
+
+    <div class="op">
+      <p class="oh">用户操作（用交互核对"远但强"的例外）</p>
+      <ol>
+        <li>进 M1，选<b>中国</b>、2023、<b>全部商品</b>。</li>
+        <li>看 <b>距离–份额双对数散点</b>：越近份额越高，趋势下行。</li>
+        <li>读 <b>Spearman ρ = −0.33</b>（覆盖 96% 伙伴）：六国全为负（−0.19 ~ −0.49）。</li>
+        <li><b>点日本</b>（近、份额 5.0%）与<b>美国</b>（远、份额 12.8%）两个点，亲手对比"近 ≠ 份额高"的例外。</li>
+      </ol>
+    </div>
+
+    <div class="concl">
+      <p class="ch">本阶段发现（Finding）· 机制</p>
+      <p>距离与份额<b>负相关</b>（Spearman ρ 全为负）——近处贸易更密，这是<b>重力</b>的直观体现。它<b>解释</b>了 M3 看到的地区集中：本土地区近、经济/供应链/制度相似，所以份额最大。</p>
+      <p style="margin-top:8px"><b>说明什么（Implication）：</b>距离只是<b>弱代理</b>——"近但弱 / 远但强"的伙伴（如中国→美国）说明<b>地区是稳定锚，单个伙伴有强例外</b>。因此"地区第一"这条规律的边界要加一句：它是地区层面的结构性规律，不保证任何一个具体伙伴都服从距离。</p>
+    </div>
+    <a class="link" href="#m4"><b>下一步 → M4 划清规律在"商品"层的边界</b></a>
+  </section>
+
+  <!-- ===================== M4 · BOUNDARY BY PRODUCT ===================== -->
+  <section class="sec" id="m4">
+    <div class="num">STEP 5</div><div class="mod">M4 · 商品结构 · 划界</div>
+    <h2>边界：规律稳在"地区"层，<u>不</u>上升到"商品"层</h2>
+    <p class="subq">M3 已经看到"同一商品在不同国家的首位地区不同"（美国 HS85 亚洲 vs HS87 美洲）。M4 接着问：<b>同一商品在各国的出口篮子里有多重要？</b>答案：同一章在不同国家地位天差地别。</p>
+
+    <div class="op">
+      <p class="oh">用户操作（用交互核对"份额 ≠ 专业化"）</p>
+      <ol>
+        <li>进 M4，走 <b>01 比较结构 → 02 检验专业化 → 03 检查变化</b>。</li>
+        <li>看<b>份额 vs RCA</b> 两个热力图：用「检验专业化」把同一章在两国的份额与 RCA 并排读——份额大 ≠ RCA&gt;1。</li>
+        <li>对比同一个 <b>HS87</b> 在中国 vs 墨西哥：份额与 RCA 差距巨大。</li>
+      </ol>
+    </div>
+
+    <table class="ev">
+      <thead>
+        <tr><th>商品</th><th>经济体</th><th>2023 出口份额</th><th>RCA（相对专业化）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="2">HS87 车辆与零部件</td><td>中国</td><td class="lead">5.4%</td><td>0.65</td></tr>
+        <tr><td>墨西哥</td><td class="lead">26.1%</td><td class="yes">3.14</td></tr>
+        <tr><td rowspan="2">HS85 电气设备</td><td>中国</td><td class="lead">31.4%</td><td>2.14</td></tr>
+        <tr><td>墨西哥</td><td class="lead">18.0%</td><td>1.20</td></tr>
+      </tbody>
+      <tr><td colspan="4" class="note">同一章（HS87）在墨西哥是头号出口（26%、RCA 3.14），在中国份额只有 5.4%（RCA 0.65）。头号商品因国而异——商品层面没有统一的"全球分工图"。</td></tr>
+    </table>
+
+    <div class="concl">
+      <p class="ch">本阶段发现（Finding）· 边界</p>
+      <p><b>国内份额 ≠ 相对专业化（RCA）</b>，且同一章的头号商品因国而异。</p>
+      <p style="margin-top:8px"><b>说明什么（Implication）：</b>规律<b>稳在地区层面</b>（第一出口地区=本土，跨国跨年），<b>不上升到商品层面</b>。准确表述：<b>贸易在地区上区域化，在商品上分散</b>——这条规律只应在"地区"这一层陈述，任何"某个商品全球分工固定"的说法都不成立。</p>
+    </div>
+    <a class="link" href="#m5"><b>下一步 → M5 追问"金额恢复后结构是否恢复"</b></a>
+  </section>
+
+  <!-- ===================== M5 · TIME CHANGE ===================== -->
+  <section class="sec" id="m5">
+    <div class="num">STEP 6</div><div class="mod">M5 · 时间变化 · 追问</div>
+    <h2>追问：金额恢复了，结构也恢复了吗？</h2>
+    <p class="subq">回到中国、德国、墨西哥，以 2019 年为基期观察疫情窗口。M5 不"证明"规律，而是<b>留下一个真问题</b>：金额可以读出"何时恢复"，结构是否恢复要保留判断。</p>
+
+    <div class="op">
+      <p class="oh">用户操作（金额与结构分开读，不合并下结论）</p>
+      <ol>
+        <li>进 M5，点 <b>01 疫情恢复</b>（基期 2019 / 事件 2020），先看<b>金额恢复指数</b>（基期=100）。</li>
+        <li>再看<b>同地区份额</b>（结构指标图，含未知目的地的不确定带）：金额 2021 年回到 100，地区份额<b>仍在移动</b>。</li>
+        <li>切 <b>03 金融危机</b>（基期 2007 / 事件 2008），核对<b>跨事件时本国地区是否仍第一</b>——是的。</li>
+      </ol>
+    </div>
+
+    <div class="concl">
+      <p class="ch">本阶段发现（Finding）· 稳定性 + 真问题</p>
+      <p><b>跨 30 年、跨 2008/2020 两次冲击，本国地区仍是第一出口地区</b>——规律在时间上稳健。同时给出规律的<b>另一面</b>：金额可恢复、结构不必恢复——中国 2024 vs 2019，同地区份额变化区间 <span class="num">−1.21 ~ +3.97 pp</span>。</p>
+      <p style="margin-top:8px"><b>说明什么（Implication）：</b>"地区是稳定锚"里，<b>锚是结构性的、长期性的</b>；而每一次冲击内部，金额与结构走的是两条线。因此不能用"金额回到了 2019"去推断"结构也回到了 2019"——这恰是 M5 要提醒的<b>判断边界</b>，保留而非收口。</p>
+    </div>
+    <a class="link" href="#final"><b>汇总 → 结论与必须保留的边界</b></a>
+  </section>
+
+  <!-- ===================== FINAL ===================== -->
+  <div class="final" id="final">
+    <h2>结论 · 一条固有规律 + 它的边界</h2>
+
+    <p class="patline">
+      <b>固有规律（贸易区域化 · 本国引力）：</b>
+      按已识别目的地，六个案例经济体的<b>全商品出口</b>在 1995–2024 年 30 年里
+      <b>始终由本国地区居首</b>——<b>180/180 个"国×年"观察</b>成立，
+      即使把未知目的地金额全部分给第二名地区仍 180/180。
+      机制：<b>地理邻近 + 经济引力</b>（M1 的负相关距离，Spearman ρ 六国 −0.19 ~ −0.49）。
+    </p>
+
+    <p class="lead">六个模块分工（引出 → 证伪 → 确认 → 解释 → 划界 → 追问），每步都落在"发现 + 启示"：</p>
+    <ol>
+      <li><b>M0 引出问题</b>：全球在涨（$5.1T→$23.0T），但各国位次在变（中国 4.51%→14.88%↑，德国 9.74%→6.85%↓）；提出 A 经济规模 / B 地理区域两条腿，分别检验。</li>
+      <li><b>M2 证伪经济规模</b>：交互比较德↔日（GDP 接近、出口差 1.99×）、美↔德（出口相近、GDP 差 6.1×）——出口多少光看 GDP 解释不了。只摘掉 A，不替 B 排优先级。</li>
+      <li><b>M3 确认地区集中</b>：本国地区=第一出口地区，180/180 观察成立；但换商品（美国 HS85 vs HS87）首位地区会分叉。</li>
+      <li><b>M1 解释机制</b>：因为近，所以多（Spearman ρ 全负）；但单个伙伴有强例外（中国→美国 12.8% vs 中国→日本 5.0%）。</li>
+      <li><b>M4 划界商品</b>：规律稳在地区层，不上升到商品（HS87 占中国 5.4% / 占墨西哥 26.1%，RCA 0.65 / 3.14）。</li>
+      <li><b>M5 追问时间</b>：跨 30 年、跨 2008/2020 冲击仍第一；金额 2021 年恢复，结构区间 −1.21~+3.97 pp 保留判断。</li>
+    </ol>
+
+    <div class="bounds">
+      <h3>必须随规律一起陈述的边界</h3>
+      <ul>
+        <li><span class="pill">强度不等</span> 领先幅度 7 pp（美国）到 78 pp（墨西哥）；美国是"第一但不主导"。</li>
+        <li><span class="pill">出口硬 / 进口软</span> 区域化对<b>出口</b>最硬（6/6）；<b>进口</b>有一个反例——美国最大供应商地区是<b>亚洲</b>（40.3%），不是美洲（"区域出口、全球采购"）。</li>
+        <li><span class="pill">不跨到商品</span> 地区层面固有，商品层面分散；同一章在不同国家首位地区可能不同（美国 HS85 亚洲 vs HS87 美洲）。</li>
+        <li><span class="pill">伙伴有例外</span> 地区是结构锚，单个伙伴不都服从距离（中国→美国 12.8% &gt; 中国→日本 5.0%）。</li>
+        <li><span class="pill">金额 ≠ 结构</span> 每次冲击内金额与结构走两条线；金额恢复不保证结构恢复。</li>
+        <li><span class="pill">描述性</span> 当期美元含价格/汇率；重力是机制解释，非拟合模型；六国是案例，非全球样本；按已识别目的地计算，未知保留在分母。</li>
+      </ul>
+    </div>
+
+    <p class="lead" style="margin-top:16px;border-top:1px solid #2a3f54;padding-top:16px">
+      <b>一句收尾：</b>过去三十年，按已识别目的地统计，六个案例经济体的全商品出口都长期呈现<b>本地区份额居首</b>的格局。
+      走近看，具体伙伴和商品会出现例外；沿时间看，出口金额恢复后，结构是否恢复仍需要单独检验。
+    </p>
+  </div>
+
+  <footer>所有数值来自随仓库发布的 <code>data/processed/*.parquet</code> 真实分析表 · 运行 <code>python app.py</code> 打开交互应用 · COMP7507 Group 7</footer>
+</div>
+
+<script>
+  const secs = [...document.querySelectorAll('.sec, .final')];
+  const links = [...document.querySelectorAll('.stepper a')];
+  const io = new IntersectionObserver((ents)=>{
+    ents.forEach(e=>{
+      if(e.isIntersecting){
+        const id = e.target.id;
+        links.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+id));
+      }
+    });
+  }, {rootMargin:'-45% 0px -50% 0px', threshold:0});
+  secs.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

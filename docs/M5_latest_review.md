@@ -28,7 +28,7 @@
 
 ## 复现与查看
 
-启动：项目根目录 `python launch_m5.py --no-browser`，打开本地 8050 端口；已有环境可用 `.venv/Scripts/python.exe`。默认疫情、HS87、金融危机按钮可复现三个窗口；切 M4 后回 M5，点击导入按钮检查摘要和终点年份。自动检查：`python -m unittest discover -s tests -v`。
+启动：项目根目录 `python app.py`，浏览器打开 http://127.0.0.1:8050 后点顶部导航的 **M5 Time Change**。默认疫情、HS87、金融危机按钮可复现三个窗口；切 M4 后回 M5，点击导入按钮检查摘要和终点年份。自动检查：`python -m unittest discover -s tests -v`。
 
 本记录如实区分模块检查通过与共享数据阻塞；当前交付不宣称整个 M5 最终验收全部通过。
 
