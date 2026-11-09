@@ -35,8 +35,7 @@ M2 覆盖边界包含、单维度匹配、单位与大于 100% 的比率、零/�
 以及真实 Dash HTTP 回调的默认案例、换年、模式切换、点选、空状态、隐藏模块、下载一致性。
 额外检查 Dash 布局不含会导致 React 渲染失败的嵌套 children 列表。
 
-浏览器复现：启动 `.venv/bin/python launch_m2.py --port 8052`，执行
-`.venv/bin/python scripts/check_m2_browser.py`。
+浏览器复现：启动 `.venv/bin/python app.py`，用 Playwright Chromium 打开 http://127.0.0.1:8050 的 M2 页并执行同一组断言（一次性 `check_m2_browser.py` 脚本已在整体整合时移除）。
 检查记录见 [浏览器检查](M2_browser_checks.json)，截图见
 [桌面默认案例](screenshots/M2_desktop.png)、[无匹配](screenshots/M2_no_match.png)、
 [窄屏布局](screenshots/M2_mobile.png)。[下载样例](M2_export_sample.csv)由页面真实下载产生。

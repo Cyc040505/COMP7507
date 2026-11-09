@@ -12,7 +12,7 @@
 - 测试先于实现：计算与界面功能在尚未实现时失败；未知地区、相同元数据重复、恢复前先高于基期、AUS/BRA颜色冲突均有回归用例。
 - 独立评审：复核了缺失、恢复时点、地区上下界、来源和回调。提出的比较颜色冲突已修复并用测试覆盖。评审独立检查的双边对账现已纳入重建脚本。
 - 浏览器：Chrome真实运行，1440px、820px、390px。点选2018联动图与明细，切换商品和金融危机，M4案例显式导入，下载CSV均成功；页面错误0，无页面横向溢出。验证等待图形尺寸实际调整完成。
-- 启动：单独进程运行launch_m5.py，读取实际Dash布局确认初始active-module=M5。
+- 启动：单独进程运行 `python app.py`，读取实际 Dash 布局并确认进入后可导航到 M5（原独立 `launch_m5.py` 启动器已在整体整合时移除）。
 
 截图：[桌面](screenshots/M5_desktop.png)、[商品恢复](screenshots/M5_product_recovery.png)、[窄屏](screenshots/M5_narrow.png)、[手机宽度](screenshots/M5_mobile.png)。现场导出见 [CSV 样例](M5_export_sample.csv)，来源清单位于 `data/processed/m5_source_manifest.json`。
 
