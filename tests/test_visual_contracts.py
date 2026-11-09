@@ -67,7 +67,7 @@ class VisualContracts(unittest.TestCase):
                 walk(getattr(c, "children", None))
 
         walk(m5.layout())
-        self.assertEqual(len(found), 2)
+        self.assertEqual(set(found), {"M5-index", "M5-structure"})
         for style in found.values():
             self.assertGreaterEqual(int(style["height"][:-2]), 330)
 

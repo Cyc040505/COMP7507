@@ -9,6 +9,8 @@ from src import theme
 from src.ids import mid
 
 FOCUS_COUNTRIES = ("USA", "DEU", "CHN", "MEX", "NLD", "ITA")
+# Match M4's base_style without coupling the two modules' analytical code.
+PLOT_FONT = "Segoe UI, system-ui, sans-serif"
 NAMES = {
     "USA": "United States",
     "DEU": "Germany",
@@ -73,7 +75,7 @@ def _figure(series, country, window, baseline, event, selected, ceiling):
     start, end = window
     fig.update_layout(
         margin={"l": 37, "r": 15, "t": 28, "b": 32},
-        font={"family": theme.FONT},
+        font={"family": PLOT_FONT, "size": 12},
         showlegend=False,
         hovermode="closest",
         clickmode="event",
@@ -86,11 +88,11 @@ def _figure(series, country, window, baseline, event, selected, ceiling):
         range=[start - 0.25, end + 0.25],
         tickmode="array",
         tickvals=ticks,
-        tickfont={"size": 10},
+        tickfont={"size": 12},
         fixedrange=True,
     )
     fig.update_yaxes(
-        title=None, range=[0, ceiling], nticks=4, tickfont={"size": 10}, fixedrange=True
+        title=None, range=[0, ceiling], nticks=4, tickfont={"size": 12}, fixedrange=True
     )
     fig.add_hline(y=100, line_color=theme.MUTED, line_width=1, line_dash="dot")
     fig.add_vrect(
@@ -108,10 +110,92 @@ def _figure(series, country, window, baseline, event, selected, ceiling):
         yref="paper",
         text=str(event),
         showarrow=False,
-        font={"size": 10, "color": theme.MUTED},
+        font={"size": 12, "color": theme.MUTED},
         yanchor="bottom",
     )
     fig.add_vline(x=selected, line_color=theme.ACCENT_LINE, line_width=1, layer="below")
+    return fig
+
+
+def _bar_figure(series, country, window, baseline, event, selected, ceiling):
+    # A clicked baseline/event still leaves the endpoint visible for comparison.
+    years = sorted({baseline, event, selected})
+    if len(years) < 3:
+        years = sorted(set(years) | {window[1]})
+    by_year = {r["year"]: r for r in series}
+    values = [by_year.get(y, {}).get("index") for y in years]
+    color = theme.country_color(country)
+    fig = go.Figure(
+        go.Bar(
+            x=values,
+            y=[str(y) for y in years],
+            orientation="h",
+            customdata=[[y, by_year.get(y, {}).get("value")] for y in years],
+            marker={
+                "color": [theme.LINE if y == baseline else color for y in years],
+                "opacity": [1 if y in (baseline, selected) else 0.45 for y in years],
+                "line": {
+                    "color": theme.ACCENT,
+                    "width": [1.5 if y == selected else 0 for y in years],
+                },
+            },
+            text=[number(v) if finite(v) else "" for v in values],
+            textposition="outside",
+            cliponaxis=False,
+            name=country,
+            hovertemplate=(
+                f"<b>{NAMES[country]}</b> · %{{customdata[0]}}"
+                "<br>Index: %{x:.1f}<br>Exports: %{customdata[1]:,.0f} thousand USD<extra></extra>"
+            ),
+        )
+    )
+    theme.style_figure(fig, height=205)
+    fig.update_layout(
+        margin={"l": 43, "r": 12, "t": 28, "b": 32},
+        font={"family": PLOT_FONT, "size": 12},
+        showlegend=False,
+        bargap=0.4,
+        clickmode="event",
+        dragmode=False,
+        uirevision=f"M5-bars-{country}-{baseline}-{event}-{selected}-{window[1]}",
+    )
+    fig.update_xaxes(
+        title=None,
+        range=[0, ceiling * 1.12],
+        fixedrange=True,
+        dtick=50 if ceiling <= 200 else 100,
+        tickfont={"size": 12},
+    )
+    fig.update_yaxes(
+        title=None,
+        type="category",
+        categoryorder="array",
+        categoryarray=[str(y) for y in years],
+        autorange="reversed",
+        fixedrange=True,
+        showgrid=False,
+        tickfont={"size": 12},
+    )
+    fig.add_vline(x=100, line_color=theme.MUTED, line_dash="dot", line_width=1)
+    fig.add_annotation(
+        x=100,
+        y=1.08,
+        xref="x",
+        yref="paper",
+        text=f"{baseline} = 100",
+        showarrow=False,
+        font={"size": 12, "color": theme.MUTED},
+    )
+    for year, value in zip(years, values):
+        if not finite(value):
+            fig.add_annotation(
+                x=0,
+                y=str(year),
+                text="No data",
+                showarrow=False,
+                xanchor="left",
+                font={"size": 12, "color": theme.MUTED},
+            )
     return fig
 
 
@@ -127,6 +211,8 @@ def portrait_cards(
     selected,
     *,
     message=None,
+    chart_type="line",
+    show_graph=True,
 ):
     """Use computed rows only; retain nulls, summary status and caller order."""
     if not rows:
@@ -134,17 +220,22 @@ def portrait_cards(
             html.Div(
                 [
                     html.H3("Choose a comparison"),
-                    html.P(message or "Select one to four economies to begin."),
+                    html.P(message or "Select one to six economies to begin."),
                 ],
                 className="m5-empty-card",
                 role="status",
             )
-        ] + [_hidden_graph(c) for c in FOCUS_COUNTRIES]
+        ] + ([_hidden_graph(c) for c in FOCUS_COUNTRIES] if show_graph else [])
 
     maxima = [r["index"] for r in rows if finite(r.get("index"))]
     ceiling = max(100, math.ceil(max(maxima, default=100) / 50) * 50)
     summary_map = {r["country"]: r for r in summaries}
-    children = []
+    children = [
+        html.P(
+            f"Nominal exports · {baseline} = 100 · Inspect {selected}",
+            className="m5-chart-caption",
+        )
+    ]
     for country in countries:
         series = [r for r in rows if r["country"] == country]
         current = next((r for r in series if r["year"] == selected), {})
@@ -192,7 +283,16 @@ def portrait_cards(
             or str(s.get("status", "Unavailable")).replace("_", " ").capitalize()
         )
         if s.get("status") == "recovered":
-            state = f"At/above baseline at window end · {window[1]}"
+            state = f"At/above baseline · {window[1]}"
+        elif s.get("status") == "relapsed":
+            state = f"Below baseline again · {window[1]}"
+        current_index = current.get("index")
+        is_bar = chart_type == "bar"
+        headline = (
+            (f"{current_index - 100:+.1f}%" if finite(current_index) else "—")
+            if is_bar
+            else number(current_index)
+        )
         children.append(
             html.Article(
                 [
@@ -204,23 +304,23 @@ def portrait_cards(
                     ),
                     html.Div(
                         [
-                            html.Strong(number(current.get("index"))),
-                            html.Span(f"index in {selected}"),
+                            html.Strong(headline),
+                            html.Span(
+                                f"vs {baseline} · {selected}"
+                                if is_bar
+                                else f"index in {selected}"
+                            ),
                         ],
                         className="m5-country-index",
                     ),
-                    html.P(
-                        f"Nominal exports · {baseline} = 100",
-                        className="m5-country-baseline",
-                    ),
                     dcc.Graph(
                         id=cid("portrait-" + country),
-                        figure=_figure(
+                        figure=(_bar_figure if is_bar else _figure)(
                             series, country, window, baseline, event, selected, ceiling
                         ),
                         style={"height": "205px"},
                         config={"displayModeBar": False, "responsive": True},
-                    ),
+                    ) if show_graph else None,
                     html.Div(
                         [
                             html.Div(
@@ -229,9 +329,7 @@ def portrait_cards(
                                     html.Strong(first_text),
                                 ]
                             ),
-                            html.Div(
-                                [html.Span("Largest observed loss*"), html.Strong(loss)]
-                            ),
+                            html.Div([html.Span("Max. loss*"), html.Strong(loss)]),
                         ],
                         className="m5-country-facts",
                     ),
@@ -247,11 +345,12 @@ def portrait_cards(
                 style={"--country-color": theme.country_color(country)},
             )
         )
-    children += [_hidden_graph(c) for c in FOCUS_COUNTRIES if c not in countries]
+    if show_graph:
+        children += [_hidden_graph(c) for c in FOCUS_COUNTRIES if c not in countries]
     children.append(
         html.P(
-            f"* Largest observed loss relative to {baseline} during {event}–{window[1]}. "
-            "Recovery summaries use the full displayed window; large values and highlighted points use the inspected year.",
+            f"* Max. observed loss vs {baseline} · {event}–{window[1]}. "
+            f"Recovery status uses {window[1]}; highlighted values use {selected}.",
             className="m5-country-footnote",
         )
     )
