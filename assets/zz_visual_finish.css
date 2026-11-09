@@ -9,8 +9,8 @@
 .nav-item:hover { background: #f0f5fa; }
 .card, .m5-analysis-rail { border-color: #dce3eb; box-shadow: 0 2px 6px #1b355008; }
 .card-title-text { color: #24394f; letter-spacing: -.2px; }
-.card.m3-map-card:not(.m3-matrix-card) { border-color: #132b3e; box-shadow: 0 3px 9px #102a3b12; }
-.m3-map-card:not(.m3-matrix-card) .card-title-text { color: #eef5fa; }
+.card.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) { border-color: #132b3e; box-shadow: 0 3px 9px #102a3b12; }
+.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .card-title-text { color: #eef5fa; }
 .control-field > label, .m2-field > label, .m3-field > label,
 .m4-field > label, .m5-field, .lbl { color: #53677b; font-weight: 550; }
 .m4-chart .m4-field > label { font-size: 12px; }
@@ -28,19 +28,19 @@
 .m5-presets.crisis #M5-crisis {
   background: #eaf1f8; border-color: #97b0c9; color: #274f77; font-weight: 600;
 }
-.m3-map-card:not(.m3-matrix-card) .radio-row > label { color: #c4d3df; border-color: #546f84; }
-.m3-map-card:not(.m3-matrix-card) .radio-row > label:has(input:checked) {
+.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .radio-row > label { color: #c4d3df; border-color: #546f84; }
+.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .radio-row > label:has(input:checked) {
   background: #31536c; color: #fff; border-color: #88a9bf;
 }
-.m3-map-card:not(.m3-matrix-card) .modebar-btn path { fill: #bfd0de !important; }
-.m3-map-card:not(.m3-matrix-card) .modebar-btn:hover path { fill: #fff !important; }
+.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .modebar-btn path { fill: #bfd0de !important; }
+.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .modebar-btn:hover path { fill: #fff !important; }
 .m3-matrix-card .radio-row > label { color: #53677b; border-color: #bccbda; background: #fff; }
 .m3-matrix-card .radio-row > label:has(input:checked) {
   color: #274f77; border-color: #97b0c9; background: #eaf1f8;
 }
 .kpi-card strong, .m2-economy dd, .m3-flow-value { font-variant-numeric: tabular-nums; }
 .kpi-card span, .chart-subtitle, .m4-note, .m5-hint, .scope-note { color: #596b7d; }
-.m3-map-card:not(.m3-matrix-card) .m3-map-caption { color: #bdcedb; }
+.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .m3-map-caption { color: #bdcedb; }
 details { border-color: #dce3eb; }
 details > summary { color: #315c88; font-weight: 550; }
 details > summary:hover { color: #173e67; }

@@ -142,6 +142,14 @@ def layout():
                                 ],
                                 className="m3-map-heading",
                             ),
+                            html.Div(
+                                field("Map appearance", dcc.RadioItems(
+                                    id=cid("map-palette"),
+                                    options=[{"label": "Light · new", "value": "light"},
+                                             {"label": "Dark · original", "value": "dark"}],
+                                    value="light", className="radio-row")),
+                                id=cid("palette-controls"), className="m3-palette-controls",
+                            ),
                             dcc.Graph(
                                 id=cid("graph"),
                                 responsive=True,
@@ -192,12 +200,19 @@ def layout():
                                 "HS85 · Electrical equipment  /  HS87 · Vehicles & parts",
                                 className="chart-subtitle",
                             ),
+                            html.H4(id=cid("regional-takeaway"), className="m3-takeaway"),
+                            field("Regional chart", dcc.RadioItems(
+                                id=cid("region-view"),
+                                options=[{"label": "Compare · new", "value": "compare"},
+                                         {"label": "Composition · original", "value": "composition"}],
+                                value="compare", className="radio-row")),
                             dcc.Graph(
                                 id=cid("regions"),
                                 responsive=True,
-                                style={"height": "350px"},
+                                style={"height": "430px"},
                                 config=graph_config,
                             ),
+                            html.P("All partners, including unknown regions, remain in the denominator. Differences use unrounded shares; pp = percentage points.", className="m3-map-caption m3-region-caption"),
                         ],
                     ),
                     components.verification_panel(
@@ -650,7 +665,109 @@ def figures(country, year, product, direction, top, view, selected):
     return fig, rank, reg, scope, finding, detail, records
 
 
+def light_map(fig):
+    """Restyle an existing geographic figure without changing its data or geometry."""
+    fig = go.Figure(fig)
+    palette = {theme.MAP_LAND: "#e0e9ed", theme.MAP_BG: "#f2f7f9",
+               theme.MAP_TEXT: theme.INK, "#3a5a6e": "#c1d8dc",
+               "#bd955c": "#147d87", "#e5b878": "#b27a2a", "#75b5c7": "#278c96"}
+    for trace in fig.data:
+        if trace.type == "choropleth":
+            trace.colorscale = [(v, palette.get(c, c)) for v, c in trace.colorscale]
+            trace.marker.line.color = "#ffffff"
+        else:
+            if trace.line.color:
+                trace.line.color = palette.get(trace.line.color, trace.line.color)
+            if trace.textfont.color:
+                trace.textfont.color = theme.INK
+            if trace.marker.color:
+                colors = trace.marker.color
+                trace.marker.color = ([palette.get(c, c) for c in colors]
+                                      if not isinstance(colors, str) else palette.get(colors, colors))
+                trace.marker.line.color = "#ffffff"
+    fig.update_geos(landcolor="#e0e9ed", oceancolor="#f2f7f9", bgcolor="#f2f7f9", countrycolor="#ffffff")
+    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#f2f7f9", font_color=theme.INK,
+                      legend_font_color=theme.INK)
+    return fig
+
+
+def regional_comparison(country, year, direction):
+    """A second encoding of the same full-partner regional shares and unknowns."""
+    order = ["Asia", "Europe", "America", "Africa", "Oceania", "Unknown"]
+    summaries = {code: regional(country, year, code, direction) for code in ["85", "87"]}
+    if all(r is None for r in summaries.values()):
+        return theme.empty_figure("No data to compare product regions.", height=430)
+    fig = go.Figure()
+    values = {}
+    for code, name, color in [("85", "HS85 · Electrical equipment", "#7892ac"),
+                               ("87", "HS87 · Vehicles & parts", "#147d87")]:
+        r = summaries[code]
+        vals = [float(r[0][region]) * 100 if r is not None else float("nan") for region in order]
+        values[code] = vals
+        fig.add_trace(go.Bar(
+            x=vals, y=order, name=name, orientation="h", marker_color=color,
+            text=["—" if pd.isna(v) else "<0.1%" if 0 < v < .1 else f"{v:.1f}%" for v in vals],
+            textposition="outside", cliponaxis=False,
+            hovertemplate=name + "<br>%{y}: %{x:.3f}% of all partners<extra></extra>",
+        ))
+    for i, region in enumerate(order):
+        a, b = values["85"][i], values["87"][i]
+        delta = "—" if pd.isna(a) or pd.isna(b) else f"{b-a:+.1f} pp" if abs(b-a) >= .05 else "0.0 pp"
+        fig.add_annotation(x=1, y=region, xref="paper", yref="y", text=delta,
+                           showarrow=False, xanchor="right", font=dict(size=12, color=theme.INK))
+    fig.add_annotation(x=1, y=1.09, xref="paper", yref="paper", text="<b>HS87 − HS85</b>",
+                       showarrow=False, xanchor="right", font=dict(size=12))
+    valid = [v for vals in values.values() for v in vals if pd.notna(v)]
+    fig.update_layout(
+        template=theme.PLOT_TEMPLATE, height=430, barmode="group", bargap=.3, bargroupgap=.15,
+        margin=dict(l=85, r=12, t=65, b=50), font=dict(color=theme.INK),
+        legend=dict(orientation="h", x=0, y=1.24, font=dict(size=12)),
+        xaxis=dict(domain=[0,.78], range=[0, max(5, max(valid, default=0)*1.16)],
+                   title="All-partner share (%)", ticksuffix="%", nticks=5, fixedrange=True),
+        yaxis=dict(categoryorder="array", categoryarray=order, autorange="reversed", fixedrange=True,
+                   showgrid=False, tickmode="array", tickvals=order,
+                   ticktext=["Americas" if r == "America" else r for r in order]),
+    )
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    home = meta.loc[country,"region"]
+    home = "Oceania" if home == "Pacific" else home
+    if home in order and home != "Unknown":
+        i = order.index(home)
+        fig.add_shape(type="rect", xref="paper", x0=0, x1=1, y0=i-.46, y1=i+.46,
+                      fillcolor="rgba(212,161,91,.12)", line_width=0, layer="below")
+    if any(r is None for r in summaries.values()):
+        missing = ", ".join("HS" + c for c, r in summaries.items() if r is None)
+        fig.add_annotation(x=0, y=-.2, xref="paper", yref="paper", xanchor="left",
+                           text=missing + ": no positive total; shares and differences unavailable.", showarrow=False)
+    return fig
+
+
+def regional_takeaway(country, year, direction):
+    a, b = regional(country, year, "85", direction), regional(country, year, "87", direction)
+    if a is None or b is None:
+        return "Regional comparison unavailable: a product has no positive trade total."
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    home = meta.loc[country,"region"]
+    home = "Oceania" if home == "Pacific" else home
+    if home not in REGIONS or home == "Unknown":
+        return "Compare each region; the focal economy’s region is unknown."
+    name = meta.loc[country,"name"]
+    noun = "exports going to" if direction == "export" else "imports coming from"
+    return f"{name}, {year} — {noun} {home}: vehicles & parts {b[0][home]:.1%}, electrical equipment {a[0][home]:.1%}. Identified shares; see unknown-region bounds alongside."
+
+
 def register_callbacks(app):
+    @app.callback(Output(cid("regional-takeaway"), "children"),
+                  Input(cid("country"), "value"), Input(cid("year"), "value"),
+                  Input(cid("direction"), "value"), Input(ACTIVE_MODULE, "data"))
+    def takeaway(country, year, direction, active):
+        guard_active(MODULE_ID, active)
+        try:
+            return regional_takeaway(country, year, direction)
+        except (KeyError, ValueError, FileNotFoundError):
+            return "No regional comparison available for this selection."
+
+
     @app.callback(Output(cid("table"), "data"), Input(cid("records"), "data"))
     def table(rows):
         return rows or []
@@ -698,8 +815,10 @@ def register_callbacks(app):
         ],
         Input(cid("selected"), "data"),
         Input(ACTIVE_MODULE, "data"),
+        Input(cid("region-view"), "value"),
+        Input(cid("map-palette"), "value"),
     )
-    def update(country, year, product, direction, top, view, selected, active):
+    def update(country, year, product, direction, top, view, selected, active, region_view=None, map_palette=None):
         guard_active(MODULE_ID, active)
         try:
             if (
@@ -710,7 +829,12 @@ def register_callbacks(app):
                 raise ValueError(
                     "Select a valid focal economy, direction and display range."
                 )
-            return figures(country, year, product, direction, top, view, selected)
+            result = list(figures(country, year, product, direction, top, view, selected))
+            if region_view == "compare":
+                result[2] = regional_comparison(country, year, direction)
+            if view == "map" and map_palette == "light":
+                result[0] = light_map(result[0])
+            return result
         except (FileNotFoundError, ValueError) as error:
             message = str(error)
             empty = theme.empty_figure(message)
@@ -741,17 +865,20 @@ def register_callbacks(app):
         Output(cid("map-card"), "className"),
         Output(cid("map-title"), "children"),
         Output(cid("map-caption"), "children"),
+        Output(cid("palette-controls"), "style"),
         Input(cid("view"), "value"),
+        Input(cid("map-palette"), "value"),
     )
-    def map_style(view):
+    def map_style(view, palette=None):
         return (
-            "card m3-map-card" + (" m3-matrix-card" if view == "matrix" else ""),
+            "card m3-map-card" + (" m3-matrix-card" if view == "matrix" else " m3-light-card" if palette == "light" else ""),
             "01  Six-economy partner matrix" if view == "matrix" else "01  Trade flows",
             (
-                "Fixed partner columns · All-partner shares · Common 0–100% scale. Other includes partners outside the fixed columns."
+                "Rows = six focal economies; columns = partner economies. Each cell is the partner’s share of that row’s trade, not a flow between continents. Common 0–100% scale; Other retains partners outside the fixed columns."
                 if view == "matrix"
                 else "Arrows point to importers · Width encodes value. Capitals locate economies; curves are not transport routes."
             ),
+            {"display": "none" if view == "matrix" else "block"},
         )
 
     @app.callback(

@@ -48,3 +48,7 @@
   .m2-controls, .m2-comparison, .m2 .m2-differences { grid-template-columns:minmax(0,1fr); }
   .m2-economy dd { overflow-wrap:anywhere; }
 }
+.m2-takeaway { padding:16px 20px; background:white; border-left:3px solid var(--accent); }
+.m2-takeaway h3 { margin:0 0 6px; font-size:21px; line-height:1.4; }
+.m2-takeaway p { margin:0; color:var(--muted); font-size:13px; }
+.m2-analysis details { margin-top:16px; font-size:13px; }
