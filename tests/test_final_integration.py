@@ -72,17 +72,35 @@ class FinalIntegration(unittest.TestCase):
             p.partners("CHN", 2023, "87", "export").value.sum(),
         )
 
-    def test_matrix_fixed_columns_and_region_sums(self):
-        expected = None
+    def test_matrix_columns_follow_peak_share_and_rows_sum_to_100(self):
+        seen = set()
         for year, product, direction in [
             (2010, "TOTAL", "export"),
             (2023, "85", "export"),
             (2024, "87", "import"),
         ]:
             columns, rows = p.matrix(year, product, direction)
-            if expected is None:
-                expected = columns
-            self.assertEqual(columns, expected)
+            seen.add(tuple(columns))
+            self.assertLessEqual(len(columns), p.MATRIX_COLUMNS + 1)
+            self.assertEqual(columns[-1], "Other")
+            # Every column is a partner some focal economy really trades with.
+            for column in columns[:-1]:
+                self.assertTrue(
+                    any(
+                        column in set(p.partners(c, year, product, direction).partner)
+                        for c in p.FOCUS
+                    ),
+                    column,
+                )
+            # Rebuild the ranking independently: peak share desc, then total share.
+            peak, total = {}, {}
+            for c in p.FOCUS:
+                d = p.partners(c, year, product, direction)
+                for partner, share in zip(d.partner, d.share):
+                    peak[partner] = max(peak.get(partner, 0.0), float(share))
+                    total[partner] = total.get(partner, 0.0) + float(share)
+            ranked = sorted(peak, key=lambda k: (-peak[k], -total[k], k))
+            self.assertEqual(columns[:-1], ranked[: p.MATRIX_COLUMNS])
             np.testing.assert_allclose(np.sum(rows, axis=1), 100, rtol=1e-12)
             for country in p.FOCUS:
                 for product in ["85", "87"]:
@@ -90,7 +108,8 @@ class FinalIntegration(unittest.TestCase):
                     self.assertAlmostEqual(shares.sum(), 1)
                     self.assertGreaterEqual(high, low)
                     self.assertAlmostEqual(high - low, shares["Unknown"])
-        self.assertEqual(columns[-1], "Other")
+        # Columns adapt to the selected scope instead of freezing one snapshot.
+        self.assertGreater(len(seen), 1)
 
     def test_zero_scope_does_not_invent_shares(self):
         with patch.object(

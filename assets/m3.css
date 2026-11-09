@@ -35,15 +35,13 @@
 .m3-flow-share { font-size:12px; }
 .m3-matrix-card .m3-flow-name { color:var(--muted); }
 
-.m3-palette-controls { margin-top:10px; }
-.m3-palette-controls .m3-field>label { font-size:11px; }
 .card.m3-light-card { background:white; border-color:var(--line); color:var(--ink); }
 .m3-light-card .card-title-text { color:var(--ink); }
 .m3-light-card .radio-row>label,.m3-matrix-card .radio-row>label { color:var(--muted); background:white; border-color:var(--line); }
 .m3-light-card .radio-row>label:has(input:checked),.m3-matrix-card .radio-row>label:has(input:checked) { color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line); }
 .m3-light-card .m3-selection { background:#f3f6f8; color:var(--ink); }
 .m3-light-card .m3-flow-name,.m3-light-card .m3-map-caption { color:var(--muted); }
-.m3-secondary .radio-row { margin:8px 0; }
 
 .m3-region-caption { color:var(--muted); }
+.m3-subhead { font-size:14px; font-weight:600; margin:14px 0 2px; color:var(--ink); }
 .m3-takeaway { font-size:17px; font-weight:600; line-height:1.5; margin:12px 0; color:var(--accent); }

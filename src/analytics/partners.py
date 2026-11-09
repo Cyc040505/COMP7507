@@ -62,19 +62,32 @@ def partners(country, year, product="TOTAL", direction="export"):
     )
 
 
-@lru_cache(maxsize=1)
-def matrix_columns():
-    codes = set()
+MATRIX_COLUMNS = 12
+
+
+@lru_cache(maxsize=64)
+def matrix_columns(year, product="TOTAL", direction="export"):
+    """Partners ranked by the highest share they hold in any focal economy.
+
+    A partner earns a column by dominating at least one focal economy's trade in
+    the current scope, not by having ranked in one fixed snapshot. Ordering by
+    that peak share makes the matrix read as a descending importance gradient.
+    """
+    peak, total = {}, {}
     for c in FOCUS:
-        codes.update(partners(c, 2023).head(5).partner)
-    meta = (
-        data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3").region
-    )
-    return sorted(codes, key=lambda c: (region(meta.get(c)), c))
+        p = partners(c, year, product, direction)
+        if p.empty or p.value.sum() <= 0:
+            continue
+        for partner, share in zip(p.partner, p.share):
+            partner, share = str(partner), float(share)
+            peak[partner] = max(peak.get(partner, 0.0), share)
+            total[partner] = total.get(partner, 0.0) + share
+    ranked = sorted(peak, key=lambda c: (-peak[c], -total[c], c))
+    return ranked[:MATRIX_COLUMNS]
 
 
 def matrix(year, product, direction):
-    columns = matrix_columns()
+    columns = matrix_columns(year, product, direction)
     rows = []
     for c in FOCUS:
         p = partners(c, year, product, direction)

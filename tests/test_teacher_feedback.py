@@ -56,10 +56,12 @@ class TeacherFeedback(unittest.TestCase):
         self.assertEqual(r.json['response']['M4-inspect']['value'],'87')
 
     def test_m3_direction_and_country_are_not_stale(self):
-        self.assertIn('exports going to Asia',m3.regional_takeaway('CHN',2023,'export'))
-        title=m3.regional_takeaway('DEU',2024,'import')
-        self.assertIn('Germany, 2024',title);self.assertIn('imports coming from Europe',title)
-        self.assertNotIn('exports going',title)
+        self.assertIn('home region Asia',m3.gravity_takeaway('CHN',2023,'export'))
+        self.assertIn('exports',m3.gravity_takeaway('CHN',2023,'export'))
+        title=m3.gravity_takeaway('DEU',2024,'import')
+        self.assertIn('Germany, 2024',title);self.assertIn('home region Europe',title)
+        self.assertIn('imports',title)
+        self.assertNotIn('exports',title)
 
     def test_m2_takeaway_tracks_comparison_and_empty_state(self):
         for country in ['JPN','USA']:
