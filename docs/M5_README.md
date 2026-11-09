@@ -47,6 +47,6 @@ CSV 保留年度金额、指数、商品份额、区域上下界、覆盖率、�
 
 ## 验证与文件
 
-运行 `python -m unittest discover -s tests -v`。交付前核验模块控件、六国、年度点击、M4 导入、缺值／缺年、固定分母、区域边界及导出一致性；执行结果见本轮提交说明。桌面和 390px 窄屏已实际检查。
+运行 `python -m unittest discover -s tests -v`。交付前核验模块控件、六国、年度点击、M4 导入、缺值／缺年、固定分母、区域边界及导出一致性；本轮整合最新 main 后完整 149 项检查通过（其中 M5 为 57 项）。桌面和 390px 窄屏已实际检查。
 
 `src/modules/m5_time.py` 负责布局与回调，`src/m5_portraits.py` 负责国家结果卡，`src/m5_structure.py` 负责结构双图，`assets/zzz_m5_fieldnotes.css` 仅作用于 M5。可编辑参考稿位于 [M5_structure_pair.svg](design/M5_structure_pair.svg)，网页仍由真实数据动态绘图。Figma 因调用额度未完成画布，不将其计作已交付设计。
