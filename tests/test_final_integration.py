@@ -201,20 +201,17 @@ class FinalIntegration(unittest.TestCase):
         self.assertEqual(
             call("M1-finding.children", vals, "M1-product.value").status_code, 200
         )
-        for source, point in [
-            ("map", {"location": "JPN"}),
-            ("scatter", {"customdata": "JPN"}),
-            ("ranking", {"customdata": "JPN"}),
-        ]:
-            r = call(
-                "M1-selected.data",
-                {
-                    "active-module.data": "M1",
-                    f"M1-{source}.clickData": {"points": [point]},
-                },
-                f"M1-{source}.clickData",
-            )
-            self.assertEqual(r.json["response"]["M1-selected"]["data"], "JPN")
+        # Selection is now local; the Python scatter callback still consumes
+        # the same selected partner without replacing the map or its ranking.
+        dependencies = app.server.test_client().get("/_dash-dependencies").json
+        selection = next(d for d in dependencies if d["output"] == "M1-selected.data")
+        self.assertEqual(selection["clientside_function"], {"namespace": "m1", "function_name": "choose"})
+        inputs = {i["id"] for i in selection["inputs"]}
+        self.assertTrue({"M1-map", "M1-scatter", "M1-clear-selection"}.issubset(inputs))
+        self.assertTrue(any("M1-partner" in i for i in inputs))
+        response = call("M1-scatter.figure", vals, "M1-selected.data")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("JPN", response.json["response"]["M1-scatter"]["figure"]["data"][0]["customdata"])
 
     def test_m0_full_trends_and_year_ranking(self):
         for year in [2010, 2023, 2024]:
