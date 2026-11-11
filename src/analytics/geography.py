@@ -127,6 +127,30 @@ def spearman_rho(frame: pd.DataFrame) -> float | None:
     return float(dist_rank.corr(share_rank))
 
 
+def distance_profile(frame: pd.DataFrame) -> pd.DataFrame:
+    """Unweighted partner-share medians and IQRs in distance-quantile groups.
+
+    Use the full valid sample, never the map's Top-N pool. At least two groups
+    and eight observations per requested group are needed for a useful guide.
+    The IQR describes partner dispersion; it is not a confidence interval.
+    """
+    columns = ["distance", "share", "q25", "q75", "n", "near", "far"]
+    if frame.empty:
+        return pd.DataFrame(columns=columns)
+    valid = frame.loc[frame.has_distance & frame.share_pct.gt(0)].copy()
+    count = min(5, len(valid) // 8)
+    if count < 2 or valid.distance.nunique() < 2:
+        return pd.DataFrame(columns=columns)
+    valid["distance_group"] = pd.qcut(valid.distance, count, duplicates="drop")
+    profile = valid.groupby("distance_group", observed=True).agg(
+        distance=("distance", "median"), share=("share_pct", "median"),
+        q25=("share_pct", lambda values: values.quantile(.25)),
+        q75=("share_pct", lambda values: values.quantile(.75)),
+        n=("partner", "size"), near=("distance", "min"), far=("distance", "max"),
+    ).reset_index(drop=True)
+    return profile if len(profile) >= 2 else pd.DataFrame(columns=columns)
+
+
 def summarize(frame: pd.DataFrame, metric_used: str) -> dict:
     """Descriptive statistics for the current selection."""
     n = int(len(frame))

@@ -1,4 +1,4 @@
-"""Browser acceptance checks; run the M2 launcher first (default port 8052 here)."""
+"""Browser acceptance checks; run app.py first (default port 8050)."""
 
 import argparse
 import json
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--url", default="http://127.0.0.1:8052")
+    parser.add_argument("--url", default="http://127.0.0.1:8050")
     args = parser.parse_args()
     libs = ROOT / ".venv/browser-libs/usr/lib/x86_64-linux-gnu"
     if libs.exists():
@@ -27,6 +27,7 @@ def main():
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.on("console", lambda msg: errors.append(msg.text) if msg.type == "error" else None)
         page.goto(args.url, wait_until="networkidle")
+        page.locator("#nav-M2").click()
         expect(page.locator("#M2-finding")).to_contain_text("Japan")
         expect(page.locator("#M2-cards")).to_contain_text("35.27%")
         expect(page.locator("#M2-cards")).to_contain_text("18.70%")
@@ -170,7 +171,7 @@ def main():
                 const graph = document.querySelector('#M2-graph');
                 const plot = graph.querySelector('.nsewdrag').getBoundingClientRect();
                 const label = [...graph.querySelectorAll('.textpoint text')]
-                    .find(t => t.textContent === 'USA');
+                    .find(t => t.textContent === 'United States');
                 if (!label) return false;
                 const box = label.getBoundingClientRect();
                 return box.width > 0 && box.left >= plot.left &&

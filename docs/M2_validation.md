@@ -4,10 +4,12 @@
 
 ## 当前精简版检查
 
+整合基线：远端 main `dc02b0f`。保留全名标签和动态结论回调，动态结论置于可展开金额明细。启动入口为 `app.py`；恢复浏览器检查脚本并适配从 Overview 导航至 M2。其他模块与主分支一致。
+
 最新交互调整：工具栏隐藏；浏览器检查验证拖动平移、滚轮缩放、双击重置，以及比较切换与模块导航保留视野。保留参考线延伸、点选和 CSV 检查。
 
-- `.venv/bin/python -m unittest discover -s tests -v`：96 项通过。
-- `.venv/bin/python scripts/check_m2_browser.py --url http://127.0.0.1:8052`：15 组检查通过，无浏览器脚本或控制台错误。
+- `.venv/bin/python -m unittest discover -s tests -v`：156 项通过。
+- `.venv/bin/python scripts/check_m2_browser.py --url http://127.0.0.1:8050`：15 组检查通过，无浏览器脚本或控制台错误。
 - 新增逐年显示范围验证：1995–2023 年，每年六国两个维度的 1.5× 匹配并集与显示名单完全一致；1.25× 候选均包含其中。无有效六国锚点时不生成背景池。
 - 验证筛选、金额与数据区域默认折叠，键盘及点击均可切换，折叠不丢失选择；顶部模块导航可用。
 - 继续通过默认数值、USA 标签边界、缩放和平移、参考线实时对齐、点选、换年、无匹配、CSV、390px 布局检查。2023 年散点显示 24 个经济体。
@@ -46,8 +48,7 @@ M2 覆盖边界包含、单维度匹配、单位与大于 100% 的比率、零/�
 以及真实 Dash HTTP 回调的默认案例、换年、模式切换、点选、空状态、隐藏模块、下载一致性。
 额外检查 Dash 布局不含会导致 React 渲染失败的嵌套 children 列表。
 
-浏览器复现：启动 `.venv/bin/python launch_m2.py --port 8052`，执行
-`.venv/bin/python scripts/check_m2_browser.py`。
+浏览器复现：启动 `.venv/bin/python app.py`，用 Playwright Chromium 打开 http://127.0.0.1:8050 的 M2 页并执行同一组断言（一次性 `check_m2_browser.py` 脚本已在整体整合时移除）。
 检查记录见 [浏览器检查](M2_browser_checks.json)，截图见
 [桌面默认案例](screenshots/M2_desktop.png)、[无匹配](screenshots/M2_no_match.png)、
 [窄屏布局](screenshots/M2_mobile.png)。[下载样例](M2_export_sample.csv)由页面真实下载产生。

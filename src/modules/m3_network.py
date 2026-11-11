@@ -15,7 +15,13 @@ from src.module_base import guard_active
 MODULE_ID = "M3"
 NAV_LABEL = "M3  Network & Partners"
 ORDER = 3
-COLORS = ["#637f91", "#bb9360", "#4c7096", "#6f9389", "#a58d9d", "#c6ccd3"]
+# Unselected flows recede once a partner is chosen, so the amber path stays readable.
+DIM_ARC = "rgba(117,181,199,0.22)"
+DIM_ARC_LIGHT = "rgba(39,140,150,0.22)"
+# Amber marks everything that belongs to the selected partner: arc, moving
+# arrowhead, capital dot and country fill. light_map() restyles it in light mode.
+HIGHLIGHT = "#e5b878"
+HIGHLIGHT_LIGHT = "#b27a2a"
 
 
 def cid(k):
@@ -155,13 +161,13 @@ def layout():
                                 role="status",
                             ),
                             html.P(
-                                "Arrows point to importers · Width encodes value. Capitals locate economies; curves are not transport routes.",
+                                "Arrows point to importers · Width encodes value · Moving arrowheads trace each flow from exporter to importer · The selected partner's country is filled in the same amber as its arc. Capitals locate economies; curves are not transport routes.",
                                 id=cid("map-caption"),
                                 className="m3-map-caption",
                             ),
                         ],
                         id=cid("map-card"),
-                        className="card m3-map-card",
+                        className="card m3-map-card m3-light-card",
                     ),
                     components.card(
                         "02  Partner shares",
@@ -186,24 +192,40 @@ def layout():
             html.Div(
                 [
                     components.card(
-                        "03  How does the regional mix change?",
+                        "03  Does trade follow regional gravity?",
                         [
                             html.P(
-                                "HS85 · Electrical equipment  /  HS87 · Vehicles & parts",
+                                "Same product pair for every case · HS85 electrical equipment vs HS87 vehicles & parts",
                                 className="chart-subtitle",
+                            ),
+                            html.H4(id=cid("regional-takeaway"), className="m3-takeaway"),
+                            dcc.Graph(
+                                id=cid("gravity"),
+                                responsive=True,
+                                style={"height": "190px"},
+                                config=graph_config,
+                            ),
+                            html.P(
+                                "Each bar is the home region's share minus the share of the largest other region, in percentage points; both shares are printed in the row label. Left of zero means the home region is out-traded — an exception to the gravity pattern. Grey means unknown-region trade is large enough to reverse the verdict.",
+                                className="m3-map-caption",
+                            ),
+                            html.H5(
+                                "Regional mix by product",
+                                className="m3-subhead",
                             ),
                             dcc.Graph(
                                 id=cid("regions"),
                                 responsive=True,
-                                style={"height": "350px"},
+                                style={"height": "380px"},
                                 config=graph_config,
                             ),
+                            html.P("All partners, including unknown regions, remain in the denominator. Differences use unrounded shares; pp = percentage points.", className="m3-map-caption m3-region-caption"),
                         ],
                     ),
                     components.verification_panel(
-                        "Does the regional concentration of trade differ between electronics and vehicles?",
+                        "When does regional trade concentration break down?",
                         "",
-                        "Regional shares describe composition, not preference adjusted for region size. No causal inference.",
+                        "A gap compares the home-region share with the single largest other region; it is not a test against every region at once. Regional shares describe composition, not preference adjusted for region size. No causal inference.",
                         evidence_id=cid("finding"),
                         conclusion_id=cid("limits"),
                     ),
@@ -215,7 +237,7 @@ def layout():
                 [
                     html.Summary("Scope, methods & complete partner data"),
                     html.P(
-                        "BACI HS92 V202601; nominal merchandise trade, thousand current USD. Shares use all partners before Top-N. Unknown regions remain in the denominator. Regions follow GeoDist: Russia is in Asia; the Americas are not split. The matrix uses the fixed union of six economies’ 2023 all-product Top5 partners; Other includes remaining partners and is not Unknown. Blank rows mean no observed total. Zero cells mean no recorded flow in the selected source, not proof of structural absence."
+                        "BACI HS92 V202601; nominal merchandise trade, thousand current USD. Shares use all partners before Top-N. Unknown regions remain in the denominator. Regions follow GeoDist: Russia is in Asia; the Americas are not split. The matrix shows the 12 partners with the highest share in any one of the six economies for the selected year, product and direction, ordered by that peak share; Other includes remaining partners and is not Unknown. Blank rows mean no observed total. Zero cells mean no recorded flow in the selected source, not proof of structural absence."
                     ),
                     html.P(
                         "Click a focal economy on the map to switch; other partners select a detail. Select a table cell for the same partner highlight."
@@ -270,6 +292,7 @@ def map_figure(country, d, direction, top, selected):
     pos = positions()
     fig = go.Figure()
     codes = data_loader.load_country_meta().iso3.drop_duplicates().tolist()
+    territories = set(codes)
     fig.add_trace(
         go.Choropleth(
             locations=codes,
@@ -301,10 +324,27 @@ def map_figure(country, d, direction, top, selected):
             hovertemplate="%{location}<extra>Selected focal economy</extra>",
         )
     )
+    # The chosen partner gets its own country fill in the same amber as its arc,
+    # so country and path highlight agree. This applies even when the partner is
+    # one of the six focal economies: the selection, not the panel, decides.
+    if selected and selected in territories:
+        fig.add_trace(
+            go.Choropleth(
+                locations=[selected],
+                z=[1],
+                colorscale=[[0, HIGHLIGHT], [1, HIGHLIGHT]],
+                showscale=False,
+                marker_line_color=theme.MAP_BG,
+                hovertemplate="%{location}<extra>Selected partner</extra>",
+            )
+        )
     shown = d.head(top)
     maxv = float(shown.value.max()) if len(shown) else 1
+    # A selection isolates one partner: fade the other arcs and draw the chosen
+    # one last, so no wider or later link can cover the highlighted path.
+    focus = selected if selected in set(shown.partner) else None
     if country in pos.index:
-        for r in shown.itertuples():
+        for r in sorted(shown.itertuples(), key=lambda row: row.partner == focus):
             if r.partner not in pos.index:
                 continue
             a, b = (
@@ -330,7 +370,12 @@ def map_figure(country, d, direction, top, selected):
                 + 2 * (1 - t) * t * control_lat
                 + t**2 * end_lat
             )
-            color = "#e5b878" if r.partner == selected else "#75b5c7"
+            if r.partner == focus:
+                color = HIGHLIGHT
+            elif focus is not None:
+                color = DIM_ARC
+            else:
+                color = "#75b5c7"
             width = 1 + 5 * math.sqrt(r.value / maxv)
             text = f"{a} → {b}<br>{r.value:,.0f} thousand USD<br>{r.share:.2%} of all partners"
             fig.add_trace(
@@ -406,8 +451,13 @@ def map_figure(country, d, direction, top, selected):
                 marker={
                     "size": [11] + [6] * (len(codes) - 1),
                     "line": {"width": 1.2, "color": theme.MAP_BG},
-                    "color": ["#e5b878"]
-                    + ["#e5b878" if p == selected else "#75b5c7" for p in codes[1:]],
+                    # Same highlight as the arcs: the chosen partner and the focal
+                    # economy stay amber, every other partner recedes with its flow.
+                    "color": [HIGHLIGHT]
+                    + [
+                        HIGHLIGHT if p == selected else (DIM_ARC if focus else "#75b5c7")
+                        for p in codes[1:]
+                    ],
                 },
                 hovertemplate="%{hovertext}<extra></extra>",
                 showlegend=False,
@@ -478,6 +528,7 @@ def map_figure(country, d, direction, top, selected):
             "y": 0,
         },
         uirevision="world",
+        dragmode=False,
     )
     return fig
 
@@ -512,6 +563,7 @@ def figures(country, year, product, direction, top, view, selected):
             margin=dict(t=20, b=90),
             xaxis_tickangle=-45,
             yaxis_autorange="reversed",
+            dragmode=False,
         )
     rank = go.Figure(
         go.Bar(
@@ -555,66 +607,43 @@ def figures(country, year, product, direction, top, view, selected):
         ),
         xaxis_title=None,
         yaxis_autorange="reversed",
+        dragmode=False,
     )
-    reg = go.Figure()
     summaries = []
     for code in ["85", "87"]:
         r = regional(country, year, code, direction)
         if r is not None:
             summaries.append((code, r))
-    for i, region in enumerate(REGIONS):
-        reg.add_trace(
-            go.Bar(
-                name=region,
-                x=["HS" + c for c, r in summaries],
-                y=[r[0][region] * 100 for c, r in summaries],
-                marker_color=COLORS[i],
-                text=[
-                    f"{r[0][region]*100:.1f}%" if r[0][region] >= 0.055 else ""
-                    for c, r in summaries
-                ],
-                textposition="inside",
-                insidetextfont=dict(color="white", size=12),
-                hovertemplate="%{x}: %{y:.2f}%<extra>" + region + "</extra>",
-            )
-        )
-    reg.update_layout(
-        barmode="stack",
-        uniformtext=dict(minsize=12, mode="hide"),
-        height=350,
-        yaxis={"range": [0, 100], "title": "All-partner share (%)"},
-        legend={"orientation": "h", "y": -0.2},
-        margin=dict(l=45, r=10, t=15, b=100),
-    )
+    reg = regional_comparison(country, year, direction)
     cov = shown.value.sum() / total if total > 0 else 0
     missing = d.loc[~d.partner.isin(positions().index), "value"].sum()
     scope = f"{country} · {year} · {product} · {direction} · Top {top} covers {cov:.1%}; all-partner total ${total/1e6:,.2f}bn. Partners lacking coordinates: ${missing/1e6:,.3f}bn, retained in denominators."
-    finding = (
+    finding = gravity_takeaway(country, year, direction)
+    finding += " Bounds are the identified home-region share and the same share if all unknown-region trade were home-region trade: " + (
         "; ".join(
             (
-                f"HS{c}: same-region share {r[1]:.1%}–{r[2]:.1%}"
+                f"HS{c} {r[1]:.1%}–{r[2]:.1%}"
                 if r[1] is not None
-                else f"HS{c}: unknown focal region"
+                else f"HS{c} unknown focal region"
             )
             for c, r in summaries
         )
-        or "No data to compare product regions."
+        or "no data to compare product regions."
     )
     finding += (
-        ". Imports describe suppliers and do not test export destination concentration."
+        ". Imports describe suppliers and do not test export destinations."
         if direction == "import"
-        else ". Compare these shares to locate differences; they do not establish a preference after controlling for region size."
+        else ". Shares describe composition, not preference after controlling for region size."
     )
     bounds = {c: r for c, r in summaries}
     if all(c in bounds and bounds[c][1] is not None for c in ["85", "87"]):
         a, b = bounds["85"], bounds["87"]
         if b[2] < a[1]:
-            comparison = "HS87 has a lower same-region share than HS85, even when all unknown HS87 trade is assigned to the focal region. "
+            finding += " HS87 has a lower same-region share than HS85, even when all unknown HS87 trade is assigned to the focal region."
         elif a[2] < b[1]:
-            comparison = "HS87 has a higher same-region share than HS85, even when all unknown HS85 trade is assigned to the focal region. "
+            finding += " HS87 has a higher same-region share than HS85, even when all unknown HS85 trade is assigned to the focal region."
         else:
-            comparison = "The same-region bounds overlap; unknown-region trade prevents an unambiguous ordering. "
-        finding = comparison + finding
+            finding += " The same-region bounds overlap; unknown-region trade prevents an unambiguous ordering."
     detail = html.Span("Select a partner on the map or ranking.")
     if selected:
         selected_rows = d[d.partner.eq(selected)]
@@ -650,7 +679,278 @@ def figures(country, year, product, direction, top, view, selected):
     return fig, rank, reg, scope, finding, detail, records
 
 
+def light_map(fig):
+    """Restyle an existing geographic figure without changing its data or geometry."""
+    fig = go.Figure(fig)
+    palette = {theme.MAP_LAND: "#e0e9ed", theme.MAP_BG: "#f2f7f9",
+               theme.MAP_TEXT: theme.INK, "#3a5a6e": "#c1d8dc",
+               "#bd955c": "#147d87", HIGHLIGHT: HIGHLIGHT_LIGHT, "#75b5c7": "#278c96",
+               DIM_ARC: DIM_ARC_LIGHT}
+    for trace in fig.data:
+        if trace.type == "choropleth":
+            trace.colorscale = [(v, palette.get(c, c)) for v, c in trace.colorscale]
+            trace.marker.line.color = "#ffffff"
+        else:
+            if trace.line.color:
+                trace.line.color = palette.get(trace.line.color, trace.line.color)
+            if trace.textfont.color:
+                trace.textfont.color = theme.INK
+            if trace.marker.color:
+                colors = trace.marker.color
+                trace.marker.color = ([palette.get(c, c) for c in colors]
+                                      if not isinstance(colors, str) else palette.get(colors, colors))
+                trace.marker.line.color = "#ffffff"
+    fig.update_geos(landcolor="#e0e9ed", oceancolor="#f2f7f9", bgcolor="#f2f7f9", countrycolor="#ffffff")
+    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#f2f7f9", font_color=theme.INK,
+                      legend_font_color=theme.INK)
+    return fig
+
+
+def regional_comparison(country, year, direction):
+    """A second encoding of the same full-partner regional shares and unknowns."""
+    order = ["Asia", "Europe", "America", "Africa", "Oceania", "Unknown"]
+    summaries = {code: regional(country, year, code, direction) for code in ["85", "87"]}
+    if all(r is None for r in summaries.values()):
+        return theme.empty_figure("No data to compare product regions.", height=430)
+    fig = go.Figure()
+    values = {}
+    for code, name, color in [("85", "Electrical equipment", "#7892ac"),
+                               ("87", "Vehicles & parts", "#147d87")]:
+        r = summaries[code]
+        vals = [float(r[0][region]) * 100 if r is not None else float("nan") for region in order]
+        values[code] = vals
+        fig.add_trace(go.Bar(
+            x=vals, y=order, name=name, orientation="h", marker_color=color,
+            text=["—" if pd.isna(v) else "<0.1%" if 0 < v < .1 else f"{v:.1f}%" for v in vals],
+            textposition="outside", cliponaxis=False,
+            hovertemplate=name + "<br>%{y}: %{x:.3f}% of all partners<extra></extra>",
+        ))
+    for i, region in enumerate(order):
+        a, b = values["85"][i], values["87"][i]
+        delta = "—" if pd.isna(a) or pd.isna(b) else f"{b-a:+.1f} pp" if abs(b-a) >= .05 else "0.0 pp"
+        fig.add_annotation(x=1, y=region, xref="paper", yref="y", text=delta,
+                           showarrow=False, xanchor="right", font=dict(size=12, color=theme.INK))
+    fig.add_annotation(x=1, y=1.09, xref="paper", yref="paper", text="<b>HS87 − HS85</b>",
+                       showarrow=False, xanchor="right", font=dict(size=12))
+    valid = [v for vals in values.values() for v in vals if pd.notna(v)]
+    fig.update_layout(
+        template=theme.PLOT_TEMPLATE, height=430, barmode="group", bargap=.3, bargroupgap=.15,
+        margin=dict(l=85, r=12, t=65, b=50), font=dict(color=theme.INK),
+        legend=dict(orientation="h", x=0, y=1.24, font=dict(size=12)),
+        xaxis=dict(domain=[0,.78], range=[0, max(5, max(valid, default=0)*1.16)],
+                   title="All-partner share (%)", ticksuffix="%", nticks=5, fixedrange=True),
+        yaxis=dict(categoryorder="array", categoryarray=order, autorange="reversed", fixedrange=True,
+                   showgrid=False, tickmode="array", tickvals=order,
+                   ticktext=["Americas" if r == "America" else r for r in order]),
+        dragmode=False,
+    )
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    home = meta.loc[country,"region"]
+    home = "Oceania" if home == "Pacific" else home
+    if home in order and home != "Unknown":
+        i = order.index(home)
+        fig.add_shape(type="rect", xref="paper", x0=0, x1=1, y0=i-.46, y1=i+.46,
+                      fillcolor="rgba(212,161,91,.12)", line_width=0, layer="below")
+    if any(r is None for r in summaries.values()):
+        missing = ", ".join("HS" + c for c, r in summaries.items() if r is None)
+        fig.add_annotation(x=0, y=-.2, xref="paper", yref="paper", xanchor="left",
+                           text=missing + ": no positive total; shares and differences unavailable.", showarrow=False)
+    return fig
+
+
+REGION_LABEL = {"America": "Americas"}
+
+
+def gravity_rows(country, year, direction):
+    """Home-region share against the largest other region, one row per product.
+
+    Returns ``(home, rows, notes)``. ``rows`` holds the numbers the figure and
+    the sentence both read, so the two can never disagree.
+    """
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    home = meta.loc[country, "region"]
+    home = "Oceania" if home == "Pacific" else home
+    if home not in REGIONS or home == "Unknown":
+        return home, [], ["unknown focal region"]
+    rows, notes = [], []
+    for code, name in [
+        ("85", "Electrical equipment"),
+        ("87", "Vehicles & parts"),
+    ]:
+        r = regional(country, year, code, direction)
+        if r is None:
+            rows.append(None)
+            notes.append("no positive total")
+            continue
+        shares, _, _ = r
+        own = float(shares[home])
+        unknown = float(shares["Unknown"])
+        others = {
+            k: float(v) for k, v in shares.items() if k not in (home, "Unknown")
+        }
+        if not others:
+            rows.append(None)
+            notes.append("no other region")
+            continue
+        rival = max(others, key=others.get)
+        rival_share = others[rival]
+        # Assigning every unknown flow to the home region is the most favourable
+        # case; if that still loses, the break is unambiguous.
+        if own > rival_share:
+            verdict, tone = "holds", "#147d87"
+        elif own + unknown < rival_share:
+            verdict, tone = "breaks", "#b4552d"
+        else:
+            verdict, tone = "unclear", theme.MUTED
+        rows.append(
+            {
+                "code": code, "name": name, "own": own,
+                "short": "electronics" if code == "85" else "vehicles",
+                "rival": rival, "rival_share": rival_share,
+                "gap": (own - rival_share) * 100, "verdict": verdict, "tone": tone,
+                "unknown": unknown,
+            }
+        )
+        notes.append("")
+    return home, rows, notes
+
+
+def gravity_test(country, year, direction):
+    """Does trade stay with the focal economy's own region, or break that rule?
+
+    Compares the home-region share with the largest other region for each
+    product. Negative gaps are the interesting exceptions: trade that ignores
+    distance. Unknown-region trade bounds the verdict instead of being dropped.
+    """
+    home, rows, notes = gravity_rows(country, year, direction)
+    if home not in REGIONS or home == "Unknown":
+        return theme.empty_figure(
+            "The focal economy’s region is unknown; no gravity test.", height=200
+        )
+    if all(r is None for r in rows):
+        return theme.empty_figure("No regional data to test.", height=200)
+    fig = go.Figure()
+    gaps = [abs(r["gap"]) for r in rows if r]
+    span = max(6.0, max(gaps, default=0) * 1.55)
+    for row in rows:
+        if row is None:
+            continue
+        # Bars long enough to hold the numbers print them inside; a bar too short
+        # to hold them (an almost-empty gap) prints them just past its tip.
+        inside = abs(row["gap"]) / (2 * span) >= 0.16
+        fig.add_trace(
+            go.Bar(
+                x=[row["gap"]],
+                y=[f"HS{row['code']}  {row['name']}"],
+                orientation="h",
+                marker_color=row["tone"],
+                width=0.58,
+                text=[f"<b>{row['gap']:+.1f} pp</b><br>{row['verdict']}"],
+                textposition="inside" if inside else "outside",
+                insidetextanchor="middle",
+                cliponaxis=False,
+                textfont=dict(size=11, color="#ffffff" if inside else theme.INK),
+                hovertemplate=(
+                    f"{REGION_LABEL.get(home, home)}: {row['own']:.1%}<br>"
+                    f"Largest other, {REGION_LABEL.get(row['rival'], row['rival'])}: "
+                    f"{row['rival_share']:.1%}<br>"
+                    f"Unknown: {row['unknown']:.1%}<extra></extra>"
+                ),
+            )
+        )
+    fig.add_vline(x=0, line_width=1, line_color=theme.MUTED)
+    fig.update_layout(
+        template=theme.PLOT_TEMPLATE, height=178, bargap=0.42,
+        margin=dict(l=176, r=26, t=8, b=30), font=dict(color=theme.INK),
+        showlegend=False, dragmode=False,
+        xaxis=dict(
+            range=[-span, span],
+            title="Home region share − largest other region (pp)",
+            ticksuffix=" pp", nticks=5, fixedrange=True, zeroline=False,
+        ),
+        yaxis=dict(
+            categoryorder="array",
+            categoryarray=[f"HS{r['code']}  {r['name']}" for r in rows if r],
+            autorange="reversed", showgrid=False, fixedrange=True,
+            ticks="",
+            tickmode="array",
+            tickvals=[f"HS{r['code']}  {r['name']}" for r in rows if r],
+            # Each row names the two regions being compared, so the bar never
+            # carries an anonymous difference.
+            ticktext=[
+                f"HS{r['code']}  {r['name']}"
+                f"<br><span style='font-size:10px;color:{theme.MUTED}'>"
+                f"{REGION_LABEL.get(home, home)} {r['own']:.1%} vs "
+                f"{REGION_LABEL.get(r['rival'], r['rival'])} {r['rival_share']:.1%}"
+                "</span>"
+                for r in rows if r
+            ],
+            tickfont=dict(size=12),
+        ),
+    )
+    if any(notes):
+        fig.add_annotation(
+            x=0, y=-0.16, xref="paper", yref="paper", xanchor="left", yanchor="top",
+            showarrow=False, font=dict(size=11, color=theme.MUTED),
+            text="; ".join(
+                f"{r['code'] if r else c}: {n}" for r, c, n in zip(rows, ["HS85", "HS87"], notes) if n
+            ),
+        )
+    return fig
+
+
+def gravity_takeaway(country, year, direction):
+    """One sentence naming the exception instead of restating the chart."""
+    home, all_rows, _ = gravity_rows(country, year, direction)
+    rows = [r for r in all_rows if r]
+    if not rows:
+        return "Regional comparison unavailable for this selection."
+    meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
+    name = meta.loc[country, "name"]
+    noun = "exports" if direction == "export" else "imports"
+    lead = f"{name}, {year} {noun} · home region {home}: "
+    holds = [r for r in rows if r["verdict"] == "holds"]
+    breaks = [r for r in rows if r["verdict"] == "breaks"]
+    unclear = [r for r in rows if r["verdict"] == "unclear"]
+
+    def fmt(rows):
+        return ", ".join(f"{r['short']} ({r['gap']:+.0f} pp)" for r in rows)
+
+    if breaks and holds:
+        lead += (
+            f"gravity holds for {fmt(holds)} but breaks for {fmt(breaks)}."
+        )
+    elif breaks:
+        lead += f"gravity breaks for {fmt(breaks)}."
+    elif holds:
+        lead += (
+            f"gravity holds for {fmt(holds)}; no exception to the pattern."
+        )
+    else:
+        return (
+            lead + "unknown-region trade is too large to decide whether the "
+            "gravity pattern holds."
+        )
+    if unclear:
+        lead += (
+            f" Inconclusive for {fmt(unclear)}: unknown-region trade could "
+            "reverse the gap."
+        )
+    return lead
+
+
 def register_callbacks(app):
+    @app.callback(Output(cid("regional-takeaway"), "children"),
+                  Input(cid("country"), "value"), Input(cid("year"), "value"),
+                  Input(cid("direction"), "value"), Input(ACTIVE_MODULE, "data"))
+    def takeaway(country, year, direction, active):
+        guard_active(MODULE_ID, active)
+        try:
+            return gravity_takeaway(country, year, direction)
+        except (KeyError, ValueError, FileNotFoundError):
+            return "No regional comparison available for this selection."
+
+
     @app.callback(Output(cid("table"), "data"), Input(cid("records"), "data"))
     def table(rows):
         return rows or []
@@ -685,6 +985,7 @@ def register_callbacks(app):
             for k, p in [
                 ("graph", "figure"),
                 ("ranking", "figure"),
+                ("gravity", "figure"),
                 ("regions", "figure"),
                 ("scope", "children"),
                 ("finding", "children"),
@@ -710,11 +1011,15 @@ def register_callbacks(app):
                 raise ValueError(
                     "Select a valid focal economy, direction and display range."
                 )
-            return figures(country, year, product, direction, top, view, selected)
+            result = list(figures(country, year, product, direction, top, view, selected))
+            if view == "map":
+                result[0] = light_map(result[0])
+            result.insert(2, gravity_test(country, year, direction))
+            return result
         except (FileNotFoundError, ValueError) as error:
             message = str(error)
             empty = theme.empty_figure(message)
-            return empty, empty, empty, message, "No result calculated.", "", []
+            return empty, empty, empty, empty, message, "No result calculated.", "", []
 
     @app.callback(
         Output(cid("kpis"), "children"),
@@ -745,12 +1050,12 @@ def register_callbacks(app):
     )
     def map_style(view):
         return (
-            "card m3-map-card" + (" m3-matrix-card" if view == "matrix" else ""),
+            "card m3-map-card" + (" m3-matrix-card" if view == "matrix" else " m3-light-card"),
             "01  Six-economy partner matrix" if view == "matrix" else "01  Trade flows",
             (
-                "Fixed partner columns · All-partner shares · Common 0–100% scale. Other includes partners outside the fixed columns."
+                "Rows = six focal economies; columns = the 12 partners with the highest share in any one row, ordered left to right by that peak share for the current year, product and direction. Each cell is the partner’s share of that row’s trade, not a flow between continents. Common 0–100% scale; Other retains partners outside these columns."
                 if view == "matrix"
-                else "Arrows point to importers · Width encodes value. Capitals locate economies; curves are not transport routes."
+                else "Arrows point to importers · Width encodes value · Moving arrowheads trace each flow from exporter to importer · The selected partner's country is filled in the same amber as its arc. Capitals locate economies; curves are not transport routes."
             ),
         )
 

@@ -93,6 +93,7 @@ def layout():
                 html.Div(id=cid("finding"), className="m2-finding"),
                 html.Details([
                     html.Summary("View exact values"),
+                    html.Div(id=cid("takeaway"), className="m2-pair-evidence", role="status"),
                     html.Div(id=cid("cards"), className="m2-comparison"),
                 ], id=cid("amounts"), className="m2-amounts"),
             ])),
@@ -125,11 +126,11 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
     matched = set(peers.country)
     fig = go.Figure()
     # Reference endpoints must not set the axis range, but the rightmost
-    # comparison's marker and ISO3 label still need room inside the clip box.
-    # Reserve 0.6 decades when the comparison is the rightmost economy;
+    # comparison's marker and country label still need room inside the clip box.
+    # Reserve 0.9 decades when the comparison is the rightmost economy;
     # otherwise retain the usual spacing between the background points.
     rightmost = valid.loc[valid.gdp_billion_usd.idxmax(), "country"]
-    right_padding = 4 if comparator == rightmost else 1.5
+    right_padding = 8 if comparator == rightmost else 1.5
     xmin, xmax = valid.gdp_billion_usd.min() / 1.5, valid.gdp_billion_usd.max() * right_padding
     ymin, ymax = valid.exports_billion_usd.min() / 1.5, valid.exports_billion_usd.max() * 1.5
     span = max(log10(xmax / xmin), log10(ymax / ymin))
@@ -163,7 +164,7 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
         custom = [[r.country, r.name, r.export_gdp_ratio] for r in data.itertuples()]
         fig.add_trace(go.Scatter(
             x=data.gdp_billion_usd.tolist(), y=data.exports_billion_usd.tolist(),
-            customdata=custom, text=data.country.tolist(), name=role,
+            customdata=custom, text=[dict(zip(FOCUS_COUNTRIES, FOCUS_NAMES)).get(r.country, r.name) for r in data.itertuples()] if labels else data.country.tolist(), name=role,
             mode="markers+text" if labels else "markers",
             textposition="top left" if role == "Anchor" else "bottom right",
             textfont={"size": 12, "color": theme.INK},
@@ -246,6 +247,24 @@ def relative_comparison(a, b, year):
 
 
 def register_callbacks(app):
+    @app.callback(Output(cid("takeaway"), "children"), Input(cid("context"), "data"), Input(ACTIVE_MODULE, "data"))
+    def takeaway(context, active):
+        guard_active(MODULE_ID, active)
+        if not context or not context.get("comparator"):
+            return html.H3("Choose two economies with comparable data")
+        try:
+            d = data_for_year(context["year"]).set_index("country")
+            a, b = d.loc[context["anchor"]], d.loc[context["comparator"]]
+            full_names = dict(zip(FOCUS_COUNTRIES, FOCUS_NAMES))
+            aname = full_names.get(context["anchor"], a['name'])
+            bname = full_names.get(context["comparator"], b['name'])
+            return html.Div([
+                html.H3(f"{bname} has {100*b.gdp/a.gdp:.1f}% of {aname}’s GDP, but {100*b.export_value/a.export_value:.1f}% of its goods exports"),
+                html.P(f"{context['year']} · Matched by {MODES[context['mode']]}. Each percentage compares the same measure between the two economies; it is not exports divided by GDP.")])
+        except (KeyError, ValueError, FileNotFoundError):
+            return html.H3("No comparable pair in this selection")
+
+
     app.clientside_callback(
         ClientsideFunction(namespace="m2", function_name="extendReferenceLines"),
         Output(cid("reference-lines-ready"), "data"),

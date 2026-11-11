@@ -165,6 +165,23 @@ class ProductTests(unittest.TestCase):
         self.assertTrue(pd.isna(fig.data[1].x[0]))
         self.assertTrue(rows.missing_endpoint.all())
 
+    def test_dumbbell_missing_endpoints_and_zero(self):
+        rows = pd.DataFrame({"hs2": ["01", "02", "03"],
+                             "share_base": [0.0, float("nan"), .2],
+                             "share_current": [.1, .3, float("nan")],
+                             "rca_base": [0.0, float("nan"), 1.0],
+                             "rca_current": [1.0, 2.0, float("nan")],
+                             "change_pp": [10.0, float("nan"), float("nan")]})
+        fig = m.dumbbell_figure(rows, 2010, 2023, "02")
+        self.assertEqual(list(fig.data[0].x), [0.0, 10.0, None])
+        self.assertTrue(pd.isna(fig.data[1].x[1]))
+        self.assertEqual(fig.data[1].x[0], 0)
+        self.assertTrue(pd.isna(fig.data[2].x[2]))
+        self.assertEqual(fig.data[1].marker.symbol, "circle-open")
+        self.assertEqual(fig.data[2].marker.symbol, "circle")
+        self.assertEqual(sum(a.text == "—" for a in fig.layout.annotations), 4)
+
+
 
 class DashIntegration(unittest.TestCase):
     def call(self, needle, inputs, states=None, changed=None):
@@ -369,6 +386,16 @@ class DashIntegration(unittest.TestCase):
             "active-module.data": "M4",
         }
         detail = self.call("M4-detail.figure", detail_inputs)
+        dumbbell = self.call("M4-detail.figure", detail_inputs | {"M4-change-style.value": "dumbbell"})
+        original = self.call("M4-detail.figure", detail_inputs | {"M4-change-style.value": "bars"})
+        self.assertEqual(dumbbell["M4-detail-table"]["data"], original["M4-detail-table"]["data"])
+        self.assertEqual(dumbbell["M4-cell-stats"], original["M4-cell-stats"])
+        new_series = dumbbell["M4-detail"]["figure"]["data"]
+        old_series = original["M4-detail"]["figure"]["data"]
+        self.assertEqual([t["type"] for t in new_series], ["scatter"] * 3)
+        self.assertEqual([t["type"] for t in old_series], ["bar"] * 2)
+        for new, old in zip(new_series[1:], old_series):
+            self.assertEqual(new["x"], old["x"])
         row = next(r for r in detail["M4-detail-table"]["data"] if r["hs2"] == "87")
         self.assertAlmostEqual(row["change_pp"], 5.399088 - 2.082040, places=3)
         self.assertLess(row["current_rca"], 1)

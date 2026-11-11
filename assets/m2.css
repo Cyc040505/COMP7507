@@ -64,3 +64,6 @@
 .m2-amounts .m2-economy h3 { font-size:14px; margin:4px 0 8px; }
 .m2-amounts .m2-economy dl>div { flex-direction:row; flex-wrap:wrap; justify-content:space-between; gap:4px; margin-bottom:6px; }
 .m2-amounts .m2-economy dd { font-size:13px; }
+
+.m2-pair-evidence h3 { font-size:14px; line-height:1.5; margin:10px 0 6px; }
+.m2-pair-evidence p { font-size:12px; color:var(--muted); }

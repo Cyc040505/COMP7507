@@ -66,7 +66,7 @@ class TimeInterface(unittest.TestCase):
         self.assertEqual(v["rows"], [])
         self.assertIn("baseline", v["message"].lower())
         v = m.compute_view(
-            ["CHN", "MEX", "USA", "DEU", "JPN"],
+            list(m.FOCUS_COUNTRIES) + ["JPN"],
             "TOTAL",
             2019,
             2020,
@@ -75,7 +75,7 @@ class TimeInterface(unittest.TestCase):
             2024,
         )
         self.assertEqual(v["rows"], [])
-        self.assertIn("4", v["message"])
+        self.assertIn("6", v["message"])
 
     def test_reconciled_data_and_hash_are_required(self):
         p, r, manifest = m.inputs()
@@ -88,9 +88,10 @@ class TimeInterface(unittest.TestCase):
             ["USA", "NLD"], "87", 2019, 2020, [2016, 2024], "product", 2024
         )
         main = {t.name: t.line.color for t in v["index"].data}
-        detail = {t.name: t.line.color for t in v["structure"].data}
         self.assertNotEqual(main["USA"], main["NLD"])
-        self.assertEqual(main, detail)
+        for country, color in main.items():
+            self.assertTrue(any(shape.line.color == color
+                                for shape in v["structure"].layout.shapes))
 
     def call(self, needle, values, changed):
         key = next(k for k in app.app.callback_map if needle in k)
@@ -159,7 +160,7 @@ class TimeInterface(unittest.TestCase):
 
     def test_import_rejections_preserve_all_controls(self):
         cases = [([], 2023, "87"), (["CHN"] * 2, 2023, "87"),
-                 (["JPN"], 2023, "87"), (list(m.FOCUS_COUNTRIES), 2023, "87"),
+                 (["JPN"], 2023, "87"), (list(m.FOCUS_COUNTRIES) + ["JPN"], 2023, "87"),
                  (["CHN"], 2019, "87"), (["CHN"], 2025, "87"),
                  (["CHN"], None, "87"), (["CHN"], "2023", "87"),
                  (["CHN"], 2023, "invalid")]
@@ -183,7 +184,6 @@ class TimeInterface(unittest.TestCase):
             self.assertEqual(data["M5-product"]["value"], expected)
             self.assertEqual(data["M5-metric"]["value"], metric)
             self.assertEqual(data["M5-window"]["value"], [2016, 2023])
-            self.assertIsNone(data["M5-index"]["clickData"])
             self.assertIsNone(data["M5-structure"]["clickData"])
         res = self.call("M5-selected.data", {
             "active-module.data": "M5", "M5-window.value": [2016, 2023],
@@ -212,6 +212,57 @@ class TimeInterface(unittest.TestCase):
         self.assertEqual(res.status_code, 200, res.data[:500])
         self.assertEqual(res.json["response"]["M5-product"]["value"], "87")
         self.assertEqual(res.json["response"]["M5-countries"]["value"], ["CHN", "MEX"])
+
+    def test_m4_import_updates_controls_without_locking_presets(self):
+        values = {"active-module.data": "M5", "M5-import.n_clicks": 1,
+                  "M4-comparison.data": {"countries": ["MEX", "CHN"], "year": 2023},
+                  "M4-inspect.value": "85"}
+        imported = self.call("M5-countries.value", values, "M5-import.n_clicks")
+        data = imported.json["response"]
+        self.assertEqual(data["M5-countries"]["value"], ["MEX", "CHN"])
+        self.assertEqual(data["M5-product"]["value"], "85")
+        self.assertEqual(data["M5-window"]["value"], [2016, 2023])
+        self.assertNotIn("paused", data["M5-import-note"]["children"])
+        self.assertTrue(all(key.startswith("M5-") for key in data))
+        for case, (scope, baseline, event, window, measure, *_) in m.CASES.items():
+            values[f"M5-{case}.n_clicks"] = 1
+            res = self.call("M5-countries.value", values, f"M5-{case}.n_clicks")
+            updated = res.json["response"]
+            self.assertEqual(updated["M5-countries"]["value"], m.CASE_COUNTRIES)
+            self.assertEqual(updated["M5-product"]["value"], scope)
+            self.assertEqual(updated["M5-baseline"]["value"], baseline)
+            self.assertEqual(updated["M5-event"]["value"], event)
+            self.assertEqual(updated["M5-window"]["value"], list(window))
+            self.assertEqual(updated["M5-import-note"]["children"], "")
+            self.assertTrue(all(key.startswith("M5-") for key in updated))
+
+    def test_preset_resets_inspection_even_when_window_is_unchanged(self):
+        res = self.call("M5-countries.value", {
+            "active-module.data": "M5", "M5-vehicles.n_clicks": 2},
+            "M5-vehicles.n_clicks")
+        data = res.json["response"]
+        self.assertEqual(data["M5-import-reset"]["data"],
+                         {"source": "vehicles", "click": 2})
+        year = self.call("M5-selected.data", {
+            "active-module.data": "M5", "M5-window.value": [2016, 2024],
+            "M5-selected.data": 2021, "M5-inspect-year.value": 2021,
+            "M5-import-reset.data": data["M5-import-reset"]["data"]},
+            "M5-import-reset.data")
+        self.assertEqual(year.json["response"]["M5-inspect-year"]["value"], 2024)
+
+    def test_presets_have_no_import_lock_or_extra_return_button(self):
+        def components(node):
+            if not hasattr(node, "to_plotly_json"):
+                return
+            yield node
+            children = getattr(node, "children", [])
+            for child in children if isinstance(children, (list, tuple)) else [children]:
+                yield from components(child)
+        items = {getattr(node, "id", None): node for node in components(m.layout())}
+        for case in m.CASES:
+            self.assertFalse(getattr(items[f"M5-{case}"], "disabled", False))
+        self.assertNotIn("M5-guided", items)
+        self.assertNotIn("M5-comparison-mode", items)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.analytics.geography import analyze, trade_by_partner, partner_frame
+from src.analytics.geography import analyze, trade_by_partner, partner_frame, distance_profile
 from src.modules.m1_geography import (
     _comparison_rows, _focus_subset, _geo_positions, _map_figure, _map_summary,
     _preserve_map_view, layout,
@@ -38,6 +38,35 @@ def _geodist():
 
 
 class GeographyTests(unittest.TestCase):
+    def test_distance_profile_uses_all_valid_partners_and_robust_medians(self):
+        frame = pd.DataFrame({
+            "partner": [f"P{i}" for i in range(40)],
+            "distance": list(range(1, 41)),
+            "share_pct": [i / 10 for i in range(40, 0, -1)],
+            "has_distance": [True] * 40,
+        })
+        # A single very large partner should not determine the typical share.
+        frame.loc[0, "share_pct"] = 90
+        frame = pd.concat([frame, pd.DataFrame([
+            {"partner": "MISSING", "distance": np.nan, "share_pct": 2, "has_distance": False},
+            {"partner": "ZERO", "distance": 50, "share_pct": 0, "has_distance": True},
+        ])], ignore_index=True)
+        profile = distance_profile(frame)
+        self.assertEqual(profile.n.sum(), 40)
+        self.assertEqual(len(profile), 5)
+        self.assertAlmostEqual(profile.iloc[0]["share"], 3.65)
+        self.assertAlmostEqual(profile.iloc[-1]["share"], .45)
+        self.assertTrue((profile.q25 <= profile.share).all())
+        self.assertTrue((profile.share <= profile.q75).all())
+        self.assertTrue(profile.distance.is_monotonic_increasing)
+
+    def test_distance_profile_does_not_invent_a_trend_for_sparse_or_tied_data(self):
+        frame = pd.DataFrame({"partner": list(range(32)), "distance": [100] * 32,
+                              "share_pct": [1] * 32, "has_distance": [True] * 32})
+        self.assertTrue(distance_profile(frame).empty)
+        frame["distance"] = list(range(1, 33))
+        self.assertTrue(distance_profile(frame.head(15)).empty)
+
     def test_share_uses_selected_scope_denominator(self):
         pair = pd.DataFrame(
             [

@@ -1,8 +1,20 @@
 """Global nominal exports and focal-economy world shares; local year control."""
 
+import math
+
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, State, dcc, html, dash_table
+from dash import (
+    Input,
+    Output,
+    State,
+    ClientsideFunction,
+    ctx,
+    dcc,
+    html,
+    dash_table,
+    no_update,
+)
 from src import data_loader, components, theme, config
 from src.analytics.partners import FOCUS
 from src.analytics.economy import SPECIAL_CODES
@@ -13,9 +25,53 @@ MODULE_ID = "M0"
 NAV_LABEL = "0  Overview"
 ORDER = 0
 
+YEAR_MIN, YEAR_MAX = 1995, 2024
+STEP_MS = 700
+PLAY_LABEL = "▶ Play"
+PAUSE_LABEL = "❚❚ Pause"
+
+FOCUS_NAMES = {
+    "USA": "United States",
+    "DEU": "Germany",
+    "CHN": "China",
+    "MEX": "Mexico",
+    "NLD": "Netherlands",
+    "ITA": "Italy",
+}
+
 
 def cid(k):
     return mid(MODULE_ID, k)
+
+
+def tint(hex_color, alpha):
+    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
+def country_tag(iso3):
+    """A coloured chip carrying the country name and its ISO3 code."""
+    color = theme.country_color(iso3)
+    return html.Span(
+        [
+            html.Span(className="m0-tag-dot", style={"background": color}),
+            html.Span(FOCUS_NAMES.get(iso3, iso3)),
+            html.Span(f"({iso3})", className="m0-tag-code"),
+        ],
+        className="m0-tag",
+        style={"background": tint(color, 0.1), "borderColor": tint(color, 0.38)},
+    )
+
+
+def pattern_row(label, codes, note):
+    return html.Div(
+        [
+            html.Span(label, className="m0-pattern-label"),
+            html.Span([country_tag(c) for c in codes], className="m0-tag-row"),
+            html.Span(note, className="m0-pattern-note"),
+        ],
+        className="m0-pattern",
+    )
 
 
 def eligible():
@@ -34,14 +90,43 @@ def layout():
             dcc.Download(id=cid("download")),
             html.Div(
                 [
-                    components.field(
-                        "Analysis year",
-                        dcc.Dropdown(
-                            id=cid("year"),
-                            options=list(range(1995, 2025)),
-                            value=2023,
-                            clearable=False,
-                        ),
+                    html.Div(
+                        [
+                            html.Label("Analysis year", htmlFor=cid("year")),
+                            html.Div(
+                                [
+                                    html.Button(
+                                        PLAY_LABEL,
+                                        id=cid("play"),
+                                        className="m0-play",
+                                        title="Step through every year automatically",
+                                        **{"aria-label": "Play years automatically"},
+                                    ),
+                                    html.Span(f"{YEAR_MIN}", className="m0-year-edge"),
+                                    dcc.Slider(
+                                        id=cid("year"),
+                                        min=YEAR_MIN,
+                                        max=YEAR_MAX,
+                                        step=1,
+                                        value=YEAR_MIN,
+                                        marks=None,
+                                        tooltip={"placement": "top"},
+                                        allow_direct_input=False,
+                                    ),
+                                    html.Span(f"{YEAR_MAX}", className="m0-year-edge"),
+                                    dcc.Interval(
+                                        id=cid("step"),
+                                        interval=STEP_MS,
+                                        n_intervals=0,
+                                        disabled=True,
+                                    ),
+                                    dcc.Store(id=cid("playing"), data=False),
+                                    dcc.Store(id=cid("auto-year"), data=None),
+                                ],
+                                className="m0-year-row",
+                            ),
+                        ],
+                        className="control-field m0-year",
                     ),
                     dcc.RadioItems(
                         id=cid("view"),
@@ -65,16 +150,43 @@ def layout():
                     ),
                     components.card(
                         "Share of complete world exports",
-                        dcc.Graph(
-                            id=cid("share"), responsive=True, style={"height": "420px"}
-                        ),
+                        [
+                            dcc.Graph(
+                                id=cid("share"),
+                                responsive=True,
+                                style={"height": "420px"},
+                            ),
+                            dcc.Store(id=cid("tween")),
+                        ],
                     ),
                 ],
                 className="m0-charts",
             ),
             components.card(
                 "What the evidence shows",
-                html.Div(id=cid("finding"), className="m3-note"),
+                [
+                    html.Div(id=cid("finding"), className="m3-note"),
+                    html.Div(
+                        [
+                            pattern_row(
+                                "Consistently dominant",
+                                ["USA", "DEU"],
+                                "Top 3 in every year, 1995–2024.",
+                            ),
+                            pattern_row(
+                                "Fastest riser",
+                                ["CHN"],
+                                "6th in 1995 → 1st since 2005; world share 4.5% → 15.7%.",
+                            ),
+                            pattern_row(
+                                "Stable shares",
+                                ["MEX", "NLD", "ITA"],
+                                "Each stayed inside a 2 pp band across 1995–2024.",
+                            ),
+                        ],
+                        className="m0-patterns",
+                    ),
+                ],
                 extra_class="m0-finding",
             ),
             html.Details(
@@ -132,12 +244,24 @@ def figures(year, view):
         yaxis_title="Trillion current USD",
         xaxis_title="Year",
         margin=dict(t=20, b=90),
-        xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024]),
+        xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024], range=[1995, 2024], fixedrange=True),
+        yaxis=dict(
+            range=[
+                math.floor(float(w.export_value.min()) / 1e9) - 0.6,
+                math.ceil(float(w.export_value.max()) / 1e9) + 0.6,
+            ],
+            fixedrange=True,
+        ),
+        dragmode=False,
     )
     valid = c[c.country.isin(eligible())]
     top = (
         valid[valid.year.eq(year)].sort_values("export_value", ascending=False).head(10)
     )
+    # One fixed horizontal scale keeps bars comparable between years and lets
+    # the ranking tween without the axis rescaling mid-animation.
+    yearly_peak = valid.groupby("year").share.max()
+    share_ceiling = float(yearly_peak.max()) if yearly_peak.notna().any() else 1.0
     if view == "ranking":
         fig = go.Figure(
             go.Bar(
@@ -153,8 +277,9 @@ def figures(year, view):
         fig.update_layout(
             yaxis_autorange="reversed",
             xaxis_title="World export share (%)",
-            xaxis_range=[0, float(top.share.max()) * 1.2],
             yaxis_showgrid=False,
+            xaxis=dict(range=[0, share_ceiling * 1.2], fixedrange=True),
+            yaxis=dict(fixedrange=True),
         )
     else:
         fig = go.Figure()
@@ -180,7 +305,9 @@ def figures(year, view):
         fig.update_layout(
             yaxis_title="World export share (%)",
             xaxis_title="Year",
-            xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024]),
+            xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024], range=[1995, 2024], fixedrange=True),
+            yaxis=dict(fixedrange=True),
+            dragmode=False,
         )
     fig.update_layout(
         height=420,
@@ -194,7 +321,7 @@ def figures(year, view):
         .country.nunique()
     )
     six = c[c.country.isin(FOCUS) & c.year.eq(year)].share.sum()
-    finding = f'{year}: global merchandise exports ${float(w.loc[w.year.eq(year),"export_value"].iloc[0])/1e9:.2f}T; six focal economies account for {six:.2f}%. {ever} distinct recorded economies entered the annual Top10 during 1995–2024. Historical entities follow BACI codes and are not silently reassigned.'
+    finding = f'{year}: global merchandise exports ${float(w.loc[w.year.eq(year),"export_value"].iloc[0])/1e9:.2f}T; six focal economies account for {six:.2f}%. {ever} distinct recorded economies entered the annual Top10 during 1995–2024.'
     return total, fig, finding
 
 
@@ -251,4 +378,51 @@ def register_callbacks(app):
     )
     def update(year, view, active):
         guard_active(MODULE_ID, active)
-        return figures(year, view)
+        total, fig, finding = figures(year, view)
+        return total, fig, finding
+
+    @app.callback(
+        Output(cid("year"), "value"),
+        Output(cid("playing"), "data"),
+        Output(cid("auto-year"), "data"),
+        Output(cid("play"), "children"),
+        Output(cid("play"), "className"),
+        Output(cid("step"), "disabled"),
+        Input(cid("play"), "n_clicks"),
+        Input(cid("step"), "n_intervals"),
+        Input(cid("year"), "value"),
+        State(cid("playing"), "data"),
+        State(cid("auto-year"), "data"),
+        prevent_initial_call=True,
+    )
+    def playback(n_clicks, ticks, year, playing, auto_year):
+        trigger = ctx.triggered_id
+        idle = (no_update, False, no_update, PLAY_LABEL, "m0-play", True)
+
+        if trigger == cid("play"):
+            if playing:
+                return idle
+            # Starting playback from the final year restarts the sequence.
+            start = int(year) if year is not None and year < YEAR_MAX else YEAR_MIN
+            return start, True, start, PAUSE_LABEL, "m0-play on", False
+
+        if trigger == cid("step"):
+            if not playing or year is None:
+                return idle
+            if auto_year is not None and year != auto_year:
+                return idle
+            nxt = int(year) + 1
+            if nxt > YEAR_MAX:
+                return idle
+            return nxt, no_update, nxt, no_update, no_update, no_update
+
+        if playing and auto_year is not None and year != auto_year:
+            return idle
+        return (no_update,) * 6
+
+    app.clientside_callback(
+        ClientsideFunction(namespace="m0", function_name="tween_ranking"),
+        Output(cid("tween"), "data"),
+        Input(cid("share"), "figure"),
+        Input(cid("view"), "value"),
+    )

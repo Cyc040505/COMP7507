@@ -21,6 +21,7 @@ from src.analytics.product import (
 )
 from src.ids import ACTIVE_MODULE, mid
 from src.module_base import guard_active
+from src.modules.m4_presentation import presentation, story_guide, RCA_GUIDE
 
 MODULE_ID = "M4"
 NAV_LABEL = "M4  Product Structure"
@@ -155,7 +156,7 @@ def layout():
                                 [
                                     ("structure", "Compare structure"),
                                     ("specialization", "Test specialization"),
-                                    ("change", "Check change"),
+                                    ("change", "Optional: change"),
                                 ],
                                 1,
                             )
@@ -270,8 +271,20 @@ def layout():
                     html.Div(id=cid("question"), className="m4-question"),
                     html.Div(id=cid("kpis"), className="m4-kpis"),
                 ],
-                className="m4-context",
+                className="m4-context", id=cid("context-summary"),
             ),
+            dcc.RadioItems(id=cid("presentation-mode"), options=[
+                {"label": "Key findings", "value": "key"},
+                {"label": "Full analysis · all original charts", "value": "full"}],
+                value="key", className="radio-row"),
+            html.Div([
+                html.P(id=cid("story-question"), className="m4-story-question"),
+                html.H3(id=cid("story-title"), className="m4-story-title"),
+                html.P(id=cid("story-evidence"), className="m4-story-evidence"),
+                html.Div(id=cid("story-rca"), className="m4-story-rca"),
+                dcc.Graph(id=cid("story"), config=GRAPH_CONFIG),
+                html.P(id=cid("story-note"), className="m4-note"),
+            ], id=cid("story-card"), className="card m4-story"),
             html.Div(
                 [
                     components.card(
@@ -370,6 +383,22 @@ def layout():
                                         ),
                                     ],
                                 ),
+                                html.Div(
+                                    field(
+                                        "Two-year chart style",
+                                        dcc.RadioItems(
+                                            id=cid("change-style"),
+                                            options=[
+                                                {"label": "Dumbbell · new", "value": "dumbbell"},
+                                                {"label": "Grouped bars · original", "value": "bars"},
+                                            ],
+                                            value="bars",
+                                            className="radio-row",
+                                        ),
+                                    ),
+                                    id=cid("change-style-controls"),
+                                    style={"display": "none"},
+                                ),
                                 graph("detail"),
                                 html.Div(id=cid("detail-note"), className="m4-note"),
                                 html.Div(id=cid("cell-stats"), className="m4-kpis"),
@@ -378,7 +407,7 @@ def layout():
                         extra_class="m4-chart",
                     ),
                 ],
-                className="m4-analysis",
+                className="m4-analysis", id=cid("full-analysis"), style={"display":"none"},
             ),
             components.card(
                 "Finding / Implication / Limits",
@@ -813,7 +842,104 @@ def comparison_figure(rows, baseline, year, product=None):
     return highlight_product(fig, product)
 
 
+def dumbbell_figure(rows, baseline, year, product=None):
+    """Paired shares on one scale; missing endpoints never become zero or a line."""
+    if rows.empty:
+        return theme.empty_figure("Select products recorded in at least one comparison year.")
+    rows = rows.sort_values(["change_pp", "hs2"], ascending=[False, True], na_position="last")
+    fig = go.Figure()
+    ys = list(range(len(rows)))
+    line_x, line_y = [], []
+    for i, r in enumerate(rows.itertuples()):
+        if pd.notna(r.share_base) and pd.notna(r.share_current):
+            line_x.extend([r.share_base * 100, r.share_current * 100, None])
+            line_y.extend([i, i, None])
+    fig.add_trace(go.Scatter(x=line_x, y=line_y, mode="lines", line=dict(color="#a8b5c2", width=2),
+                             hoverinfo="skip", showlegend=False, connectgaps=False))
+    for suffix, title, symbol, color in [
+        ("base", f"{baseline} · open", "circle-open", "#65758b"),
+        ("current", f"{year} · filled", "circle", theme.ACCENT),
+    ]:
+        fig.add_trace(go.Scatter(
+            x=rows["share_" + suffix] * 100, y=ys, mode="markers", name=title,
+            marker=dict(symbol=symbol, size=10, color=color, line=dict(width=2)),
+            customdata=[[r.hs2, number(getattr(r, "rca_" + suffix))] for r in rows.itertuples()],
+            hovertemplate=f"{title.split(' · ')[0]} · HS%{{customdata[0]}}<br>Share: %{{x:.3f}}%<br>RCA: %{{customdata[1]}}<extra></extra>",
+        ))
+    def share_text(v):
+        return "—" if pd.isna(v) else "<0.01%" if 0 < v * 100 < 0.01 else f"{v * 100:.2f}%"
+    for x, title in [(0.69, str(baseline)), (0.84, str(year)), (1, "Change")]:
+        fig.add_annotation(x=x, y=1.08, xref="paper", yref="paper", text=f"<b>{title}</b>",
+                           showarrow=False, xanchor="right", font=dict(size=12))
+    for i, r in enumerate(rows.itertuples()):
+        delta = "—" if pd.isna(r.change_pp) else f"{r.change_pp:+.2f} pp"
+        for x, text in [(0.69, share_text(r.share_base)), (0.84, share_text(r.share_current)), (1, delta)]:
+            fig.add_annotation(x=x, y=i, xref="paper", yref="y", text=text,
+                               showarrow=False, xanchor="right", font=dict(size=12, color=theme.INK))
+        if r.hs2 == product:
+            fig.add_shape(type="rect", xref="paper", x0=0, x1=1, y0=i-.42, y1=i+.42,
+                          fillcolor="rgba(212,161,91,0.15)", line_width=0, layer="below")
+    values = pd.concat([rows.share_base, rows.share_current]).dropna() * 100
+    upper = max(1, float(values.max()) * 1.12) if len(values) else 1
+    ticks = ["<br>".join(wrap(label(p), 22)) for p in rows.hs2]
+    ticks = [f"<b>{t}</b>" if p == product else t for p, t in zip(rows.hs2, ticks)]
+    base_style(fig, max(450, 120 + 48 * len(rows)))
+    fig.update_layout(
+        margin=dict(l=15, r=12, t=65, b=60),
+        legend=dict(orientation="h", y=1.23, x=0, font=dict(size=12)),
+        xaxis=dict(domain=[0, .54], range=[0, upper], title="Export share (%)", ticksuffix="%", nticks=5, fixedrange=True),
+        yaxis=dict(tickmode="array", tickvals=ys, ticktext=ticks, range=[len(rows)-.5, -.5],
+                   automargin=True, fixedrange=True, showgrid=False, zeroline=False),
+    )
+    return fig
+
+
+def rca_explainer():
+    return [
+        html.Div([
+            html.Strong("RCA", className="m4-rca-symbol"),
+            html.Span("=", className="m4-rca-equals", **{"aria-hidden": "true"}),
+            html.Div([
+                html.Span("Product’s share of country exports", className="m4-rca-numerator"),
+                html.Span("Product’s share of world exports"),
+            ], className="m4-rca-fraction", **{"aria-hidden": "true"}),
+        ], className="m4-rca-formula", role="img", **{
+            "aria-label": "RCA equals a product’s share of country exports divided by its share of world exports."
+        }),
+        html.Div([
+            html.Div([html.Strong("1×"), html.Span("World benchmark")]),
+            html.Div([html.Strong("Above 1×"), html.Span("More concentrated in this product")]),
+        ], className="m4-rca-reading"),
+        html.P("Compares export shares — not export amounts or product quality.", className="m4-rca-boundary"),
+    ]
+
+
 def register_callbacks(app):
+    @app.callback(
+        Output(cid("story-title"), "children"), Output(cid("story"), "figure"),
+        Output(cid("story-note"), "children"), Output(cid("story-card"), "style"),
+        Output(cid("full-analysis"), "style"), Output(cid("context-summary"), "style"),
+        Output(cid("story-question"), "children"), Output(cid("story-evidence"), "children"),
+        Output(cid("story-rca"), "children"),
+        Input(cid("comparison"), "data"), Input(cid("presentation-mode"), "value"),
+        Input(ACTIVE_MODULE, "data"),
+    )
+    def show_story(comparison, mode, active):
+        guard_active(MODULE_ID, active)
+        comparison = comparison or {}
+        title, figure, note = presentation(comparison, metrics(comparison.get("year",2023)), trade(), names())
+        question, evidence, rca = story_guide(comparison, metrics(comparison.get("year",2023)), names())
+        return title, figure, note, {"display":"none" if mode=="full" else "block"}, {"display":"grid" if mode=="full" else "none"}, {"display":"grid" if mode=="full" else "none"}, question, evidence, rca_explainer() if rca else ""
+
+    @app.callback(Output(cid("presentation-mode"), "value"), Input(cid("story"), "clickData"), prevent_initial_call=True)
+    def inspect_story(click):
+        return "full" if click else no_update
+
+
+    @app.callback(Output(cid("change-style-controls"), "style"), Input(cid("detail-view"), "value"))
+    def change_style_visibility(view):
+        return {"display": "block" if view == "change" else "none"}
+
     @app.callback(
         Output(cid("case"), "data"),
         Input(ACTIVE_MODULE, "data"),
@@ -1104,6 +1230,8 @@ def register_callbacks(app):
             if metric == "share"
             else "RCA colours use log₂ centred at 1, saturating below 0.125 / above 8. Cell numbers and hover retain actual values."
         )
+        if metric == "rca":
+            note += " " + RCA_GUIDE
         records = []
         lookup = shown.set_index(["exporter", "hs2"])
         meta = context_metadata(context)
@@ -1226,11 +1354,12 @@ def register_callbacks(app):
         Input(cid("comparison"), "data"),
         Input(cid("case"), "data"),
         Input(ACTIVE_MODULE, "data"),
+        Input(cid("story"), "clickData"),
         State(cid("focus"), "value"),
         State(cid("inspect"), "value"),
         State(cid("detail-context"), "data"),
     )
-    def select(click, comparison, case, active, focus, product, previous):
+    def select(click, comparison, case, active, story_click, focus, product, previous):
         guard_active(MODULE_ID, active)
         comparison = comparison or {}
         case = case or {}
@@ -1238,6 +1367,10 @@ def register_callbacks(app):
         previous = previous or {}
         step = case.get("step")
         context = {"step": step}
+        if ctx.triggered_id == cid("story") and story_click:
+            point = story_click["points"][0].get("customdata", [])
+            if len(point) == 2 and point[0] in valid and point[1] in chapters():
+                return point[0], point[1], context
         if ctx.triggered_id == cid("graph") and click:
             pt = click["points"][0]
             c, p = pt.get("x"), pt.get("y")
@@ -1264,8 +1397,9 @@ def register_callbacks(app):
         Input(cid("detail-view"), "value"),
         Input(cid("baseline"), "value"),
         Input(ACTIVE_MODULE, "data"),
+        Input(cid("change-style"), "value"),
     )
-    def detail(c, p, comparison, view, baseline, active):
+    def detail(c, p, comparison, view, baseline, active, chart_style=None):
         guard_active(MODULE_ID, active)
         comparison = comparison or {}
         year = int(comparison.get("year", 2023))
@@ -1294,7 +1428,8 @@ def register_callbacks(app):
                 )
             codes = list(dict.fromkeys(comparison.get("products", []) + [p]))
             rows = two_year_metrics(trade(), c, year, baseline, codes)
-            figure = comparison_figure(rows, baseline, year, p)
+            render = dumbbell_figure if chart_style == "dumbbell" else comparison_figure
+            figure = render(rows, baseline, year, p)
             note = f"{names().get(c,c)} ({c}) · {baseline} vs {year}. Fixed displayed chapters plus HS{p}; sorted by share change (pp). Each year uses its own full world reference. Missing endpoints are not filled."
         else:
             if a.empty:
@@ -1309,6 +1444,8 @@ def register_callbacks(app):
             codes = list(figure.data[0].y)
             rows = two_year_metrics(trade(), c, year, baseline, codes)
             note = f"{names().get(c,c)} ({c}) · {year} · HS{p}. Top8 chapters by exports plus inspected chapter; same-year economy and world shares. Other chapters remain in the denominators."
+        if view == "change" and chart_style == "dumbbell":
+            note += " Open point = baseline; filled point = current year. A connector joins two observations, not a continuous trend. — means missing."
         r = rows[rows.hs2.eq(p)]
         notice = ""
         if r.empty or pd.isna(r.iloc[0].share_current):

@@ -72,17 +72,35 @@ class FinalIntegration(unittest.TestCase):
             p.partners("CHN", 2023, "87", "export").value.sum(),
         )
 
-    def test_matrix_fixed_columns_and_region_sums(self):
-        expected = None
+    def test_matrix_columns_follow_peak_share_and_rows_sum_to_100(self):
+        seen = set()
         for year, product, direction in [
             (2010, "TOTAL", "export"),
             (2023, "85", "export"),
             (2024, "87", "import"),
         ]:
             columns, rows = p.matrix(year, product, direction)
-            if expected is None:
-                expected = columns
-            self.assertEqual(columns, expected)
+            seen.add(tuple(columns))
+            self.assertLessEqual(len(columns), p.MATRIX_COLUMNS + 1)
+            self.assertEqual(columns[-1], "Other")
+            # Every column is a partner some focal economy really trades with.
+            for column in columns[:-1]:
+                self.assertTrue(
+                    any(
+                        column in set(p.partners(c, year, product, direction).partner)
+                        for c in p.FOCUS
+                    ),
+                    column,
+                )
+            # Rebuild the ranking independently: peak share desc, then total share.
+            peak, total = {}, {}
+            for c in p.FOCUS:
+                d = p.partners(c, year, product, direction)
+                for partner, share in zip(d.partner, d.share):
+                    peak[partner] = max(peak.get(partner, 0.0), float(share))
+                    total[partner] = total.get(partner, 0.0) + float(share)
+            ranked = sorted(peak, key=lambda k: (-peak[k], -total[k], k))
+            self.assertEqual(columns[:-1], ranked[: p.MATRIX_COLUMNS])
             np.testing.assert_allclose(np.sum(rows, axis=1), 100, rtol=1e-12)
             for country in p.FOCUS:
                 for product in ["85", "87"]:
@@ -90,7 +108,8 @@ class FinalIntegration(unittest.TestCase):
                     self.assertAlmostEqual(shares.sum(), 1)
                     self.assertGreaterEqual(high, low)
                     self.assertAlmostEqual(high - low, shares["Unknown"])
-        self.assertEqual(columns[-1], "Other")
+        # Columns adapt to the selected scope instead of freezing one snapshot.
+        self.assertGreater(len(seen), 1)
 
     def test_zero_scope_does_not_invent_shares(self):
         with patch.object(
@@ -201,20 +220,17 @@ class FinalIntegration(unittest.TestCase):
         self.assertEqual(
             call("M1-finding.children", vals, "M1-product.value").status_code, 200
         )
-        for source, point in [
-            ("map", {"location": "JPN"}),
-            ("scatter", {"customdata": "JPN"}),
-            ("ranking", {"customdata": "JPN"}),
-        ]:
-            r = call(
-                "M1-selected.data",
-                {
-                    "active-module.data": "M1",
-                    f"M1-{source}.clickData": {"points": [point]},
-                },
-                f"M1-{source}.clickData",
-            )
-            self.assertEqual(r.json["response"]["M1-selected"]["data"], "JPN")
+        # Selection is now local; the Python scatter callback still consumes
+        # the same selected partner without replacing the map or its ranking.
+        dependencies = app.server.test_client().get("/_dash-dependencies").json
+        selection = next(d for d in dependencies if d["output"] == "M1-selected.data")
+        self.assertEqual(selection["clientside_function"], {"namespace": "m1", "function_name": "choose"})
+        inputs = {i["id"] for i in selection["inputs"]}
+        self.assertTrue({"M1-map", "M1-scatter", "M1-clear-selection"}.issubset(inputs))
+        self.assertTrue(any("M1-partner" in i for i in inputs))
+        response = call("M1-scatter.figure", vals, "M1-selected.data")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("JPN", response.json["response"]["M1-scatter"]["figure"]["data"][0]["customdata"])
 
     def test_m0_full_trends_and_year_ranking(self):
         for year in [2010, 2023, 2024]:
