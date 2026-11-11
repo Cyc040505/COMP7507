@@ -11,7 +11,7 @@ from dash.exceptions import PreventUpdate
 from src import components, config, data_loader, theme
 from src.analytics.economy import (
     FOCUS_COUNTRIES, MODES, country_names, prepare_year,
-    match_candidates, evidence_frame,
+    match_candidates, evidence_frame, display_candidates,
 )
 from src.ids import ACTIVE_MODULE, mid
 from src.module_base import guard_active
@@ -54,43 +54,52 @@ def layout():
         html.Div([
             html.Div("ECONOMIC SCALE / M2", className="m2-eyebrow"),
             html.H2("Similar GDP. Similar exports?"),
-            html.P("Start with Germany and Japan in 2023, then reverse the question: at similar exports, how different is GDP?"),
+            html.P("Similar economic size does not necessarily mean similar goods exports.", className="m2-takeaway"),
         ], className="m2-intro"),
-        components.card(None, html.Div([
+        html.Details([
+            html.Summary("Customize this comparison"),
             html.Div([
-                field("Analysis year", dcc.Dropdown(id=cid("year"), options=list(range(1995, 2024)), value=2023, clearable=False)),
-                field("Find similar economies by", dcc.RadioItems(id=cid("mode"), options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}], value="gdp", className="m2-radio")),
-                field("Similarity range", dcc.RadioItems(id=cid("factor"), options=[{"label": "1.25×", "value": 1.25}, {"label": "1.5×", "value": 1.5}], value=1.25, className="m2-radio")),
-            ], className="m2-controls"),
-            field("Choose your starting economy", dcc.RadioItems(
-                id=cid("anchor"),
-                options=[{"label": name, "value": code} for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)],
-                value="DEU", className="m2-anchors")),
-            html.P("Compare your chosen economy with similar economies around the world. Select 1.5× to explore a wider range.", className="m2-note"),
-        ])),
+                html.Div([
+                    field("Analysis year", dcc.Dropdown(id=cid("year"), options=list(range(1995, 2024)), value=2023, clearable=False)),
+                    field("Find similar economies by", dcc.RadioItems(id=cid("mode"), options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}], value="gdp", className="m2-radio")),
+                    field("Similarity range", dcc.RadioItems(id=cid("factor"), options=[{"label": "1.25×", "value": 1.25}, {"label": "1.5×", "value": 1.5}], value=1.25, className="m2-radio")),
+                ], className="m2-controls"),
+                field("Choose your starting economy", dcc.RadioItems(
+                    id=cid("anchor"),
+                    options=[{"label": name, "value": code} for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)],
+                    value="DEU", className="m2-anchors")),
+                html.P("Compare your chosen economy with similar economies around the world. Select 1.5× to explore a wider range.", className="m2-note"),
+            ]),
+        ], id=cid("customize"), className="m2-customize"),
         html.Div([
-            components.card("GDP and goods exports around the world", html.Div([
+            components.card("GDP and goods exports", html.Div([
                 html.Div(id=cid("scope"), className="m2-note", role="status"),
                 dcc.Graph(id=cid("graph"), figure=theme.empty_figure("Select M2 to begin."),
                           className="graph-interactive",
-                          config={"displayModeBar": True, "displaylogo": False,
+                          config={"displayModeBar": False, "displaylogo": False,
                                   "responsive": True, "scrollZoom": True, "doubleClick": "reset",
-                                  "modeBarButtonsToRemove": ["select2d", "lasso2d"]},
+                                  "showAxisDragHandles": False, "showAxisRangeEntryBoxes": False},
                           style={"height": "510px", "minHeight": "510px"}),
-                html.P("Each dot is an economy. Both axes use logarithmic scales: equal distances represent equal ratios. Darker blue lines indicate higher exports/GDP (10%, 50%, 100%). The shaded band shows your similarity range; click a highlighted dot to compare.", className="m2-note"),
-                html.P("Scroll to zoom or drag a box to enlarge an area. Choose Pan to move around; double-click or choose Reset axes to return to the full view.", className="m2-note"),
+                html.P("Drag to pan · Scroll to zoom · Double-click to reset", className="m2-note"),
+                html.Details([
+                    html.Summary("How to read this chart"),
+                    html.P("Both axes use logarithmic scales: equal distances represent equal ratios. Darker blue lines indicate higher exports/GDP (10%, 50%, 100%). The shaded band shows the selected similarity range. Drag to move around; click a highlighted dot to compare.", className="m2-note"),
+                ], className="m2-chart-help"),
             ])),
             components.card("Compare two economies", html.Div([
                 field("Choose an economy to compare", dcc.Dropdown(id=cid("comparator"), options=[{"label": "Japan · JPN", "value": "JPN"}], value="JPN", clearable=False)),
                 html.P(id=cid("match-status"), role="status", className="m2-note"),
-                html.Div(id=cid("cards"), className="m2-comparison"),
                 html.Div(id=cid("relative")),
                 html.Div(id=cid("finding"), className="m2-finding"),
-                html.P(LIMITATION, className="m2-note"),
+                html.Details([
+                    html.Summary("View exact values"),
+                    html.Div(id=cid("cards"), className="m2-comparison"),
+                ], id=cid("amounts"), className="m2-amounts"),
             ])),
         ], className="m2-analysis"),
         html.Details([
             html.Summary("All matches, data coverage and sources"),
+            html.P(LIMITATION, className="m2-note"),
             html.P("Browse all economies in your similarity range, with the closest matches first. Similarity is based on the measure you selected above.", className="m2-note"),
             dash_table.DataTable(id=cid("table"), columns=[
                 {"name": "Economy", "id": "economy"},
@@ -104,12 +113,12 @@ def layout():
             html.P("Download the selected year’s amounts, matching economies and reasons for missing comparisons. Sources: BACI HS92 V202601 and CHELEM GDP-VAL V202502. Charts and cards show billion current USD; the CSV labels the original units for each amount.", className="m2-note"),
             html.P("Some economies cannot be compared because GDP or exports are missing or non-positive, or their geographic coverage differs between sources. Missing values are not treated as zero.", className="m2-note"),
             html.P("Historical coverage: Belgium–Luxembourg through 1998 and Sudan through 2011 are excluded because the trade and GDP territories are not directly comparable. Regional or unspecified groups (Other Asia nes, Europe EFTA nes and SACU) are also excluded.", className="m2-note"),
-        ], className="card m2-details"),
+        ], id=cid("data-details"), className="card m2-details"),
     ])
 
 
 def scatter_figure(rows, anchor, comparator, mode, factor):
-    valid = rows[rows.valid]
+    valid = display_candidates(rows)
     if valid.empty:
         return theme.empty_figure("No finite positive GDP/export pairs for this year.")
     peers = match_candidates(rows, anchor, mode, factor)
@@ -137,16 +146,16 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
     a = valid[valid.country.eq(anchor)]
     if not a.empty:
         value = a.iloc[0]["gdp_billion_usd" if mode == "gdp" else "exports_billion_usd"]
-        band = {"fillcolor": theme.ACCENT, "opacity": .07, "line_width": 0, "layer": "below"}
+        band = {"fillcolor": theme.ACCENT, "opacity": .16, "line_width": 0, "layer": "below"}
         if mode == "gdp":
             fig.add_vrect(x0=value / factor, x1=value * factor, **band)
         else:
             fig.add_hrect(y0=value / factor, y1=value * factor, **band)
     roles = [
-        ("Global economies", valid[~valid.country.isin(matched | {anchor, comparator})], 7, "circle", False),
-        ("Matches", valid[valid.country.isin(matched - {comparator})], 11, "circle", False),
-        ("Anchor", a, 16, "diamond", True),
-        ("Comparison", valid[valid.country.eq(comparator)], 15, "square", True),
+        ("Other economies", valid[~valid.country.isin(matched | {anchor, comparator})], 10, "circle", False),
+        ("Matches", valid[valid.country.isin(matched - {comparator})], 14, "circle", False),
+        ("Anchor", a, 18, "diamond", True),
+        ("Comparison", valid[valid.country.eq(comparator)], 18, "square", True),
     ]
     for role, data, size, symbol, labels in roles:
         if data.empty:
@@ -159,14 +168,14 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
             textposition="top left" if role == "Anchor" else "bottom right",
             textfont={"size": 12, "color": theme.INK},
             marker={"size": size, "symbol": symbol,
-                    "color": "#b8c2ce" if role == "Global economies" else [theme.country_color(c) for c in data.country],
-                    "opacity": .65 if role == "Global economies" else 1,
+                    "color": "#b8c2ce" if role == "Other economies" else [theme.country_color(c) for c in data.country],
+                    "opacity": .65 if role == "Other economies" else 1,
                     "line": {"color": theme.ACCENT if role == "Matches" else "white", "width": 2 if role == "Matches" else 1}},
             hovertemplate="<b>%{customdata[1]} (%{customdata[0]})</b><br>GDP: $%{x:,.3f}bn<br>Goods exports: $%{y:,.3f}bn<br>Exports / GDP: %{customdata[2]:.2%}<extra>" + role + "</extra>",
         ))
     fig.update_layout(
         template=theme.PLOT_TEMPLATE, height=510, margin={"l": 65, "r": 25, "t": 35, "b": 105},
-        dragmode="zoom",
+        dragmode="pan",
         xaxis={"type": "log", "dtick": 1, "title": "GDP · billion current USD (log)", "autorange": True,
                "autorangeoptions": {"clipmin": xmin, "clipmax": xmax}},
         yaxis={"type": "log", "dtick": 1, "title": "Goods exports · billion current USD (log)", "autorange": True,
@@ -193,8 +202,6 @@ def finding_text(a, b, mode, year):
     return (
         f"In {year}, {b['name']}'s {MODES[mode]} measured {b[mode] / a[mode]:.2f}× "
         f"{a['name']}'s, while its {MODES[other]} measured {b[other] / a[other]:.2f}×. "
-        f"Exports/GDP was {b['export_gdp_ratio']:.2%} versus {a['export_gdp_ratio']:.2%}. "
-        "The relative-size bars show the gap in each measure. These figures describe the comparison, not what caused it."
     )
 
 
@@ -286,9 +293,8 @@ def register_callbacks(app):
         options = [{"label": name + (" (data unavailable this year)" if code not in valid_codes else ""), "value": code}
                    for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)]
         peer_options = [{"label": f"{names[c]} · {c}", "value": c} for c in pool]
-        scope = (f"{year} · {len(valid)} economies shown · {len(rows) - len(valid)} records excluded. "
-                 "All goods, all trading partners · billion current USD. "
-                 "See data coverage below for excluded records.")
+        shown = display_candidates(rows)
+        scope = f"{year} · {len(shown)} economies in comparison range · billion current USD"
         a = valid[valid.country.eq(anchor)]
         cards = []
         relative = []
@@ -301,7 +307,7 @@ def register_callbacks(app):
             cards = [economy_card(a, f"Starting economy · {year}")]
             status = (f"{len(pool)} other economies match {MODES[mode]} within "
                       f"[{1 / factor:.3f}, {factor:g}] × {names.get(anchor, anchor)}. "
-                      "Choose a comparison below, or click a highlighted dot.")
+                      "")
             if comparator:
                 b = valid.loc[valid.country.eq(comparator)].iloc[0]
                 cards.append(economy_card(b, f"Comparison · {year}"))
@@ -316,7 +322,11 @@ def register_callbacks(app):
         table = [{"economy": f"{r.name} · {r.country}", "gdp": f"{r.gdp_billion_usd:,.3f}", "exports": f"{r.exports_billion_usd:,.3f}", "ratio": f"{r.export_gdp_ratio:.2%}", "matching_ratio": f"{r.matching_ratio:.4f}×"} for r in peers.itertuples()]
         excluded = rows[~rows.valid]
         summary = "; ".join(f"{reason}: {count}" for reason, count in excluded.exclusion.value_counts().items()) or "None"
-        exclusions = [html.P(f"Exclusions ({len(excluded)}): {summary}. Reasons and values are included in the CSV."),
+        exclusions = [html.P(f"Scatter coverage: {len(shown)} of {len(valid)} valid economies. "
+                               "Shown economies are the six starting economies and their matches within 1.5× "
+                               "on either GDP or exports for this year. Matching uses only your selected measure; "
+                               "valid economies outside the display range remain in the CSV."),
+                      html.P(f"Exclusions ({len(excluded)}): {summary}. Reasons and values are included in the CSV."),
                       html.Ul([html.Li(f"{r.name} ({r.country}): {r.exclusion}") for r in excluded.itertuples()])]
         context = {"year": year, "anchor": anchor, "comparator": comparator, "mode": mode, "factor": factor}
         figure = scatter_figure(rows, anchor, comparator, mode, factor)

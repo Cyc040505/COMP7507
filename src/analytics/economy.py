@@ -88,6 +88,21 @@ def match_candidates(rows, anchor, mode="gdp", factor=1.25):
     return result.sort_values(["_distance", "country"]).drop(columns="_distance")
 
 
+def display_candidates(rows):
+    """Year-specific union of all six anchors' widest one-dimensional pools.
+
+    Display-only: do not change the matching rules or exported source universe.
+    Invalid anchors never contribute a range or a plotted point.
+    """
+    valid = rows[rows.valid]
+    keep = valid.country.isin(FOCUS_COUNTRIES)
+    anchors = valid[valid.country.isin(FOCUS_COUNTRIES)]
+    for anchor in anchors.itertuples():
+        for measure in MODES:
+            keep |= (valid[measure] / getattr(anchor, measure)).between(1 / 1.5, 1.5, inclusive="both")
+    return valid.loc[keep].copy()
+
+
 def evidence_frame(rows, anchor, comparator, mode, factor):
     """Download includes the full source universe, matches, and exclusion reasons."""
     peers = match_candidates(rows, anchor, mode, factor)

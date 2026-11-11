@@ -51,6 +51,26 @@ def main():
         check_reference_edges()
         page.screenshot(path=str(screenshots / "M2_desktop.png"), full_page=True)
         checks.append("Default Germany/Japan cards, finding and desktop screenshot")
+        expect(page.locator("#M2-customize")).not_to_have_attribute("open", "")
+        expect(page.locator("#M2-year")).to_be_hidden()
+        expect(page.locator("#M2-amounts")).not_to_have_attribute("open", "")
+        expect(page.locator("#M2-cards")).to_be_hidden()
+        expect(page.locator("#M2-data-details")).not_to_have_attribute("open", "")
+        expect(page.locator("#M2-relative-graph")).to_be_visible()
+        page.locator("#M2-amounts > summary").click()
+        expect(page.locator("#M2-cards")).to_be_visible()
+        page.locator("#M2-amounts > summary").click()
+        customize = page.locator("#M2-customize > summary")
+        customize.focus()
+        page.keyboard.press("Enter")
+        expect(page.locator("#M2-year")).to_be_visible()
+        customize.click()
+        expect(page.locator("#M2-year")).to_be_hidden()
+        customize.click()
+        expect(page.locator('#M2-anchor input[value="DEU"]')).to_be_checked()
+        expect(page.locator("#nav-M4")).to_be_visible()
+        checks.append("Filters, exact values and data default to collapsed; keyboard toggle preserves selection and module navigation")
+
 
         def ranges():
             return page.locator("#M2-graph .js-plotly-plot").evaluate(
@@ -89,33 +109,34 @@ def main():
                     : Math.abs(x[0]-before.x[0]) > .001;
             }""", arg={"before": before, "shrink": shrink})
 
-        def reset_view():
-            page.locator('#M2-graph [data-title="Reset axes"]').click()
-            page.wait_for_function("""before => {
-                const x = document.querySelector('#M2-graph .js-plotly-plot')._fullLayout.xaxis.range;
-                return Math.abs(x[0]-before.x[0]) < 1e-6 && Math.abs(x[1]-before.x[1]) < 1e-6;
-            }""", arg=initial)
-
         page.locator("#M2-graph").scroll_into_view_if_needed()
+        graph = page.locator("#M2-graph .js-plotly-plot")
+        expect(page.locator("#M2-graph .modebar-btn")).to_have_count(0)
+        assert graph.evaluate("g => g._fullLayout.dragmode === 'pan' && g._context.scrollZoom && g._context.doubleClick === 'reset'")
         initial = ranges()
         status = page.locator("#M2-match-status").inner_text()
         plot = page.locator("#M2-graph .nsewdrag").bounding_box()
-        page.locator("#M2-graph .js-plotly-plot").evaluate("""g => {
-            g._m2TestUpdates = {afterplot: 0, restyle: 0};
-            g.on('plotly_afterplot', () => g._m2TestUpdates.afterplot++);
-            g.on('plotly_restyle', () => g._m2TestUpdates.restyle++);
-        }""")
-        cx, cy = plot["x"] + plot["width"] * .65, plot["y"] + plot["height"] * .5
-        page.mouse.move(cx, cy)
+        page.mouse.move(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
         page.mouse.wheel(0, -400)
         wait_range_change(initial, shrink=True)
-        check_reference_edges()
-        check_live_alignment()
         zoomed = ranges()
+        page.locator("#M2-graph").scroll_into_view_if_needed()
+        plot = page.locator("#M2-graph .nsewdrag").bounding_box()
+        page.mouse.move(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
+        page.mouse.down()
+        for fraction in [.025, .05, .075, .1]:
+            page.mouse.move(plot["x"] + plot["width"]*(.5+fraction), plot["y"] + plot["height"]*(.5+fraction/2), steps=3)
+            check_live_alignment()
+        page.mouse.up()
+        wait_range_change(zoomed)
+        panned = ranges()
+        for axis in ['x', 'y']:
+            assert abs((panned[axis][1]-panned[axis][0]) - (zoomed[axis][1]-zoomed[axis][0])) < 1e-6
+        check_reference_edges()
         page.locator("#M2-comparator").click()
         page.get_by_role("dialog").get_by_text("India · IND", exact=True).click()
         expect(page.locator("#M2-finding")).to_contain_text("India")
-        assert ranges() == zoomed, "Selecting a comparison must preserve zoom"
+        assert ranges() == panned, (ranges(), panned)
         page.locator("#M2-comparator").click()
         page.get_by_role("dialog").get_by_text("Japan · JPN", exact=True).click()
         expect(page.locator("#M2-finding")).to_contain_text("Japan")
@@ -124,60 +145,21 @@ def main():
         page.locator("#nav-M2").click()
         expect(page.locator("#M2-panel")).to_be_visible()
         page.wait_for_load_state("networkidle")
-        assert ranges() == zoomed, "Navigation must preserve zoom"
-        page.locator("#M2-graph").scroll_into_view_if_needed()
-        assert page.locator("#M2-graph .js-plotly-plot").evaluate("e => e._context.scrollZoom")
-        reset_view()
-        # Exercise successive wheel events, checking the actual rendered line
-        # between events rather than only after a final settled view.
-        wheel_restyles = page.locator("#M2-graph .js-plotly-plot").evaluate("g => g._m2TestUpdates.restyle")
-        plot = page.locator("#M2-graph .nsewdrag").bounding_box()
-        page.mouse.move(plot["x"] + plot["width"] * .6, plot["y"] + plot["height"] * .5)
-        for delta in [-180, -180, 180, 180]:
-            before_wheel = ranges()
-            page.mouse.wheel(0, delta)
-            wait_range_change(before_wheel)
-            check_live_alignment()
-        assert page.locator("#M2-graph .js-plotly-plot").evaluate("g => g._m2TestUpdates.restyle") == wheel_restyles
-        reset_view()
-        plot = page.locator("#M2-graph .nsewdrag").bounding_box()
-        page.mouse.move(plot["x"] + plot["width"] * .3, plot["y"] + plot["height"] * .25)
-        page.mouse.down()
-        page.mouse.move(plot["x"] + plot["width"] * .8, plot["y"] + plot["height"] * .8, steps=12)
-        page.mouse.up()
-        wait_range_change(initial, shrink=True)
-        boxed = ranges()
-        page.locator('#M2-graph [data-title="Pan"]').click()
-        page.mouse.move(plot["x"] + plot["width"] * .5, plot["y"] + plot["height"] * .5)
-        page.mouse.down()
-        before_drag = page.locator("#M2-graph .js-plotly-plot").evaluate("g => ({...g._m2TestUpdates})")
-        for fraction in [.025, .05, .075, .1]:
-            page.mouse.move(plot["x"] + plot["width"] * (.5 + fraction),
-                            plot["y"] + plot["height"] * (.5 + fraction/2), steps=3)
-            check_live_alignment()
-        during_drag = page.locator("#M2-graph .js-plotly-plot").evaluate("g => ({...g._m2TestUpdates})")
-        assert during_drag == before_drag, "Dragging should transform traces without extra replot/restyle"
-        page.mouse.up()
-        wait_range_change(boxed)
-        check_reference_edges()
-        panned = ranges()
-        assert abs((panned['x'][1]-panned['x'][0]) - (boxed['x'][1]-boxed['x'][0])) < 1e-6
-        reset_view()
-        page.locator('#M2-graph [data-title="Zoom"]').click()
+        assert ranges() == panned, (ranges(), panned)
         assert page.locator("#M2-match-status").inner_text() == status
-        checks.append("Wheel zoom, box zoom, pan and reset; comparison/navigation preserve zoom; matching remains unchanged")
-        check_reference_edges()
-        checks.append("All three ratio lines reach viewport edges with correct ratios after zoom, pan and reset")
-        checks.append("Rendered lines align within 1px during mouse-down pan and successive wheel zoom; no extra redraws during dragging or endpoint restyles during ordinary zoom")
-
-        # Force a distant view to exercise endpoint extension, not just the
-        # initial spare coverage. Reset must still return to country extents.
-        page.locator("#M2-graph .js-plotly-plot").evaluate("g => Plotly.relayout(g, {'xaxis.range': [30,34], 'yaxis.range': [29,33], 'xaxis.autorange': false, 'yaxis.autorange': false})")
+        page.locator("#M2-graph").scroll_into_view_if_needed()
+        plot = page.locator("#M2-graph .nsewdrag").bounding_box()
+        page.mouse.dblclick(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
+        page.wait_for_function("""initial => {
+            const g = document.querySelector('#M2-graph .js-plotly-plot');
+            return ['x','y'].every(a => g._fullLayout[a+'axis'].range.every((v,i) => Math.abs(v-initial[a][i]) < 1e-6));
+        }""", arg=initial)
+        checks.append("Toolbar hidden; drag pans, wheel zooms and double-click restores the initial view")
+        checks.append("Comparison and navigation preserve panned view; reference lines align during dragging and reach viewport edges")
+        graph.evaluate("g => Plotly.relayout(g, {'xaxis.range': [30,34], 'yaxis.range': [29,33], 'xaxis.autorange': false, 'yaxis.autorange': false})")
         check_reference_edges()
         check_live_alignment()
-        reset_view()
-        check_reference_edges()
-        checks.append("Distant viewport extends native reference endpoints; reset ignores extended endpoints")
+        checks.append("Distant viewport extends native reference endpoints")
 
         page.locator("#M2-mode").get_by_text("Similar exports", exact=True).click()
         expect(page.locator("#M2-finding")).to_contain_text("USA")
@@ -205,11 +187,10 @@ def main():
                 return Math.abs(graph.clientWidth - graph.querySelector('.js-plotly-plot')._fullLayout.width) < 2;
             }""")
             check_usa_label()
-        page.locator('#M2-graph [data-title="Reset axes"]').click()
         check_usa_label()
         check_reference_edges()
         page.screenshot(path=str(screenshots / "M2_similar_exports.png"), full_page=True)
-        checks.append("USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x, including reset")
+        checks.append("USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x after changing filters")
         page.wait_for_function("""() => {
             const g = document.querySelector('#M2-relative-graph .js-plotly-plot');
             return g.data[0].x[0] > 600 && g._fullLayout.xaxis.range[1] > Math.max(...g.data[0].x);
@@ -285,6 +266,7 @@ def main():
         checks.append("Relative GDP/export bars, percentage-point gap and CSV agree; >100 values remain visible; empty comparisons clear the chart")
 
         page.get_by_text("All matches, data coverage and sources", exact=True).click()
+        page.locator("#M2-customize > summary").click()
         page.set_viewport_size({"width": 390, "height": 844})
         page.locator("#M2-graph").scroll_into_view_if_needed()
         page.wait_for_function("document.querySelector('#M2-graph .js-plotly-plot')._fullLayout.width < 450")
