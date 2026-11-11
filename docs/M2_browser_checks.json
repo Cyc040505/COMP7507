@@ -1,11 +1,11 @@
 {
   "checks_passed": [
     "Default Germany/Japan cards, finding and desktop screenshot",
-    "Wheel zoom, box zoom, pan and reset; comparison/navigation preserve zoom; matching remains unchanged",
-    "All three ratio lines reach viewport edges with correct ratios after zoom, pan and reset",
-    "Rendered lines align within 1px during mouse-down pan and successive wheel zoom; no extra redraws during dragging or endpoint restyles during ordinary zoom",
-    "Distant viewport extends native reference endpoints; reset ignores extended endpoints",
-    "USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x, including reset",
+    "Filters, exact values and data default to collapsed; keyboard toggle preserves selection and module navigation",
+    "Toolbar hidden; drag pans, wheel zooms and double-click restores the initial view",
+    "Comparison and navigation preserve panned view; reference lines align during dragging and reach viewport edges",
+    "Distant viewport extends native reference endpoints",
+    "USA label stays inside the plot at 1440px and 1280px in Similar exports 1.25x after changing filters",
     "Both matching dimensions and both threshold choices",
     "Actual India scatter point click updates comparison",
     "Year change clears an ineligible comparison and stale point selection",

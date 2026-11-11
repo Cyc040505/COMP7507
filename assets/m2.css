@@ -48,7 +48,22 @@
   .m2-controls, .m2-comparison, .m2 .m2-differences { grid-template-columns:minmax(0,1fr); }
   .m2-economy dd { overflow-wrap:anywhere; }
 }
-.m2-takeaway { padding:16px 20px; background:white; border-left:3px solid var(--accent); }
-.m2-takeaway h3 { margin:0 0 6px; font-size:21px; line-height:1.4; }
-.m2-takeaway p { margin:0; color:var(--muted); font-size:13px; }
-.m2-analysis details { margin-top:16px; font-size:13px; }
+
+/* Compact comparison view: controls and supporting evidence open on demand. */
+.m2 .m2-takeaway { color:var(--accent); font-size:clamp(22px, 2vw, 28px); font-weight:650; line-height:1.35; margin-top:10px; }
+/* Match M5's compact native disclosure and shared summary styling. */
+.m2-customize { padding:9px 12px; align-self:flex-end; max-width:100%; }
+.m2-customize[open] { align-self:stretch; }
+.m2-customize > summary { text-align:right; }
+.m2-customize[open] > div { padding-top:8px; }
+.m2 .m2-relative { margin-top:14px; padding-top:0; border-top:0; }
+.m2 .m2-finding { margin-top:14px; padding-top:12px; font-size:13px; }
+.m2-amounts, .m2-chart-help { margin-top:14px; padding:10px 12px; }
+.m2-amounts .m2-comparison { gap:12px; margin-top:10px; }
+.m2-amounts .m2-economy { padding-top:8px; }
+.m2-amounts .m2-economy h3 { font-size:14px; margin:4px 0 8px; }
+.m2-amounts .m2-economy dl>div { flex-direction:row; flex-wrap:wrap; justify-content:space-between; gap:4px; margin-bottom:6px; }
+.m2-amounts .m2-economy dd { font-size:13px; }
+
+.m2-pair-evidence h3 { font-size:14px; line-height:1.5; margin:10px 0 6px; }
+.m2-pair-evidence p { font-size:12px; color:var(--muted); }
