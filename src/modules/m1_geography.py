@@ -28,7 +28,7 @@ from src.geo_topology import optimized_world
 
 MODULE_ID = "M1"
 NAV_LABEL = "M1  Geography"
-ORDER = 1
+ORDER = 2
 
 _HYPOTHESIS = (
     "Bilateral trade intensity is associated with geographic proximity "

@@ -18,7 +18,7 @@ from src.module_base import guard_active
 
 MODULE_ID = "M2"
 NAV_LABEL = "M2  Economy"
-ORDER = 2
+ORDER = 1
 FOCUS_NAMES = ["United States", "Germany", "China", "Mexico", "Netherlands", "Italy"]
 LIMITATION = (
     "Nominal goods exports / nominal GDP compares gross trade with value added; "
