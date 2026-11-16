@@ -19,7 +19,7 @@
     "data/processed/m5_source_manifest.json": "e193a6121870624b4e305e67ca9317dd5cf01981f169ee91a99e4d1e30901fca",
     "data/reference/capitals.csv": "0be20a048c4867a2944435702d31c7307bedcf5e4076b3981614996ab03041ab",
     "data/reference/hs92_chapters.json": "4a522be408eaf042e36a89710abe000d4e226c4be4087a180663221a48a8afdc",
-    "data/reference/m2_country_codes_V202601.csv": "c6892f28bea23d689b29b074d299cea7f5196c708b03026fbe419fa4ecb4e820",
+    "data/reference/m1_country_codes_V202601.csv": "c6892f28bea23d689b29b074d299cea7f5196c708b03026fbe419fa4ecb4e820",
     "data/reference/m4_income_policy.json": "414bc47e591c7ca9d5cf36a91c84c13cdc042f5c94ab02feda379504e8e4f37e",
     "src/analytics/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "src/analytics/economy.py": "54bde9195fddebfc3647a1ffc257287ba069543a9e995b7dc69a6dba9676f86a",
@@ -29,7 +29,7 @@
     "src/analytics/time_change.py": "ea04ac167dfacc5f7f05bf62f334b5aa6b6305fc5c491d23746664ec4d29b25b"
   },
   "tests_passed": 92,
-  "scope": "Trace type/x/y/z/customdata and M3 export records, M1 statistics, M5 recovery rows and summary unchanged. Capitals, flow directions and amount-width relation tested separately.",
+  "scope": "Trace type/x/y/z/customdata and M3 export records, M2 statistics, M5 recovery rows and summary unchanged. Capitals, flow directions and amount-width relation tested separately.",
   "redesign_baseline_commit": "437d7639103d050973fe4a684abb6271b89bebad",
-  "m1_map_fix": "Explicit dark tooltip text; full selected details and country labels. Analytical snapshot unchanged."
+  "m2_map_fix": "Explicit dark tooltip text; full selected details and country labels. Analytical snapshot unchanged."
 }

@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import Input, Output, State, ctx, dash_table, dcc, html, no_update
 
-from src import components, config, data_loader, theme
+from src import components, config, data_loader, handoffs, theme
 from src.analytics.product import chapters, label
 from src.analytics.time_change import build_timeline, summarize_recovery
 from src.ids import ACTIVE_MODULE, mid
@@ -150,7 +150,11 @@ def layout():
             dcc.Store(id=cid("rows")),
             dcc.Store(id=cid("import-reset")),
             dcc.Download(id=cid("download")),
-            html.Div(html.H2("Recovery & structural change"), className="m5-intro"),
+            components.module_intro(
+                "Recovery & structural change",
+                "Compare how export values recovered, then check how product and regional partner shares changed.",
+                actions=handoffs.actions(cid, "Use current M4 selection", apply_id="import", undo_id="undo-import"),
+            ),
             html.Div(
                 [
                     field(
@@ -193,9 +197,6 @@ def layout():
                         value="recovery",
                         inline=True,
                         className="m5-major-tabs",
-                    ),
-                    html.Button(
-                        "Use current M4 selection", id=cid("import"), n_clicks=0
                     ),
                     html.Details(
                         [
@@ -280,20 +281,26 @@ def layout():
                                 className="m5-window",
                             ),
                         ],
-                        className="m5-methods m5-custom",
+                        className="m5-methods m5-custom toolbar-disclosure",
                     ),
                 ],
-                className="m5-toolbar",
+                className="m5-toolbar module-toolbar toolbar-row",
             ),
-            html.Div(id=cid("import-note"), className="m5-hint"),
+            dcc.Store(id=cid("import-history")),
             html.Div(
                 [
-                    html.Button("Pandemic recovery", id=cid("pandemic"), n_clicks=0),
-                    html.Button("Vehicles & parts", id=cid("vehicles"), n_clicks=0),
-                    html.Button("Financial crisis", id=cid("crisis"), n_clicks=0),
+                    html.Div(
+                        [
+                            html.Button("Pandemic recovery", id=cid("pandemic"), n_clicks=0),
+                            html.Button("Vehicles & parts", id=cid("vehicles"), n_clicks=0),
+                            html.Button("Financial crisis", id=cid("crisis"), n_clicks=0),
+                        ],
+                        id=cid("presets"), className="m5-presets",
+                    ),
+                    html.Div(id=cid("import-preview"), className="m5-hint"),
+                    html.Div(id=cid("import-note"), className="m5-hint", role="status"),
                 ],
-                id=cid("presets"),
-                className="m5-presets",
+                className="module-toolbar toolbar-row",
             ),
             html.Section(
                 [
@@ -970,6 +977,31 @@ def validate_import(comparison, product):
 
 
 def register_callbacks(app):
+    import_fields = ("countries", "product", "baseline", "event", "window", "metric")
+
+    @app.callback(
+        Output(cid("import-preview"), "children"),
+        Input("M4-comparison", "data"),
+        Input("M4-inspect", "value"),
+        Input(ACTIVE_MODULE, "data"),
+    )
+    def import_preview(comparison, product, active):
+        guard_active(MODULE_ID, active)
+        try:
+            countries, scope, end = validate_import(comparison, product)
+        except ValueError:
+            return "M4 recovery import · 2020–2024 analysis years · 2019 baseline."
+        label = "All products" if scope == "TOTAL" else "HS" + scope
+        return f"{', '.join(countries)} · {label} · {end} · 2019 baseline · 2020 event"
+
+    @app.callback(
+        Output(cid("undo-import"), "hidden"),
+        Input(cid("import-history"), "data"),
+        *[Input(cid(key), "value") for key in (*import_fields, "inspect-year")],
+    )
+    def hide_import_undo(history, *current):
+        return not history or list(current) != history["applied"]
+
     @app.callback(
         Output(cid("recovery-panel"), "style"),
         Output(cid("structure-panel"), "style"),
@@ -1005,35 +1037,55 @@ def register_callbacks(app):
         Output(cid("import-reset"), "data"),
         Output(cid("index"), "clickData"),
         Output(cid("structure"), "clickData"),
+        Output(cid("import-history"), "data"),
         Input(cid("pandemic"), "n_clicks"),
         Input(cid("vehicles"), "n_clicks"),
         Input(cid("crisis"), "n_clicks"),
         Input(cid("import"), "n_clicks"),
+        Input(cid("undo-import"), "n_clicks"),
         State("M4-comparison", "data"),
         State("M4-inspect", "value"),
         State(ACTIVE_MODULE, "data"),
+        State("M4-year", "value"),
+        State("M4-case", "data"),
+        State("M4-detail-context", "data"),
+        *[State(cid(key), "value") for key in (*import_fields, "inspect-year")],
+        State(cid("import-history"), "data"),
         prevent_initial_call=True,
     )
-    def presets(pandemic, vehicles, crisis, imported, comparison, product, active):
+    def presets(pandemic, vehicles, crisis, imported, undo, comparison, product,
+                active, source_year, source_case, source_detail, *values):
         guard_active(MODULE_ID, active)
         trigger = ctx.triggered_id
+        *local, history = values
+        if trigger == cid("undo-import"):
+            if not history or local != history["applied"]:
+                return [no_update] * 6 + ["Selection has changed. Nothing to undo."] + [no_update] * 4
+            return (
+                *history["before"][:6], "Previous selection restored.",
+                {"source": "undo", "click": undo, "year": history["before"][6]},
+                None, None, None,
+            )
         if trigger == cid("import"):
             try:
                 countries, scope, end = validate_import(comparison, product)
+                if source_year is not None and source_year != end:
+                    raise ValueError("Wait for M4 to finish loading the current year.")
+                request_id = (source_case or {}).get("transfer_request")
+                if request_id and (source_detail or {}).get("transfer_request") != request_id:
+                    raise ValueError("Wait for M4 to finish applying the current selection.")
             except ValueError as exc:
-                return [no_update] * 6 + [str(exc)] + [no_update] * 3
+                return [no_update] * 6 + [str(exc)] + [no_update] * 4
+            applied = [countries, scope, 2019, 2020, [2016, end],
+                       "intra" if scope == "TOTAL" else "product"]
             return (
-                countries,
-                scope,
-                2019,
-                2020,
-                [2016, end],
-                "intra" if scope == "TOTAL" else "product",
+                *applied,
                 f"Imported from M4: {', '.join(countries)} · "
                 f"{'All products' if scope == 'TOTAL' else 'HS' + scope} · 2016–{end}.",
                 imported,
                 None,
                 None,
+                {"before": local, "applied": applied + [end]},
             )
         key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
         scope, baseline, event, window, measure = CASES[key][:5]
@@ -1046,6 +1098,7 @@ def register_callbacks(app):
             measure,
             "",
             {"source": key, "click": dict(zip(CASES, (pandemic, vehicles, crisis)))[key]},
+            None,
             None,
             None,
         )
@@ -1069,6 +1122,10 @@ def register_callbacks(app):
             return no_update, no_update
         trigger = ctx.triggered_id
         if f"{cid('import-reset')}.data" in ctx.triggered_prop_ids:
+            if isinstance(reset, dict) and reset.get("source") == "undo":
+                year = reset.get("year")
+                if type(year) is int and window[0] <= year <= window[1]:
+                    return year, year
             return window[1], window[1]
         sources = {cid("index"): a, cid("structure"): b}
         sources.update(zip((cid("portrait-" + c) for c in FOCUS_COUNTRIES), portrait_clicks))

@@ -75,7 +75,7 @@ def pattern_row(label, codes, note):
 
 
 def eligible():
-    ref = pd.read_csv(config.DATA_DIR / "reference/m2_country_codes_V202601.csv")
+    ref = pd.read_csv(config.DATA_DIR / "reference/m1_country_codes_V202601.csv")
     return set(ref.loc[~ref.country_code.isin(SPECIAL_CODES), "country_iso3"].dropna())
 
 
@@ -88,6 +88,7 @@ def layout():
                 "How has the scale of world trade changed—and which economies account for it?",
             ),
             dcc.Download(id=cid("download")),
+            dcc.Store(id=cid("rendered-year")),
             html.Div(
                 [
                     html.Div(
@@ -128,6 +129,14 @@ def layout():
                         ],
                         className="control-field m0-year",
                     ),
+                    components.field(
+                        "Focus economy",
+                        dcc.Dropdown(
+                            id=cid("focus-economy"),
+                            options=[{"label": name, "value": code} for code, name in FOCUS_NAMES.items()],
+                            placeholder="Optional · carry into Economy",
+                        ),
+                    ),
                     dcc.RadioItems(
                         id=cid("view"),
                         options=[
@@ -138,7 +147,7 @@ def layout():
                         className="radio-row",
                     ),
                 ],
-                className="m0-controls",
+                className="m0-controls module-toolbar toolbar-row",
             ),
             html.Div(
                 [
@@ -372,6 +381,7 @@ def register_callbacks(app):
         Output(cid("total"), "figure"),
         Output(cid("share"), "figure"),
         Output(cid("finding"), "children"),
+        Output(cid("rendered-year"), "data"),
         Input(cid("year"), "value"),
         Input(cid("view"), "value"),
         Input(ACTIVE_MODULE, "data"),
@@ -379,7 +389,7 @@ def register_callbacks(app):
     def update(year, view, active):
         guard_active(MODULE_ID, active)
         total, fig, finding = figures(year, view)
-        return total, fig, finding
+        return total, fig, finding, year
 
     @app.callback(
         Output(cid("year"), "value"),

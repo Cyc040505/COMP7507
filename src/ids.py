@@ -17,8 +17,8 @@ RESIZE_TOKEN = "ui-resize-token"
 def mid(module_id: str, name: str) -> str:
     """Namespaced id for a component owned by ``module_id``.
 
-    >>> mid("M1", "graph")
-    'M1-graph'
+    >>> mid("M2", "graph")
+    'M2-graph'
     """
     return f"{module_id}-{name}"
 

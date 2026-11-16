@@ -39,8 +39,8 @@ One feature module per file under `src/modules/`, all registered in `src/modules
 | Id   | Nav label          | Focus |
 |------|--------------------|-------|
 | M0   | Overview           | Global export growth, Top-10 world shares, six focal economies |
-| M1   | Geography          | Distance–share scatter, directed map, partner ranking |
-| M2   | Economy            | GDP vs. export scale, similar-income matching |
+| M1   | Economy            | GDP vs. export scale, similar-income matching |
+| M2   | Geography          | Distance–share scatter, directed map, partner ranking |
 | M3   | Network & Partners | Bilateral flows, regions, partner matrix |
 | M4   | Product Structure  | Composition & RCA heatmaps, linked product detail |
 | M5   | Time Change        | Recovery index, product & regional-share change around events |
@@ -54,7 +54,7 @@ renders into its own cards. Modules never modify shared state — they own their
 app.py                       # single entry point: build the shell, register all callbacks
 assets/
   styles.css                 # shared shell styles (blue/white design)
-  m1.css … m5.css, m2.js    # per-module local styles / client-side scripts
+  m2.css … m5.css, m1.js    # per-module local styles / client-side scripts
   world_*.json               # offline GeoJSON basemap for the maps
 src/
   config.py                  # paths, year range, DATA_READY flag
@@ -77,8 +77,8 @@ Every `src/modules/<mod>.py` exposes the same contract:
 
 | Name | Description |
 |---|---|
-| `MODULE_ID` | Unique id, also the component-id prefix (**do not change after release**), e.g. `"M1"` |
-| `NAV_LABEL` | Text shown in the top navigation, e.g. `"M1  Geography"` |
+| `MODULE_ID` | Unique id, also the component-id prefix (**do not change after release**), e.g. `"M2"` |
+| `NAV_LABEL` | Text shown in the top navigation, e.g. `"M2  Geography"` |
 | `ORDER` | Navigation sort order (overview is 0) |
 | `layout()` | Returns the module's right-column panel: its control bar + cards |
 | `register_callbacks(app)` | Registers the module's callbacks via `@app.callback` |
@@ -88,10 +88,21 @@ Every `src/modules/<mod>.py` exposes the same contract:
 
 ### Module-local controls (the current model)
 
-The shared global console was removed. The sidebar now carries navigation only; **each module
-owns its controls** (year, country, product, indicator, …) through a module-prefixed store such
-as `M4-filters`. Guided cases never change another module's state. The only cross-module
-transfer is an **explicit, user-initiated** action (M5 → "use current M4 selection").
+The top navigation follows the presentation order **M0 → M1 → M2 → M3 → M4 → M5**.
+M1 is Economy and M2 is Geography. Each module owns its controls and renders them
+in a shared transparent toolbar. Navigation alone preserves each module's selection.
+
+Select **Use current … selection** at the upper right of the destination module to
+apply the preceding module's compatible settings. The button preserves the source
+module's selection and offers **Undo** in the destination before further edits.
+
+| Transfer | Settings applied |
+|---|---|
+| M0 → M1 | Focus economy when selected and analysis year. The preview shows 2023 as the latest comparable year for an Overview selection of 2024. |
+| M1 → M2 | Starting economy and year. Geography starts at all products. |
+| M2 → M3 | Exporter, year and product. Trade direction is exports. |
+| M3 → M4 | Focal economy and year, with a chapter and optional comparison economies selected in M4. An import view requires an explicit switch to comparing exports. |
+| M4 → M5 | Comparison economies and inspected chapter. The recovery window uses a 2019 baseline and 2020 event, with an analysis year from 2020 to 2024. |
 
 `dcc.Store(id="global-filters")` still exists in `src/layout.py` **only as a read-only
 compatibility snapshot** for unfinished placeholder modules — implemented modules do not write it.
@@ -146,14 +157,14 @@ python scripts/build_m5_data.py
 # Official bilateral & regional rebuild + audit (needs a raw-source directory)
 python scripts/prepare_final_data.py --source-root /path/to/CEPII-data
 python scripts/audit_final_examples.py  --source-root /path/to/CEPII-data
-python scripts/verify_m2_sources.py     --source-root /path/to/CEPII-data
+python scripts/verify_m1_sources.py     --source-root /path/to/CEPII-data
 python scripts/verify_m4_sources.py     --source-root /path/to/CEPII-data
 ```
 
 Raw-source paths default to `data/BACI`, `data/CHELEM`, `data/GEODIST` and can be overridden
 via `COMP7507_BACI_DIR` / `COMP7507_CHELEM_DIR` / `COMP7507_GEODIST_DIR`. SHA256 of the shipped
 inputs and per-year reconciliation counts are recorded in
-`data/processed/m5_source_manifest.json`, `docs/M2_source_audit.json` and `docs/M4_source_audit.json`.
+`data/processed/m5_source_manifest.json`, `docs/M1_source_audit.json` and `docs/M4_source_audit.json`.
 
 ## Tests
 

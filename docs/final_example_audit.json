@@ -179,7 +179,7 @@
       "rca": 3.127371985926072
     }
   },
-  "M1_CHN_USA_2023": {
+  "M2_CHN_USA_2023": {
     "distance_km": 10993.68,
     "share": 0.12776209666769875
   },
@@ -195,12 +195,12 @@
     "USA": 9618561.469999999,
     "USA_share": 0.14813582092199779
   },
-  "M2_DEU": {
+  "M1_DEU": {
     "gdp_million_USD": 4456081.017,
     "export_thousand_USD": 1571537543.2340002,
     "export_gdp_ratio": 0.35267256973977057
   },
-  "M2_JPN": {
+  "M1_JPN": {
     "gdp_million_USD": 4212944.753,
     "export_thousand_USD": 787818619.9180001,
     "export_gdp_ratio": 0.1869995136672518

@@ -126,8 +126,14 @@ def placeholder_graph(
     )
 
 
-def module_intro(title, description):
-    return html.Div([html.H2(title), html.P(description)], className="module-intro")
+def module_intro(title, description=None, *, actions=None):
+    copy = [html.H2(title)]
+    if description:
+        copy.append(html.P(description))
+    return html.Div(
+        [html.Div(copy), actions],
+        className="module-intro module-heading-row",
+    )
 
 
 def field(label, widget):

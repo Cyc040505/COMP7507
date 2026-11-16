@@ -1,4 +1,4 @@
-"""Audit M2 against official raw files without rebuilding shared analysis tables."""
+"""Audit M1 against official raw files without rebuilding shared analysis tables."""
 
 import argparse
 import hashlib
@@ -12,7 +12,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from src.modules import m2_economy as m
+from src.modules import m1_economy as m
 from src.analytics.economy import match_candidates
 
 
@@ -24,11 +24,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", type=Path, required=True)
     parser.add_argument("--years", type=int, nargs="+", default=list(range(1995, 2024)))
-    parser.add_argument("--out", type=Path, default=ROOT / "docs/M2_source_audit.json")
+    parser.add_argument("--out", type=Path, default=ROOT / "docs/M1_source_audit.json")
     args = parser.parse_args()
     source = args.source_root
     dictionary = source / "BACI/country_codes_V202601.csv"
-    assert sha(dictionary) == sha(ROOT / "data/reference/m2_country_codes_V202601.csv")
+    assert sha(dictionary) == sha(ROOT / "data/reference/m1_country_codes_V202601.csv")
     cc = pd.read_csv(dictionary)
     gdp = pd.read_parquet(ROOT / "data/processed/gdp_year.parquet")
     exports = pd.read_parquet(ROOT / "data/processed/country_year.parquet")
@@ -47,7 +47,7 @@ def main():
               "historical_scope_policy": "BEL <=1998 and SDN <=2011 excluded conservatively; no territorial GDP remapping.",
               "input_sha256": {str(p.relative_to(ROOT)): sha(p) for p in [
                   ROOT / "data/processed/country_year.parquet", ROOT / "data/processed/gdp_year.parquet",
-                  ROOT / "data/reference/m2_country_codes_V202601.csv"]}}
+                  ROOT / "data/reference/m1_country_codes_V202601.csv"]}}
     con = duckdb.connect()
     con.execute("SET threads=4")
     con.register("cc", cc)

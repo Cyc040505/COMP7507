@@ -16,8 +16,8 @@ The shell never learns any module's internals.
 from __future__ import annotations
 
 from src.modules import (
-    m1_geography,
-    m2_economy,
+    m1_economy,
+    m2_geography,
     m3_network,
     m4_product,
     m5_time,
@@ -26,8 +26,8 @@ from src.modules import (
 
 MODULES = [
     overview,
-    m1_geography,
-    m2_economy,
+    m1_economy,
+    m2_geography,
     m3_network,
     m4_product,
     m5_time,

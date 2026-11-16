@@ -41,7 +41,7 @@ distance = pd.read_excel(a.source_root / "GEODIST/dist_cepii.xls")
 km = float(
     distance.loc[distance.iso_o.eq("CHN") & distance.iso_d.eq("USA"), "dist"].iloc[0]
 )
-report["M1_CHN_USA_2023"] = {
+report["M2_CHN_USA_2023"] = {
     "distance_km": km,
     "share": float(exports["USA"] / exports.sum()),
 }
@@ -67,7 +67,7 @@ for code in ["DEU", "JPN"]:
         raw.loc[raw.country.eq(code) & raw.indicator.eq("GDP-VAL"), "v2023"].iloc[0]
     )
     v = d.loc[d.exporter.eq(code), "value"].sum()
-    report["M2_" + code] = {
+    report["M1_" + code] = {
         "gdp_million_USD": g,
         "export_thousand_USD": float(v),
         "export_gdp_ratio": float(v / (g * 1000)),

@@ -3,7 +3,7 @@
 (function () {
     document.addEventListener('wheel', function (event) {
         const map = event.target instanceof Element && event.target.closest(
-            '#M1-map, #new-map, #old-map'
+            '#M2-map, #new-map, #old-map'
         );
         if (map && map.offsetParent && event.cancelable) event.preventDefault();
     }, {capture: true, passive: false});

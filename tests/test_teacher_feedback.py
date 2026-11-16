@@ -63,13 +63,13 @@ class TeacherFeedback(unittest.TestCase):
         self.assertIn('imports',title)
         self.assertNotIn('exports',title)
 
-    def test_m2_takeaway_tracks_comparison_and_empty_state(self):
+    def test_m1_takeaway_tracks_comparison_and_empty_state(self):
         for country in ['JPN','USA']:
-            r=call('M2-takeaway.children',{'active-module.data':'M2','M2-context.data':dict(year=2023,anchor='DEU',comparator=country,mode='gdp')},'M2-context.data')
+            r=call('M1-takeaway.children',{'active-module.data':'M1','M1-context.data':dict(year=2023,anchor='DEU',comparator=country,mode='gdp')},'M1-context.data')
             self.assertEqual(r.status_code,200)
             self.assertIn('2023',r.get_data(as_text=True))
             self.assertIn('Japan' if country=='JPN' else 'United States',r.get_data(as_text=True))
-        r=call('M2-takeaway.children',{'active-module.data':'M2','M2-context.data':None},'M2-context.data')
+        r=call('M1-takeaway.children',{'active-module.data':'M1','M1-context.data':None},'M1-context.data')
         self.assertNotIn('Japan',r.get_data(as_text=True))
 
     def test_change_plots_both_shares_and_rca_from_each_year(self):

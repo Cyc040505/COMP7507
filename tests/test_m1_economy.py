@@ -1,4 +1,4 @@
-"""M2 numerical boundaries, source integrity, and actual Dash callback requests."""
+"""M1 numerical boundaries, source integrity, and actual Dash callback requests."""
 
 import io
 import unittest
@@ -10,7 +10,7 @@ import pandas as pd
 import app
 from src import data_loader
 from src.analytics.economy import prepare_year, match_candidates, evidence_frame
-from src.modules import m2_economy as m
+from src.modules import m1_economy as m
 
 
 def sample():
@@ -111,7 +111,7 @@ class EconomyMath(unittest.TestCase):
             self.assertEqual(len(fig.layout.shapes), 1)
             self.assertEqual(fig.layout.shapes[-1].yref if mode == "gdp" else fig.layout.shapes[-1].xref, "y domain" if mode == "gdp" else "x domain")
             for trace, ratio in zip(fig.data[:3], [.1, .5, 1]):
-                self.assertEqual(trace.meta["m2_ratio"], ratio)
+                self.assertEqual(trace.meta["m1_ratio"], ratio)
                 np.testing.assert_allclose(np.array(trace.y) / np.array(trace.x), ratio)
             self.assertGreater(fig.layout.xaxis.autorangeoptions.clipmin, 0)
             self.assertLess(fig.data[0].x[0], fig.layout.xaxis.autorangeoptions.clipmin)
@@ -134,10 +134,10 @@ class EconomyCallbacks(unittest.TestCase):
                 visit(children)
         visit(m.layout())
 
-    def request(self, needle="M2-graph.figure", changes=None, changed="active-module.data", expect=200):
-        values = {"active-module.data": "M2", "M2-year.value": 2023, "M2-anchor.value": "DEU",
-                  "M2-mode.value": "gdp", "M2-factor.value": 1.25, "M2-comparator.value": "JPN",
-                  "M2-graph.clickData": None}
+    def request(self, needle="M1-graph.figure", changes=None, changed="active-module.data", expect=200):
+        values = {"active-module.data": "M1", "M1-year.value": 2023, "M1-anchor.value": "DEU",
+                  "M1-mode.value": "gdp", "M1-factor.value": 1.25, "M1-comparator.value": "JPN",
+                  "M1-graph.clickData": None}
         values.update(changes or {})
         key = next(k for k in app.app.callback_map if needle in k)
         spec = app.app.callback_map[key]
@@ -154,33 +154,33 @@ class EconomyCallbacks(unittest.TestCase):
 
     def test_default_cards_table_finding_and_context_agree(self):
         z = self.request()
-        self.assertEqual(z["M2-comparator"]["value"], "JPN")
-        self.assertEqual(len(z["M2-cards"]["children"]), 2)
-        self.assertIn("2023", z["M2-finding"]["children"])
-        self.assertIn("Japan", z["M2-finding"]["children"])
-        self.assertEqual(len(z["M2-table"]["data"]), 2)
-        self.assertEqual(z["M2-context"]["data"]["comparator"], "JPN")
+        self.assertEqual(z["M1-comparator"]["value"], "JPN")
+        self.assertEqual(len(z["M1-cards"]["children"]), 2)
+        self.assertIn("2023", z["M1-finding"]["children"])
+        self.assertIn("Japan", z["M1-finding"]["children"])
+        self.assertEqual(len(z["M1-table"]["data"]), 2)
+        self.assertEqual(z["M1-context"]["data"]["comparator"], "JPN")
 
     def test_zoom_preserved_for_comparison_but_reset_for_new_filters(self):
-        context = self.request()["M2-context"]["data"]
-        inputs = {"M2-context.data": context,
-                  "M2-graph.relayoutData": {"xaxis.range[0]": 2, "xaxis.range[1]": 4,
+        context = self.request()["M1-context"]["data"]
+        inputs = {"M1-context.data": context,
+                  "M1-graph.relayoutData": {"xaxis.range[0]": 2, "xaxis.range[1]": 4,
                                             "yaxis.range[0]": 1, "yaxis.range[1]": 3},
-                  "M2-comparator.value": "IND"}
-        result = self.request(changes=inputs, changed="M2-comparator.value")
-        axes = result["M2-graph"]["figure"]["layout"]
+                  "M1-comparator.value": "IND"}
+        result = self.request(changes=inputs, changed="M1-comparator.value")
+        axes = result["M1-graph"]["figure"]["layout"]
         self.assertEqual(axes["xaxis"]["range"], [2, 4])
         self.assertEqual(axes["yaxis"]["range"], [1, 3])
         self.assertFalse(axes["xaxis"]["autorange"])
-        for change in [{"M2-year.value": 2010}, {"M2-factor.value": 1.5}, {"M2-mode.value": "export_value"}]:
+        for change in [{"M1-year.value": 2010}, {"M1-factor.value": 1.5}, {"M1-mode.value": "export_value"}]:
             z = self.request(changes={**inputs, **change})
-            self.assertTrue(z["M2-graph"]["figure"]["layout"]["xaxis"]["autorange"])
-        z = self.request(changes={**inputs, "M2-graph.relayoutData": {"xaxis.autorange": True, "yaxis.autorange": True}})
-        self.assertTrue(z["M2-graph"]["figure"]["layout"]["xaxis"]["autorange"])
+            self.assertTrue(z["M1-graph"]["figure"]["layout"]["xaxis"]["autorange"])
+        z = self.request(changes={**inputs, "M1-graph.relayoutData": {"xaxis.autorange": True, "yaxis.autorange": True}})
+        self.assertTrue(z["M1-graph"]["figure"]["layout"]["xaxis"]["autorange"])
 
     def test_relative_comparison_values_range_and_empty_state(self):
         def graph(result):
-            children = result["M2-relative"]["children"]["props"]["children"]
+            children = result["M1-relative"]["children"]["props"]["children"]
             return next(c["props"]["figure"] for c in children if c["type"] == "Graph")
         z = self.request()
         f = graph(z)
@@ -188,13 +188,13 @@ class EconomyCallbacks(unittest.TestCase):
         expected = [100 * r.loc["JPN", k] / r.loc["DEU", k] for k in ("gdp", "export_value")]
         np.testing.assert_allclose(f["data"][0]["x"], expected)
         self.assertEqual(f["layout"]["shapes"][0]["x0"], 100)
-        self.assertIn("16.57 percentage points lower", str(z["M2-relative"]))
-        z = self.request(changes={"M2-mode.value": "export_value"})
+        self.assertIn("16.57 percentage points lower", str(z["M1-relative"]))
+        z = self.request(changes={"M1-mode.value": "export_value"})
         f = graph(z)
         self.assertGreater(f["data"][0]["x"][0], 600)
         self.assertGreater(f["layout"]["xaxis"]["range"][1], max(f["data"][0]["x"]))
-        for changes in [{"M2-anchor.value": "USA"}, {"M2-year.value": 2010}, {"M2-anchor.value": "XXX"}]:
-            self.assertEqual(self.request(changes=changes)["M2-relative"]["children"], [])
+        for changes in [{"M1-anchor.value": "USA"}, {"M1-year.value": 2010}, {"M1-anchor.value": "XXX"}]:
+            self.assertEqual(self.request(changes=changes)["M1-relative"]["children"], [])
 
     def test_relative_equal_values_and_export_agreement(self):
         rows = prepare_year(*sample(), m.reference(), 2023)
@@ -210,60 +210,60 @@ class EconomyCallbacks(unittest.TestCase):
         self.assertAlmostEqual(exported.loc["JPN", "export_gdp_gap_pp"], 100 * (values.loc["JPN", "export_gdp_ratio"] - values.loc["DEU", "export_gdp_ratio"]))
 
     def test_switch_dimension_replaces_ineligible_comparator(self):
-        z = self.request(changes={"M2-mode.value": "export_value"}, changed="M2-mode.value")
-        self.assertEqual(z["M2-comparator"]["value"], "USA")
-        self.assertIn("closest current match", z["M2-match-status"]["children"])
-        self.assertIn("USA", z["M2-finding"]["children"])
+        z = self.request(changes={"M1-mode.value": "export_value"}, changed="M1-mode.value")
+        self.assertEqual(z["M1-comparator"]["value"], "USA")
+        self.assertIn("closest current match", z["M1-match-status"]["children"])
+        self.assertIn("USA", z["M1-finding"]["children"])
 
     def test_year_change_updates_all_evidence(self):
-        z = self.request(changes={"M2-year.value": 2010}, changed="M2-year.value")
-        context = z["M2-context"]["data"]
+        z = self.request(changes={"M1-year.value": 2010}, changed="M1-year.value")
+        context = z["M1-context"]["data"]
         self.assertEqual(context["year"], 2010)
-        self.assertIn("2010", z["M2-finding"]["children"])
+        self.assertIn("2010", z["M1-finding"]["children"])
         expected = match_candidates(m.data_for_year(2010), "DEU", "gdp", 1.25)
-        self.assertEqual([o["value"] for o in z["M2-comparator"]["options"]], expected.country.tolist())
+        self.assertEqual([o["value"] for o in z["M1-comparator"]["options"]], expected.country.tolist())
 
     def test_no_match_has_no_stale_card_or_finding(self):
-        z = self.request(changes={"M2-anchor.value": "USA"}, changed="M2-anchor.value")
-        self.assertIsNone(z["M2-comparator"]["value"])
-        self.assertTrue(z["M2-comparator"]["disabled"])
-        self.assertIn("has not been widened", z["M2-match-status"]["children"])
-        self.assertNotIn("Japan", z["M2-finding"]["children"])
+        z = self.request(changes={"M1-anchor.value": "USA"}, changed="M1-anchor.value")
+        self.assertIsNone(z["M1-comparator"]["value"])
+        self.assertTrue(z["M1-comparator"]["disabled"])
+        self.assertIn("has not been widened", z["M1-match-status"]["children"])
+        self.assertNotIn("Japan", z["M1-finding"]["children"])
 
     def test_missing_and_nonpositive_anchors(self):
         e, g = sample()
         g.loc[g.country.eq("DEU"), "gdp"] = 0
         with patch.object(data_loader, "load_country_year", return_value=e), patch.object(data_loader, "load_gdp_year", return_value=g):
-            z = self.request(changes={"M2-anchor.value": "DEU"})
-            self.assertIn("Non-positive GDP", z["M2-match-status"]["children"])
-            self.assertEqual(z["M2-cards"]["children"], [])
+            z = self.request(changes={"M1-anchor.value": "DEU"})
+            self.assertIn("Non-positive GDP", z["M1-match-status"]["children"])
+            self.assertEqual(z["M1-cards"]["children"], [])
 
     def test_missing_file_or_demo_cannot_generate_findings(self):
         e, _ = sample()
         e.attrs["demo"] = True
         with patch.object(data_loader, "load_country_year", return_value=e):
             z = self.request()
-        self.assertTrue(z["M2-export"]["disabled"])
-        self.assertIsNone(z["M2-context"]["data"])
-        self.assertIn("No finding", z["M2-finding"]["children"])
+        self.assertTrue(z["M1-export"]["disabled"])
+        self.assertIsNone(z["M1-context"]["data"])
+        self.assertIn("No finding", z["M1-finding"]["children"])
         with patch.object(m, "reference", side_effect=FileNotFoundError("missing dictionary")):
             z = self.request()
-        self.assertIn("missing dictionary", z["M2-scope"]["children"])
+        self.assertIn("missing dictionary", z["M1-scope"]["children"])
 
     def test_click_only_selects_current_matches_and_does_not_filter_pool(self):
-        z = self.request(changes={"M2-graph.clickData": {"points": [{"customdata": ["IND"]}]}}, changed="M2-graph.clickData")
-        self.assertEqual(z["M2-comparator"]["value"], "IND")
-        self.assertEqual(len(z["M2-table"]["data"]), 2)
-        z = self.request(changes={"M2-graph.clickData": {"points": [{"customdata": ["CHN"]}]}}, changed="M2-graph.clickData")
-        self.assertEqual(z["M2-comparator"]["value"], "JPN")
-        z = self.request(changes={"M2-year.value": 2010, "M2-graph.clickData": {"points": [{"customdata": ["IND"]}]}}, changed="M2-year.value")
-        self.assertNotEqual(z["M2-comparator"]["value"], "IND")
+        z = self.request(changes={"M1-graph.clickData": {"points": [{"customdata": ["IND"]}]}}, changed="M1-graph.clickData")
+        self.assertEqual(z["M1-comparator"]["value"], "IND")
+        self.assertEqual(len(z["M1-table"]["data"]), 2)
+        z = self.request(changes={"M1-graph.clickData": {"points": [{"customdata": ["CHN"]}]}}, changed="M1-graph.clickData")
+        self.assertEqual(z["M1-comparator"]["value"], "JPN")
+        z = self.request(changes={"M1-year.value": 2010, "M1-graph.clickData": {"points": [{"customdata": ["IND"]}]}}, changed="M1-year.value")
+        self.assertNotEqual(z["M1-comparator"]["value"], "IND")
 
     def test_csv_contains_same_values_and_complete_exclusions(self):
         z = self.request()
-        context = z["M2-context"]["data"]
-        result = self.request("M2-download.data", {"M2-context.data": context, "M2-export.n_clicks": 1}, changed="M2-export.n_clicks")
-        csv = pd.read_csv(io.StringIO(result["M2-download"]["data"]["content"]))
+        context = z["M1-context"]["data"]
+        result = self.request("M1-download.data", {"M1-context.data": context, "M1-export.n_clicks": 1}, changed="M1-export.n_clicks")
+        csv = pd.read_csv(io.StringIO(result["M1-download"]["data"]["content"]))
         rows = m.data_for_year(2023)
         self.assertEqual(len(csv), len(rows))
         self.assertEqual(set(csv[csv.is_match].country), {"JPN", "IND"})
@@ -274,17 +274,17 @@ class EconomyCallbacks(unittest.TestCase):
 
     def test_six_anchors_global_candidates_and_hidden_module_guard(self):
         for code in m.FOCUS_COUNTRIES:
-            z = self.request(changes={"M2-anchor.value": code})
-            self.assertEqual(z["M2-context"]["data"]["anchor"], code)
-            self.assertEqual([o["value"] for o in z["M2-anchor"]["options"]], list(m.FOCUS_COUNTRIES))
+            z = self.request(changes={"M1-anchor.value": code})
+            self.assertEqual(z["M1-context"]["data"]["anchor"], code)
+            self.assertEqual([o["value"] for o in z["M1-anchor"]["options"]], list(m.FOCUS_COUNTRIES))
         for code in ["JPN", "IND", "XXX", None]:
-            z = self.request(changes={"M2-anchor.value": code})
-            self.assertIsNone(z["M2-context"]["data"])
-            self.assertIn("six focus countries", z["M2-scope"]["children"])
-            self.assertTrue(z["M2-export"]["disabled"])
+            z = self.request(changes={"M1-anchor.value": code})
+            self.assertIsNone(z["M1-context"]["data"])
+            self.assertIn("six focus countries", z["M1-scope"]["children"])
+            self.assertTrue(z["M1-export"]["disabled"])
         z = self.request()
-        self.assertEqual({o["value"] for o in z["M2-comparator"]["options"]}, {"JPN", "IND"})
-        self.request("M2-download.data", {"M2-export.n_clicks": 1, "M2-context.data": {"anchor": "JPN"}}, expect=204)
+        self.assertEqual({o["value"] for o in z["M1-comparator"]["options"]}, {"JPN", "IND"})
+        self.request("M1-download.data", {"M1-export.n_clicks": 1, "M1-context.data": {"anchor": "JPN"}}, expect=204)
         self.request(changes={"active-module.data": "M4"}, expect=204)
 
 

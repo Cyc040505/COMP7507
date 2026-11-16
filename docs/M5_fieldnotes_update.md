@@ -82,7 +82,7 @@ Figma 状态：新建了 [设计文件](https://www.figma.com/design/Riswg16zYq3
 
 最新控件调整：按 M4 截图将主查看年份滑块替换为顶部 Analysis year 下拉框；与 01 Compare recovery / 02 Check structure 紧凑编号按钮放在同一行，案例放在下一行并使用单选标记。移除底部年份滑块及其重复年份文字。下拉框只提供当前观察窗口内的年份，图表点击仍双向同步，跨案例窗口变化和 M4 导入继续校验年份。完整 127 项测试通过。
 
-结论区随后按用户要求改为共用的 **What the evidence shows** 卡片，与 M1、M3 一致采用 Question / Evidence / Interpretation 三行。Evidence 按当前国家、基期和窗口末年更新；Interpretation 按所选结构指标更新，并保留区域不确定性。移除重复的三项 KPI 栏和旧版专用样式，避免只改标题而保留重复内容。
+结论区随后按用户要求改为共用的 **What the evidence shows** 卡片，与 M2、M3 一致采用 Question / Evidence / Interpretation 三行。Evidence 按当前国家、基期和窗口末年更新；Interpretation 按所选结构指标更新，并保留区域不确定性。移除重复的三项 KPI 栏和旧版专用样式，避免只改标题而保留重复内容。
 
 此前曾按用户要求将总论卡移至图前；现已由上述“二级导航与分区结论”替代，结论分别放在各部分图后。
 

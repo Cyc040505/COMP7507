@@ -11,7 +11,7 @@
 .card-title-text { color: #24394f; letter-spacing: -.2px; }
 .card.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) { border-color: #132b3e; box-shadow: 0 3px 9px #102a3b12; }
 .m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .card-title-text { color: #eef5fa; }
-.control-field > label, .m2-field > label, .m3-field > label,
+.control-field > label, .m1-field > label, .m3-field > label,
 .m4-field > label, .m5-field, .lbl { color: #53677b; font-weight: 550; }
 .m4-chart .m4-field > label { font-size: 12px; }
 .dash-dropdown { border-color: #c3d0dd !important; }
@@ -38,7 +38,7 @@
 .m3-matrix-card .radio-row > label:has(input:checked) {
   color: #274f77; border-color: #97b0c9; background: #eaf1f8;
 }
-.kpi-card strong, .m2-economy dd, .m3-flow-value { font-variant-numeric: tabular-nums; }
+.kpi-card strong, .m1-economy dd, .m3-flow-value { font-variant-numeric: tabular-nums; }
 .kpi-card span, .chart-subtitle, .m4-note, .m5-hint, .scope-note { color: #596b7d; }
 .m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .m3-map-caption { color: #bdcedb; }
 details { border-color: #dce3eb; }

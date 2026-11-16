@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from dash import Input, Output, State, ctx, dcc, html, no_update, dash_table
-from src import config, theme, components, data_loader
+from src import config, theme, components, data_loader, handoffs
 from src.analytics.partners import FOCUS, REGIONS, partners, regional, matrix
 from src.analytics.product import chapters, label
 from src.ids import ACTIVE_MODULE, mid
@@ -48,12 +48,22 @@ def layout():
             components.module_intro(
                 "Trade partners & regional reach",
                 "Follow the flows, compare partner shares, then test how destinations change across products.",
+                actions=handoffs.actions(cid, "Use current M2 selection"),
             ),
             dcc.Store(id=cid("selected")),
             dcc.Store(id=cid("records")),
             dcc.Download(id=cid("download")),
             html.Div(
                 [
+                    field(
+                        "Analysis year",
+                        dcc.Dropdown(
+                            id=cid("year"),
+                            options=list(range(1995, 2025)),
+                            value=2023,
+                            clearable=False,
+                        ),
+                    ),
                     field(
                         "Focal economy",
                         dcc.Dropdown(
@@ -63,15 +73,6 @@ def layout():
                                 for c in FOCUS
                             ],
                             value="CHN",
-                            clearable=False,
-                        ),
-                    ),
-                    field(
-                        "Year",
-                        dcc.Dropdown(
-                            id=cid("year"),
-                            options=list(range(1995, 2025)),
-                            value=2023,
                             clearable=False,
                         ),
                     ),
@@ -106,8 +107,9 @@ def layout():
                             clearable=False,
                         ),
                     ),
+                    handoffs.controls(cid),
                 ],
-                className="m3-controls",
+                className="m3-controls module-toolbar toolbar-row",
             ),
             html.Div(
                 [
@@ -191,6 +193,10 @@ def layout():
             ),
             html.Div(
                 [
+                    components.card(
+                        "Regional shares · current selection",
+                        html.Div(id=cid("selected-regions")),
+                    ),
                     components.card(
                         "03  Does trade follow regional gravity?",
                         [
@@ -939,6 +945,27 @@ def gravity_takeaway(country, year, direction):
     return lead
 
 
+def register_geography_transfer(app):
+    def geography_preview(country, year, product):
+        if not (country and year and product):
+            return ""
+        return "From M2 · " + handoffs.description(country, year, product) + " · Exports"
+
+    def from_geography(country, year, product, _current):
+        country, year, product = handoffs.scope(country, year, product)
+        handoffs.require_trade(country, year, product)
+        message = handoffs.description(country, year, product) + " · Exports"
+        return [country, year, product, "export", None], "Applied from M2 · " + message
+
+    handoffs.register_transfer(
+        app, MODULE_ID, cid,
+        [("country", "value", True), ("year", "value", True), ("product", "value", True),
+         ("direction", "value", True), ("selected", "data", True)],
+        [("M2-exporter", "value"), ("M2-year", "value"), ("M2-product", "value")],
+        geography_preview, from_geography,
+    )
+
+
 def register_callbacks(app):
     @app.callback(Output(cid("regional-takeaway"), "children"),
                   Input(cid("country"), "value"), Input(cid("year"), "value"),
@@ -1043,6 +1070,23 @@ def register_callbacks(app):
         ]
 
     @app.callback(
+        Output(cid("selected-regions"), "children"),
+        Input(cid("records"), "data"),
+    )
+    def selected_regions(rows):
+        if not rows:
+            return "No recorded flows for this selection."
+        values = pd.DataFrame(rows).groupby("region").value.sum()
+        total = values.sum()
+        if total <= 0:
+            return "No recorded flows for this selection."
+        ordered = values.reindex(REGIONS, fill_value=0)
+        return components.kpi_row([
+            ("Americas" if region == "America" else region, f"{value / total:.1%}")
+            for region, value in ordered.items()
+        ])
+
+    @app.callback(
         Output(cid("map-card"), "className"),
         Output(cid("map-title"), "children"),
         Output(cid("map-caption"), "children"),
@@ -1093,3 +1137,5 @@ def register_callbacks(app):
         return dcc.send_data_frame(
             pd.DataFrame(rows).to_csv, "M3_partners.csv", index=False
         )
+
+    register_geography_transfer(app)
