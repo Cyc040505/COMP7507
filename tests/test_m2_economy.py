@@ -9,7 +9,7 @@ import pandas as pd
 
 import app
 from src import data_loader
-from src.analytics.economy import prepare_year, match_candidates, evidence_frame
+from src.analytics.economy import prepare_year, match_candidates, evidence_frame, display_candidates
 from src.modules import m2_economy as m
 
 
@@ -101,6 +101,27 @@ class EconomyMath(unittest.TestCase):
         self.assertAlmostEqual(a.loc["JPN", "gdp"], 4212944.753)
         self.assertAlmostEqual(a.loc["DEU", "export_gdp_ratio"], .352672565, places=7)
 
+    def test_display_union_preserves_every_selectable_match(self):
+        for year in range(1995, 2024):
+            rows = m.data_for_year(year)
+            shown = display_candidates(rows)
+            codes = set(shown.country)
+            expected = set(rows.loc[rows.valid & rows.country.isin(m.FOCUS_COUNTRIES), "country"])
+            for anchor in m.FOCUS_COUNTRIES:
+                for mode in ("gdp", "export_value"):
+                    widest = set(match_candidates(rows, anchor, mode, 1.5).country)
+                    expected |= widest
+                    self.assertTrue(set(match_candidates(rows, anchor, mode, 1.25).country) <= codes)
+            self.assertEqual(codes, expected)
+            self.assertTrue(shown.valid.all())
+            self.assertLessEqual(len(shown), int(rows.valid.sum()))
+        self.assertLess(len(display_candidates(rows)), int(rows.valid.sum()))
+
+    def test_display_pool_empty_without_valid_focus_economies(self):
+        rows = prepare_year(*sample(), m.reference(), 2023)
+        rows.loc[rows.country.isin(m.FOCUS_COUNTRIES), "valid"] = False
+        self.assertTrue(display_candidates(rows).empty)
+
     def test_figure_band_and_reference_lines(self):
         rows = m.data_for_year(2023)
         for mode in ["gdp", "export_value"]:
@@ -116,7 +137,7 @@ class EconomyMath(unittest.TestCase):
             self.assertGreater(fig.layout.xaxis.autorangeoptions.clipmin, 0)
             self.assertLess(fig.data[0].x[0], fig.layout.xaxis.autorangeoptions.clipmin)
             self.assertGreater(fig.data[0].x[1], fig.layout.xaxis.autorangeoptions.clipmax)
-            self.assertEqual(sum(len(t.x) for t in fig.data[3:]), int(rows.valid.sum()))
+            self.assertEqual(sum(len(t.x) for t in fig.data[3:]), len(display_candidates(rows)))
 
 
 class EconomyCallbacks(unittest.TestCase):
