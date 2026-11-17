@@ -29,6 +29,10 @@ def main():
         page.goto(args.url, wait_until="networkidle")
         page.locator("#nav-M2").click()
         expect(page.locator("#M2-finding")).to_contain_text("Japan")
+        scope = page.locator("#M2-scope")
+        match_status = page.locator("#M2-match-status")
+        expect(scope).to_contain_text("24 economies shown")
+        expect(match_status).to_contain_text("2 other economies match GDP")
         expect(page.locator("#M2-cards")).to_contain_text("35.27%")
         expect(page.locator("#M2-cards")).to_contain_text("18.70%")
         expect(page.locator("#M2-relative")).to_contain_text("5.5% lower")
@@ -102,34 +106,46 @@ def main():
                 });
             }""")
 
-        def wait_range_change(before, shrink=False):
-            page.wait_for_function("""({before, shrink}) => {
+        def wait_range_change(before, completed, shrink=False):
+            page.wait_for_function("""({before, completed, shrink}) => {
                 const g = document.querySelector('#M2-graph .js-plotly-plot');
+                if (g.completedGestures <= completed) return false;
                 const x = g._fullLayout.xaxis.range;
                 return shrink ? x[1]-x[0] < (before.x[1]-before.x[0]) * .98
                     : Math.abs(x[0]-before.x[0]) > .001;
-            }""", arg={"before": before, "shrink": shrink})
+            }""", arg={"before": before, "completed": completed, "shrink": shrink})
 
         page.locator("#M2-graph").scroll_into_view_if_needed()
         graph = page.locator("#M2-graph .js-plotly-plot")
         expect(page.locator("#M2-graph .modebar-btn")).to_have_count(0)
         assert graph.evaluate("g => g._fullLayout.dragmode === 'pan' && g._context.scrollZoom && g._context.doubleClick === 'reset'")
+        # The axis can change before Plotly commits the wheel or drag gesture.
+        graph.evaluate("""g => {
+            g.completedGestures = 0;
+            g.on('plotly_relayout', event => {
+                if (Object.keys(event).some(key => key.startsWith('xaxis.range'))) {
+                    g.completedGestures += 1;
+                }
+            });
+        }""")
         initial = ranges()
-        status = page.locator("#M2-match-status").inner_text()
+        status = match_status.inner_text()
         plot = page.locator("#M2-graph .nsewdrag").bounding_box()
         page.mouse.move(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
+        completed = graph.evaluate("g => g.completedGestures")
         page.mouse.wheel(0, -400)
-        wait_range_change(initial, shrink=True)
+        wait_range_change(initial, completed, shrink=True)
         zoomed = ranges()
         page.locator("#M2-graph").scroll_into_view_if_needed()
         plot = page.locator("#M2-graph .nsewdrag").bounding_box()
         page.mouse.move(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
+        completed = graph.evaluate("g => g.completedGestures")
         page.mouse.down()
         for fraction in [.025, .05, .075, .1]:
             page.mouse.move(plot["x"] + plot["width"]*(.5+fraction), plot["y"] + plot["height"]*(.5+fraction/2), steps=3)
             check_live_alignment()
         page.mouse.up()
-        wait_range_change(zoomed)
+        wait_range_change(zoomed, completed)
         panned = ranges()
         for axis in ['x', 'y']:
             assert abs((panned[axis][1]-panned[axis][0]) - (zoomed[axis][1]-zoomed[axis][0])) < 1e-6
@@ -145,9 +161,8 @@ def main():
         expect(page.locator("#M4-panel")).to_be_visible()
         page.locator("#nav-M2").click()
         expect(page.locator("#M2-panel")).to_be_visible()
-        page.wait_for_load_state("networkidle")
+        expect(match_status).to_have_text(status)
         assert ranges() == panned, (ranges(), panned)
-        assert page.locator("#M2-match-status").inner_text() == status
         page.locator("#M2-graph").scroll_into_view_if_needed()
         plot = page.locator("#M2-graph .nsewdrag").bounding_box()
         page.mouse.dblclick(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
@@ -231,6 +246,8 @@ def main():
         page.locator("#M2-factor").get_by_text("1.25×", exact=True).click()
         page.locator("#M2-anchor").get_by_text("United States", exact=True).click()
         expect(page.locator("#M2-match-status")).to_contain_text("No matching economy")
+        expect(scope).to_contain_text("24 economies shown")
+        expect(match_status).to_contain_text("0 other economies match GDP")
         expect(page.locator("#M2-finding")).to_contain_text("No two-country finding")
         expect(page.locator("#M2-relative-graph")).to_have_count(0)
         page.screenshot(path=str(screenshots / "M2_no_match.png"), full_page=True)

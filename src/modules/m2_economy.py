@@ -313,7 +313,7 @@ def register_callbacks(app):
                    for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)]
         peer_options = [{"label": f"{names[c]} · {c}", "value": c} for c in pool]
         shown = display_candidates(rows)
-        scope = f"{year} · {len(shown)} economies in comparison range · billion current USD"
+        scope = f"{year} · {len(shown)} economies shown · billion current USD"
         a = valid[valid.country.eq(anchor)]
         cards = []
         relative = []
@@ -325,8 +325,7 @@ def register_callbacks(app):
             a = a.iloc[0]
             cards = [economy_card(a, f"Starting economy · {year}")]
             status = (f"{len(pool)} other economies match {MODES[mode]} within "
-                      f"[{1 / factor:.3f}, {factor:g}] × {names.get(anchor, anchor)}. "
-                      "")
+                      f"[{1 / factor:.3f}, {factor:g}] × {names.get(anchor, anchor)}.")
             if comparator:
                 b = valid.loc[valid.country.eq(comparator)].iloc[0]
                 cards.append(economy_card(b, f"Comparison · {year}"))
