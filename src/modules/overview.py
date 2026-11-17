@@ -85,7 +85,7 @@ def layout():
         children=[
             components.module_intro(
                 "Global growth, changing export shares",
-                "How has the scale of world trade changed—and which economies account for it?",
+                "Global goods exports grew, and China gained a larger share of the world total.",
             ),
             dcc.Download(id=cid("download")),
             dcc.Store(id=cid("rendered-year")),
@@ -198,9 +198,16 @@ def layout():
                 ],
                 extra_class="m0-finding",
             ),
-            html.Details(
+            components.module_data_details(
                 [
-                    html.Summary("Annual Top10 evidence & full data"),
+                    html.P(
+                        "Current-dollar exports reflect price and exchange-rate changes. The six focal economies are case studies. The CSV includes country shares for all years."
+                    ),
+                    components.module_data_table_header(
+                        "Top 10 exporters in the selected year",
+                        download_id=cid("export"),
+                        download_label="Download world export shares for all years (CSV)",
+                    ),
                     dash_table.DataTable(
                         id=cid("table"),
                         columns=[
@@ -214,13 +221,8 @@ def layout():
                         page_size=10,
                         style_table={"overflowX": "auto"},
                     ),
-                    html.Button(
-                        "Download all years and country shares", id=cid("export")
-                    ),
-                ]
-            ),
-            html.P(
-                "Current-dollar values include price and exchange-rate effects. Rising nominal exports need not mean a rising world share. The six focal economies are case studies, not a representative global sample."
+                ],
+                id=cid("data-details"),
             ),
         ],
     )

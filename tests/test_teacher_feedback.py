@@ -25,7 +25,7 @@ class TeacherFeedback(unittest.TestCase):
             expected=m4.metrics(2023).query('exporter == @country').set_index('hs2').reindex([v[1] for v in trace.customdata]).share*100
             np.testing.assert_allclose(trace.x,expected)
             self.assertEqual(trace.customdata[0][0],country)
-        self.assertIn('GDP per person',note)
+        self.assertEqual(note, 'Click a bar to inspect the product in Full analysis.')
 
     def test_specialization_retains_ratio_and_its_baseline(self):
         title,fig,note=self.render(self.context('specialization'))
@@ -33,7 +33,7 @@ class TeacherFeedback(unittest.TestCase):
         np.testing.assert_allclose(fig.data[0].x,[31.3646,2.5996],atol=.0001)
         np.testing.assert_allclose(fig.data[1].x,[2.140111,4.118182],atol=.00001)
         self.assertEqual(fig.layout.shapes[0].x0,1)
-        self.assertIn('not an export-value multiple',note)
+        self.assertEqual(note, '')
 
     def test_custom_selection_has_no_preset_claim(self):
         c=self.context('specialization')|dict(selection_state='Custom exploration',countries=['USA'],products=['27'])
@@ -63,14 +63,29 @@ class TeacherFeedback(unittest.TestCase):
         self.assertIn('imports',title)
         self.assertNotIn('exports',title)
 
-    def test_m1_takeaway_tracks_comparison_and_empty_state(self):
-        for country in ['JPN','USA']:
-            r=call('M1-takeaway.children',{'active-module.data':'M1','M1-context.data':dict(year=2023,anchor='DEU',comparator=country,mode='gdp')},'M1-context.data')
-            self.assertEqual(r.status_code,200)
-            self.assertIn('2023',r.get_data(as_text=True))
-            self.assertIn('Japan' if country=='JPN' else 'United States',r.get_data(as_text=True))
-        r=call('M1-takeaway.children',{'active-module.data':'M1','M1-context.data':None},'M1-context.data')
-        self.assertNotIn('Japan',r.get_data(as_text=True))
+    def test_m1_exact_values_track_comparison_and_no_match(self):
+        values = {
+            "active-module.data": "M1",
+            "M1-year.value": 2023,
+            "M1-anchor.value": "DEU",
+            "M1-mode.value": "gdp",
+            "M1-factor.value": 1.25,
+            "M1-comparator.value": "JPN",
+        }
+        response = call("M1-graph.figure", values, "M1-comparator.value")
+        self.assertEqual(response.status_code, 200)
+        cards = response.get_json()["response"]["M1-cards"]["children"]
+        self.assertEqual(len(cards), 2)
+        self.assertIn("Japan", str(cards[1]))
+        self.assertIn("18.70%", str(cards[1]))
+
+        values["M1-anchor.value"] = "USA"
+        response = call("M1-graph.figure", values, "M1-anchor.value")
+        self.assertEqual(response.status_code, 200)
+        cards = response.get_json()["response"]["M1-cards"]["children"]
+        self.assertIsNone(response.get_json()["response"]["M1-comparator"]["value"])
+        self.assertIn("USA", str(cards[0]))
+        self.assertNotIn("Japan", str(cards))
 
     def test_change_plots_both_shares_and_rca_from_each_year(self):
         from src.analytics.product import two_year_metrics
@@ -96,7 +111,7 @@ class TeacherFeedback(unittest.TestCase):
         custom=self.context('specialization')|{'selection_state':'Custom exploration'}
         q,e,r=story_guide(custom,m4.metrics(2023),m4.names())
         self.assertNotIn('14.66',e)
-        self.assertIn('current selection',e)
+        self.assertEqual(e,'')
 
     def test_change_missing_endpoint_is_not_zero_or_growth_claim(self):
         c=self.context('change')

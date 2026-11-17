@@ -112,6 +112,7 @@
     <div class="sub" style="margin-top:12px">
       所有数值来自随仓库发布的真实分析表 · 运行 <code>python app.py</code> 打开交互应用。
       网页导航与本讲稿采用相同顺序 <b>M0 → M1 → M2 → M3 → M4 → M5</b>。
+      演示前确认可打开各模块。页底 <b>Scope, methods &amp; data</b> 提供数据表和 CSV，数值口径在 <b>Detailed methods &amp; sources</b> 中核对。
     </div>
   </div>
 
@@ -136,8 +137,8 @@
       <p class="oh">用户操作</p>
       <ol>
         <li>进 M0，看 <b>全球出口总额折线</b>（1995 → 2024），确认"在增长"。</li>
-        <li>切「<b>六国世界份额</b>」视图，看 30 年走势——增长方向不同。</li>
-        <li>把增长的事实<b>升级成问题</b>：出口规模与结构由什么决定？</li>
+        <li>切到 <b>Six-economy world shares</b>，比较各国的长期份额。把 <b>Analysis year</b> 设到 2023，焦点经济体选 <b>Germany</b>。</li>
+        <li>接着比较经济规模和出口规模，然后追踪主要伙伴及地区。</li>
       </ol>
     </div>
 
@@ -164,9 +165,9 @@
     <div class="op">
       <p class="oh">用户操作（用交互比较判断，而不是读一张图）</p>
       <ol>
-        <li>进 M1，看<b>GDP–出口额双对数散点</b>，图中展示六个起始经济体及其最宽窗口内的候选。三条参考线对应出口/GDP 为 10%、50%、100%。</li>
-        <li>展开 <b>Customize this comparison</b>，选<b>起始经济体 = 德国</b>、匹配维度 = <b>相似 GDP</b>、窗口 = <b>1.25×</b>；在匹配圈里<b>点日本</b>比较：两国 GDP 接近（以德国=100，日本 94.5），出口却差 1.99 倍（50.1）。</li>
-        <li>换匹配维度为 <b>相似出口</b>，以美国为锚、1.25× 内<b>点德国</b>反向比较：德国出口 0.83× 美国，GDP 却只有 0.16×。</li>
+        <li>进 M1，点 <b>Use current overview selection</b> 带入德国和 2023 年。散点的三条参考线对应出口/GDP 为 10%、50%、100%。</li>
+        <li><b>Similarity range</b> 取 <b>1.25×</b>，<b>Match by</b> 选 <b>Similar GDP</b>，比较对象选日本。以德国为 100，日本 GDP 为 94.5，货物出口为 50.1。绝对数值在图下方 <b>Exact values</b>，比较结论在页底 <b>Finding / Implication / Limits</b>。</li>
+        <li>切到 <b>Similar exports</b>，把 <b>Starting economy</b> 改为美国，再选德国。德国出口约为美国的 0.83 倍，GDP 约为 0.16 倍。保留美国和 2023 年带入 M2。</li>
       </ol>
     </div>
 
@@ -213,9 +214,8 @@
       <p class="oh">用户操作</p>
       <ol>
         <li>点右上角 <b>Use current M2 selection</b>，沿用美国、2023 年和全部商品。查看用全部伙伴计算的地区份额，比较美洲与其他地区。</li>
-        <li>再看 HS85 和 HS87，比较同一出口国的首位地区。保留 HS87 进入下一步。</li>
-        <li><b>逐个切换六个焦点国</b>（美国 / 德国 / 中国 / 墨西哥 / 荷兰 / 意大利），每次都记下"本国所在大洲"在第几名。</li>
-        <li>核对下方证据表：份额、领先第二名、是否 30/30、换商品后是否仍第一。</li>
+        <li>在 <b>Does trade follow regional gravity?</b> 比较 HS85 与 HS87。美国的 HS85 出口以亚洲居首，HS87 则以美洲居首。灰色柱可悬停查看未知地区对结论的影响。</li>
+        <li>把上方商品切到 <b>HS87</b> 后进入 M4。六国跨年结果可用下面的汇总表补充，完整伙伴表及 <b>Download CSV</b> 位于 M3 页底。</li>
       </ol>
     </div>
 
@@ -271,9 +271,9 @@
     <div class="op">
       <p class="oh">用户操作（用交互核对"份额 ≠ 专业化"）</p>
       <ol>
-        <li>在 M4 的导入选项选 HS87，比较国家加德国，再点右上角 <b>Use current M3 selection</b>，沿用美国和 2023 年。</li>
-        <li>打开 <b>Full analysis</b>，查看两国的 HS87 出口份额（约 7.92% 与 18.63%）。在全分析里切到 RCA，查看同一章的相对专业化；份额大不一定有 RCA&gt;1。</li>
-        <li>保持美国、德国、2023 年和当前细查商品 HS87 进入 M5。下表的中墨对比可作为补充。</li>
+        <li>在 M4 的联动选项选 <b>Vehicles &amp; parts · HS87</b>，比较经济体加德国，再点 <b>Use current M3 selection</b>。美国与德国 2023 年的 HS87 份额分别约为 7.92% 和 18.63%。</li>
+        <li>需要核对细节时切到 <b>Full analysis</b>，在 <b>Heatmap measure</b> 间切换 <b>Export share</b> 和 <b>RCA</b>。讲明 1× 是世界基准。两张数据表和下载在页底，详细口径另行展开。</li>
+        <li>保留美国、德国、2023 年和 HS87 进入 M5。中墨表和 <b>Test specialization</b> 可作问答备用。</li>
       </ol>
     </div>
 
@@ -306,9 +306,9 @@
     <div class="op">
       <p class="oh">用户操作</p>
       <ol>
-        <li>在 M5 点击 <b>Use current M4 selection</b>，沿用美国、德国、HS87 和 2023 年；疫情窗口以 2019 为基期。</li>
-        <li>在 <b>Compare recovery</b> 查金额指数和国家条形，再进入 <b>Check structure</b>，用组成条形和增减图对比两年份额。</li>
-        <li>可再切到默认疫情案例或金融危机案例。看地区份额时，悬停增减图可查看可能的变化区间。</li>
+        <li>点击 <b>Use current M4 selection</b>。在 <b>Customize this comparison</b> 核对美国、德国、HS87、2019 基期、2020 事件年和 2016–2023 窗口。<b>Analysis year</b> 显示 2023。</li>
+        <li>在 <b>Compare recovery</b> 看多国折线和各国对比条形。切到 <b>Check structure</b>，读两年份额的组成图和从零起算的增减图。点恢复图的年份或使用 <b>Analysis year</b> 可以切换结构对照年份。</li>
+        <li>用页底 <b>Finding / Implication / Limits</b> 收束。需要继续展示时点 <b>Undo</b> 恢复导入前的选择，或切换 <b>Pandemic recovery</b>、<b>Vehicles &amp; parts</b>、<b>Financial crisis</b>。同地区份额的增减图悬停可查可能区间。</li>
       </ol>
     </div>
 

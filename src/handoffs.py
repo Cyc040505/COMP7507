@@ -24,10 +24,6 @@ def require_trade(country, year, product):
         raise ValueError("No recorded exports for the selected economy, year and product.")
 
 
-def description(country, year, product="TOTAL"):
-    return f"{country} · {year} · " + ("All products" if product == "TOTAL" else f"HS{product}")
-
-
 def actions(cid, label, *, apply_id="handoff", undo_id="handoff-undo"):
     return html.Div(
         [
@@ -38,11 +34,11 @@ def actions(cid, label, *, apply_id="handoff", undo_id="handoff-undo"):
     )
 
 
-def controls(cid, *options):
+def controls(cid, *options, preview=False):
     return html.Div(
         [
             *options,
-            html.Span(id=cid("handoff-preview"), className="handoff-note"),
+            *([html.Span(id=cid("handoff-preview"), className="handoff-note")] if preview else []),
             html.Div(id=cid("handoff-status"), className="handoff-note", role="status"),
             dcc.Store(id=cid("handoff-history")),
         ],
@@ -50,16 +46,19 @@ def controls(cid, *options):
     )
 
 
-def register_transfer(app, module, cid, fields, source, preview, prepare):
-    """Register a filter transfer with a one-step undo for simple targets."""
-    @app.callback(
-        Output(cid("handoff-preview"), "children"),
-        Input(ACTIVE_MODULE, "data"),
-        *[Input(*field) for field in source],
-    )
-    def show_preview(active, *values):
-        guard_active(module, active)
-        return preview(*values)
+def register_transfer(
+    app, module, cid, fields, source, prepare, *, preview=None, restore_on_undo=()
+):
+    """Register a filter transfer with one-step undo and optional dependent state."""
+    if preview is not None:
+        @app.callback(
+            Output(cid("handoff-preview"), "children"),
+            Input(ACTIVE_MODULE, "data"),
+            *[Input(*field) for field in source],
+        )
+        def show_preview(active, *values):
+            guard_active(module, active)
+            return preview(*values)
 
     @app.callback(
         *[Output(cid(key), prop, allow_duplicate=duplicate) for key, prop, duplicate in fields],
@@ -70,23 +69,33 @@ def register_transfer(app, module, cid, fields, source, preview, prepare):
         State(ACTIVE_MODULE, "data"),
         *[State(*field) for field in source],
         *[State(cid(key), prop) for key, prop, _ in fields],
+        *[State(cid(key), prop) for key, prop in restore_on_undo],
         State(cid("handoff-history"), "data"),
         prevent_initial_call=True,
     )
     def transfer(_apply, _undo, active, *args):
         guard_active(module, active)
-        current = list(args[len(source):-1])
+        snapshot = list(args[len(source):-1])
+        current = snapshot[:len(fields)]
         history = args[-1]
         keep = [no_update] * (len(fields) + 1)
         if ctx.triggered_id == cid("handoff-undo"):
-            if not history or current != history["applied"]:
+            if not history or current != history.get("applied"):
                 return *keep, "Selection has changed. Nothing to undo."
-            return *history["before"], None, "Previous selection restored."
+            restored = {"restored": history["dependent"]} if restore_on_undo else None
+            return *history["before"], restored, ""
         try:
-            result, message = prepare(*args[:len(source)], current)
+            result = prepare(*args[:len(source)], current)
         except (ValueError, FileNotFoundError) as exc:
             return *keep, str(exc)
-        return *result, {"before": current, "applied": result}, message
+        if result == current:
+            return *keep, ""
+        history = {"before": current, "applied": result}
+        if restore_on_undo:
+            history["dependent"] = {
+                key: value for (key, _), value in zip(restore_on_undo, snapshot[len(fields):])
+            }
+        return *result, history, ""
 
     @app.callback(
         Output(cid("handoff-undo"), "hidden"),
@@ -94,4 +103,4 @@ def register_transfer(app, module, cid, fields, source, preview, prepare):
         *[Input(cid(key), prop) for key, prop, _ in fields],
     )
     def hide_undo(history, *current):
-        return not history or list(current) != history["applied"]
+        return not history or list(current) != history.get("applied")

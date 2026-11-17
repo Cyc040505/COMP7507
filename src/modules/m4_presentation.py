@@ -57,10 +57,9 @@ def story_guide(context, current, names):
         return '02 / Is the largest export category also the most specialized?', evidence, explanation
     if step == 'change':
         return ('03 / If export share rises, is specialization above the world benchmark?',
-                f'Vehicles & parts · {baseline} → {year}. Compare the share change on the left and RCA against 1× on the right. China and Mexico remain the same two cases.',
+                f'Vehicles & parts · {baseline} → {year} · China and Mexico',
                 explanation)
-    return ('Explore / What does the current selection show?',
-            f"{year} · {len(context.get('countries', []))} selected economies. Findings follow your current selection; preset conclusions are not carried over.", explanation)
+    return ('Explore / How do export baskets compare?', '', explanation)
 
 
 def presentation(context, current, trade, names):
@@ -71,6 +70,7 @@ def presentation(context, current, trade, names):
     if not countries or not products:
         return 'No valid comparison available', theme.empty_figure('Choose economies and products in Customize this comparison.'), 'Missing data are not treated as zero.'
     selected = current[current.exporter.isin(countries)]
+    note = ''
     if step == 'specialization':
         a = selected[selected.exporter.eq('CHN')].set_index('hs2').reindex(['85','95'])
         fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.13,
@@ -85,7 +85,6 @@ def presentation(context, current, trade, names):
         fig.add_annotation(x=1, y=.5, xref='x2', yref='y2 domain', text='1× World benchmark', showarrow=False, xanchor='left', xshift=6, bgcolor='white', font=dict(size=12))
         supported = a.loc['85','share'] > a.loc['95','share'] and a.loc['95','rca'] > a.loc['85','rca']
         title = ('China: electrical equipment has the larger share; toys are more specialized' if supported else 'Compare product share with the world benchmark')
-        note = 'Above 1×: the product takes a larger share of China’s exports than of world exports. This is RCA, not an export-value multiple or a technology score.'
         fig.update_layout(showlegend=False, height=365)
     elif step == 'change':
         fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.13,
@@ -109,9 +108,8 @@ def presentation(context, current, trade, names):
         chn = next((r for c,r in zip(countries,data) if c=='CHN'),None)
         supported = chn is not None and not chn.missing_endpoint and chn.share_current>chn.share_base and chn.rca_current<1
         title = (f'China’s vehicle export share rose; RCA was below 1× in {year}' if supported else 'Vehicles and parts: compare share and specialization in two years')
-        note = ('Each year uses its own all-product and world export totals. '
-                'Two observations are not a continuous trend. Missing endpoints remain unknown. '
-                'Full analysis retains all chapters and the optional dumbbell chart.')
+        if any(row.missing_endpoint for row in data):
+            note = 'Missing endpoints prevent a comparison for some economies.'
         fig.update_layout(height=375,barmode='group')
     else:
         if step == 'structure' and '87' in products:
@@ -129,10 +127,9 @@ def presentation(context, current, trade, names):
                 title = "Similar incomes, different export baskets" if has_income_evidence(context) else "Different export baskets: compare China and Mexico"
             idx = products.index('87')
             fig.add_shape(type='rect',xref='paper',x0=0,x1=1,y0=idx-.46,y1=idx+.46,line_width=0,fillcolor='rgba(212,161,91,.14)',layer='below')
-        note = ('Income means GDP per person; similar does not mean identical. ' if context.get('comparison_mode')=='income' else '') + 'Shares use all-product exports, not just the displayed chapters. Click a bar to inspect the product in Full analysis.'
+        note = 'Click a bar to inspect the product in Full analysis.'
         if metric == 'rca':
             fig.add_vline(x=1,line_dash='dot',line_color=theme.INK)
-            note += ' 1× marks the world benchmark; above 1× indicates relative specialization.'
         if len(countries)<2:
             title = 'One economy selected — no cross-country comparison'
         fig.update_layout(height=max(420,100+len(products)*max(50,len(countries)*20)),barmode='group',
@@ -143,4 +140,4 @@ def presentation(context, current, trade, names):
         fig.update_layout(legend=dict(orientation='h', y=1.3, x=0), margin=dict(t=80))
     fig.update_xaxes(rangemode='tozero',fixedrange=True)
     fig.update_yaxes(automargin=True,fixedrange=True)
-    return title, fig, f'{year} · '+note
+    return title, fig, note

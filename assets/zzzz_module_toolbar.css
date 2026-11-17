@@ -72,9 +72,10 @@ html { scrollbar-gutter: stable; }
   flex-basis: 330px;
 }
 
-.toolbar-row > :is(.control-field,.m3-field):has(#M0-focus-economy,#M2-exporter,#M3-country,#M2-product,#M3-product) {
+.toolbar-row > :is(.control-field,.m3-field):has(#M0-focus-economy,#M1-anchor,#M2-exporter,#M3-country,#M2-product,#M3-product) {
   flex-basis: var(--toolbar-field);
 }
+.toolbar-row > .control-field:has(#M1-factor) { flex-basis: 125px; }
 .toolbar-row :is(#M2-dist-metric,#M2-show,#M3-direction,#M3-top) { min-width: min(125px, 100%); }
 
 .module-inner .dash-dropdown {
@@ -107,7 +108,6 @@ html { scrollbar-gutter: stable; }
   font-weight: 500;
 }
 
-.module-toolbar .m1-field > :is(.m1-radio,.m1-anchors),
 .module-toolbar :is(.m4-steps,.m5-major-tabs,.m5-presets),
 .toolbar-actions {
   display: flex;
@@ -119,9 +119,10 @@ html { scrollbar-gutter: stable; }
   height: auto;
 }
 
-.module-inner :is(.radio-row,.m1-radio,.m1-anchors,.m5-major-tabs,.m5-chart-switch) label,
+.module-inner :is(.radio-row,.m5-major-tabs,.m5-chart-switch) label,
 .module-toolbar :is(.m4-step,.m5-presets button,.toolbar-actions button,.handoff-controls > button),
 .module-inner > .handoff-controls > button,
+.module-inner .comparison-row > button,
 .module-inner .toolbar-disclosure > summary {
   min-height: var(--toolbar-height);
   padding: 7px 11px;
@@ -135,14 +136,14 @@ html { scrollbar-gutter: stable; }
   line-height: 1.3;
 }
 
-.module-inner :is(.radio-row,.m1-radio,.m1-anchors,.m5-major-tabs,.m5-chart-switch) label,
+.module-inner :is(.radio-row,.m5-major-tabs,.m5-chart-switch) label,
 .module-toolbar :is(.m4-step,.m5-presets button) {
   display: inline-flex;
   align-items: center;
   gap: 7px;
 }
 
-.module-inner :is(.radio-row,.m1-radio,.m1-anchors,.m5-major-tabs,.m5-chart-switch) label:has(input:checked),
+.module-inner :is(.radio-row,.m5-major-tabs,.m5-chart-switch) label:has(input:checked),
 .module-toolbar .m4-step.on {
   border-color: var(--toolbar-selected-border);
   background: var(--toolbar-selected-fill);
@@ -178,10 +179,6 @@ html { scrollbar-gutter: stable; }
 .toolbar-row > .handoff-controls .handoff-note {
   line-height: 16px;
 }
-.toolbar-row > .toolbar-note {
-  align-content: center;
-  min-block-size: var(--toolbar-height);
-}
 
 .module-inner .handoff-controls > button,
 .module-inner .toolbar-actions button {
@@ -212,21 +209,25 @@ html { scrollbar-gutter: stable; }
   margin-inline-start: 0;
 }
 .module-inner .toolbar-disclosure[open] > summary { margin-bottom: 10px; }
-.module-inner .toolbar-disclosure :is(.m4-controls,.m5-controls) {
+.comparison-controls {
+  display: grid;
+  gap: var(--toolbar-gap);
+}
+.comparison-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px var(--toolbar-gap);
+  gap: var(--toolbar-gap);
   align-items: end;
-  margin-top: 0;
 }
-.toolbar-disclosure :is(.m4-field,.m5-field) { flex: 0 1 var(--toolbar-field); }
-.toolbar-disclosure :is(.m4-field,.m5-field):has(#M4-countries,#M4-products,#M5-countries) {
-  flex-basis: var(--toolbar-multi);
-}
-.toolbar-disclosure .m5-field:has(#M5-baseline,#M5-event) { flex-basis: var(--toolbar-year); }
-.toolbar-disclosure .m4-field:has(#M4-mode) { flex-basis: auto; }
+.comparison-row > .control-field { flex: 0 1 var(--toolbar-field); max-inline-size: 100%; }
+.comparison-row > .comparison-wide { flex-basis: var(--toolbar-multi); }
+.comparison-row > .comparison-year { flex-basis: var(--toolbar-year); }
+.comparison-row > .control-field:has(> .radio-row) { flex-basis: auto; }
+.comparison-row > .comparison-range { flex-basis: min(100%, 736px); }
+.comparison-controls .radio-row { gap: 6px; }
+.comparison-controls .dash-dropdown { padding: 0; }
 
-.module-toolbar :is(.handoff-note,.m5-hint,.toolbar-note) {
+.module-toolbar :is(.handoff-note,.m5-hint) {
   margin: 0;
   font-size: 12px;
   color: var(--muted);

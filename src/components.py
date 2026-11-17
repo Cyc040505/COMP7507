@@ -19,6 +19,57 @@ def card(title: str | None, body, *, extra_class: str = "") -> html.Div:
     return html.Div(children, className=f"card {extra_class}".strip())
 
 
+def findings_card(*, finding, implication, limits) -> html.Div:
+    return card(
+        "Finding / Implication / Limits",
+        html.Div(
+            [
+                html.Article([html.H4(label), text])
+                for label, text in (
+                    ("Finding", finding),
+                    ("Implication", implication),
+                    ("Limits", limits),
+                )
+            ],
+            className="module-findings",
+        ),
+    )
+
+
+def module_data_details(children, *, id: str) -> html.Details:
+    """The collapsed methods and data panel at the end of a module."""
+    return html.Details(
+        [html.Summary("Scope, methods & data"), *children],
+        id=id,
+        className="module-data-details",
+    )
+
+
+def module_data_table_header(
+    title: str, *, download_id: str, download_label: str, disabled: bool = False
+) -> html.Div:
+    return html.Div(
+        [
+            html.H4(title),
+            html.Button(
+                "Download CSV",
+                id=download_id,
+                n_clicks=0,
+                disabled=disabled,
+                **{"aria-label": download_label},
+            ),
+        ],
+        className="module-data-table-header",
+    )
+
+
+def module_data_methods(children) -> html.Details:
+    return html.Details(
+        [html.Summary("Detailed methods & sources"), *children],
+        className="module-data-methods",
+    )
+
+
 def kpi_row(items: list[tuple[str, str]]) -> html.Div:
     """A row of small label/value stat tiles.
 
@@ -129,14 +180,29 @@ def placeholder_graph(
 def module_intro(title, description=None, *, actions=None):
     copy = [html.H2(title)]
     if description:
-        copy.append(html.P(description))
+        copy.append(html.P(description, className="module-conclusion"))
     return html.Div(
         [html.Div(copy), actions],
         className="module-intro module-heading-row",
     )
 
 
-def field(label, widget):
+def field(label, widget, *, extra_class=""):
     return html.Div(
-        [html.Label(label, htmlFor=widget.id), widget], className="control-field"
+        [html.Label(label, htmlFor=widget.id), widget],
+        className=f"control-field {extra_class}".strip(),
+    )
+
+
+def comparison_controls(*rows, id):
+    return html.Details(
+        [
+            html.Summary("Customize this comparison"),
+            html.Div(
+                [html.Div(fields, className="comparison-row") for fields in rows],
+                className="comparison-controls",
+            ),
+        ],
+        id=id,
+        className="toolbar-disclosure",
     )

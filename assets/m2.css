@@ -7,7 +7,6 @@
 .m2-map-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; }
 .m2-map-heading .card-title-text { margin:7px 0 0; font-size:20px; }
 .m2-map-eyebrow { font-size:10px; letter-spacing:1.3px; color:#687e8f; }
-.m2-scope-badge { white-space:nowrap; border:1px solid #dce6eb; border-radius:4px; padding:6px 9px; font-size:11px; color:#6a8090; }
 .m2-map-legend { display:flex; gap:18px; align-items:center; flex-wrap:wrap; color:#667e8d; font-size:11px; margin:17px 0; }
 .m2-map-legend>span { display:inline-flex; align-items:center; gap:6px; }
 .m2-map-legend i { width:9px; height:9px; border-radius:2px; display:inline-block; }

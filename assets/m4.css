@@ -5,9 +5,6 @@
 .m4-step-number { opacity:.65; }
 .m4-step.on { color:var(--accent); border-color:var(--accent-line); background:var(--accent-soft); }
 .m4-step.on strong { font-weight:600; }
-.m4-toolbar .m4-advanced { border:1px solid var(--line); border-radius:5px; padding:8px 12px; background:white; }
-.m4-toolbar:has(.m4-advanced[open]) .m4-advanced { grid-column:1/-1; }
-.m4-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 20px; margin-top:12px; }
 .m4-question { padding:0; background:none; border:0; }
 .m4-question h3 { font-size:17px; font-weight:500; margin:0 0 3px; letter-spacing:-.2px; }
 .m4-question p { font-size:12px; margin:0; color:var(--muted); }
@@ -16,15 +13,13 @@
 .m4-analysis { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:20px; align-items:start; }
 .m4-chart { min-width:0; }
 .m4-note { font-size:12px; color:var(--muted); line-height:1.6; margin:7px 0; }
+.m4-data-guide { margin:0; padding-left:18px; color:var(--muted); font-size:12px; line-height:1.7; }
+.m4-data-guide strong { color:var(--ink); }
 .m4-chart .radio-row { margin-bottom:8px; }
 .m4-chart .m4-field>label { font-size:11px; }
 .m4-detail-controls { display:grid; grid-template-columns:1fr 1.4fr .8fr; gap:10px; margin:12px 0 8px; }
 .m4-scope { color:var(--muted); font-size:12px; background:none; border:0; padding:0; }
-.m4-findings { display:grid; grid-template-columns:1.15fr 1.15fr 1fr; gap:24px; }
-.m4-findings h4 { font-size:12px; color:var(--muted); font-weight:600; margin:0 0 7px; }
-.m4-findings p { font-size:13px; line-height:1.7; margin:0; }
-.m4-focus-title { color:var(--accent); font-size:14px; display:block; margin:0 0 8px; }
-.m4-method .m4-button { margin:12px 0; }
+.m4-scope:empty, .m4-story-evidence:empty { display:none; }
 .m4-chart .m4-kpis { padding-top:12px; border-top:1px solid var(--line); }
 .m4-chart .kpi-card { padding:0 12px; }
 .m4-chart .kpi-card:first-child { padding-left:0; }
@@ -46,6 +41,7 @@
 .m4-heat-controls .m4-note { max-width:78ch; }
 .m4-story-title { font-size:21px; line-height:1.4; margin:0 0 12px; color:var(--ink); max-width:90ch; }
 .m4-story .m4-note { font-size:13px; max-width:110ch; }
+.m4-story .m4-note:empty { display:none; }
 .m4-story { border-top:3px solid var(--accent); }
 .m4-story-question { margin:0 0 6px; color:var(--muted); font-size:13px; }
 .m4-story-evidence { margin:0 0 12px; font-size:14px; line-height:1.6; color:var(--ink); max-width:110ch; }

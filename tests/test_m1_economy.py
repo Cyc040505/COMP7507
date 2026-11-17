@@ -209,7 +209,8 @@ class EconomyCallbacks(unittest.TestCase):
         expected = [100 * r.loc["JPN", k] / r.loc["DEU", k] for k in ("gdp", "export_value")]
         np.testing.assert_allclose(f["data"][0]["x"], expected)
         self.assertEqual(f["layout"]["shapes"][0]["x0"], 100)
-        self.assertIn("16.57 percentage points lower", str(z["M1-relative"]))
+        self.assertIn("Germany = 100", str(z["M1-relative"]))
+        self.assertNotIn("percentage points lower", str(z["M1-relative"]))
         z = self.request(changes={"M1-mode.value": "export_value"})
         f = graph(z)
         self.assertGreater(f["data"][0]["x"][0], 600)
@@ -222,7 +223,6 @@ class EconomyCallbacks(unittest.TestCase):
         a = rows[rows.country.eq("DEU")].iloc[0]
         text = str(m.relative_comparison(a, a, 2023))
         self.assertIn("Same at displayed precision", text)
-        self.assertIn("equal at displayed precision", text)
         r = m.data_for_year(2023)
         exported = evidence_frame(r, "DEU", "JPN", "gdp", 1.25).set_index("country")
         values = r.set_index("country")
@@ -233,7 +233,6 @@ class EconomyCallbacks(unittest.TestCase):
     def test_switch_dimension_replaces_ineligible_comparator(self):
         z = self.request(changes={"M1-mode.value": "export_value"}, changed="M1-mode.value")
         self.assertEqual(z["M1-comparator"]["value"], "USA")
-        self.assertIn("closest current match", z["M1-match-status"]["children"])
         self.assertIn("USA", z["M1-finding"]["children"])
 
     def test_year_change_updates_all_evidence(self):
@@ -248,7 +247,7 @@ class EconomyCallbacks(unittest.TestCase):
         z = self.request(changes={"M1-anchor.value": "USA"}, changed="M1-anchor.value")
         self.assertIsNone(z["M1-comparator"]["value"])
         self.assertTrue(z["M1-comparator"]["disabled"])
-        self.assertIn("has not been widened", z["M1-match-status"]["children"])
+        self.assertIn("No two-country finding", z["M1-finding"]["children"])
         self.assertNotIn("Japan", z["M1-finding"]["children"])
 
     def test_missing_and_nonpositive_anchors(self):
@@ -256,7 +255,7 @@ class EconomyCallbacks(unittest.TestCase):
         g.loc[g.country.eq("DEU"), "gdp"] = 0
         with patch.object(data_loader, "load_country_year", return_value=e), patch.object(data_loader, "load_gdp_year", return_value=g):
             z = self.request(changes={"M1-anchor.value": "DEU"})
-            self.assertIn("Non-positive GDP", z["M1-match-status"]["children"])
+            self.assertIn("Non-positive GDP", z["M1-finding"]["children"])
             self.assertEqual(z["M1-cards"]["children"], [])
 
     def test_missing_file_or_demo_cannot_generate_findings(self):

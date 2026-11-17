@@ -113,34 +113,6 @@ def story_heading(section):
     )
 
 
-def section_findings(question, evidence, interpretation):
-    return components.card(
-        "What the evidence shows",
-        html.Ol(
-            [
-                html.Li([
-                    html.Span("Question", className="vtag vtag-q"),
-                    html.P(id=cid(question)),
-                ]),
-                html.Li(
-                    [
-                        html.Span("Evidence", className="vtag vtag-e"),
-                        html.P(id=cid(evidence)),
-                    ]
-                ),
-                html.Li(
-                    [
-                        html.Span("Interpretation", className="vtag vtag-c"),
-                        html.P(id=cid(interpretation)),
-                    ]
-                ),
-            ],
-            className="verify-list",
-        ),
-        extra_class="verify m5-section-findings",
-    )
-
-
 def layout():
     ns = country_names()
     return html.Div(
@@ -152,7 +124,7 @@ def layout():
             dcc.Download(id=cid("download")),
             components.module_intro(
                 "Recovery & structural change",
-                "Compare how export values recovered, then check how product and regional partner shares changed.",
+                "Export recovery can coincide with shifts in product and regional partner shares.",
                 actions=handoffs.actions(cid, "Use current M4 selection", apply_id="import", undo_id="undo-import"),
             ),
             html.Div(
@@ -198,90 +170,60 @@ def layout():
                         inline=True,
                         className="m5-major-tabs",
                     ),
-                    html.Details(
+                    components.comparison_controls(
                         [
-                            html.Summary("Customize this comparison"),
-                            html.Div(
-                                [
-                                    field(
-                                        "Six focus economies · choose 1–6",
-                                        dcc.Dropdown(
-                                            id=cid("countries"),
-                                            options=[
-                                                {"label": f"{ns[c]} ({c})", "value": c}
-                                                for c in FOCUS_COUNTRIES
-                                            ],
-                                            value=["CHN", "DEU", "MEX"],
-                                            multi=True,
-                                        ),
-                                    ),
-                                    field(
-                                        "Export scope · HS2 chapter",
-                                        dcc.Dropdown(
-                                            id=cid("product"),
-                                            options=[
-                                                {
-                                                    "label": "All products",
-                                                    "value": "TOTAL",
-                                                }
-                                            ]
-                                            + [
-                                                {"label": label(p), "value": p}
-                                                for p in chapters()
-                                            ],
-                                            value="TOTAL",
-                                            clearable=False,
-                                        ),
-                                    ),
-                                    field(
-                                        "Baseline · index = 100",
-                                        dcc.Dropdown(
-                                            id=cid("baseline"),
-                                            options=YEARS,
-                                            value=2019,
-                                            clearable=False,
-                                        ),
-                                    ),
-                                    field(
-                                        "Event marker · annual data",
-                                        dcc.Dropdown(
-                                            id=cid("event"),
-                                            options=YEARS,
-                                            value=2020,
-                                            clearable=False,
-                                        ),
-                                    ),
-                                ],
-                                className="m5-controls",
+                            components.field(
+                                "Economies (up to 6)",
+                                dcc.Dropdown(
+                                    id=cid("countries"),
+                                    options=[
+                                        {"label": f"{ns[c]} ({c})", "value": c}
+                                        for c in FOCUS_COUNTRIES
+                                    ],
+                                    value=["CHN", "DEU", "MEX"],
+                                    multi=True,
+                                ),
+                                extra_class="comparison-wide",
                             ),
-                            html.Div(
-                                [
-                                    html.Span(
-                                        "Observation window · summaries stop at the right endpoint"
-                                    ),
-                                    dcc.RangeSlider(
-                                        id=cid("window"),
-                                        min=1995,
-                                        max=2024,
-                                        value=[2016, 2024],
-                                        step=1,
-                                        marks={
-                                            1995: "1995",
-                                            2000: "2000",
-                                            2005: "2005",
-                                            2010: "2010",
-                                            2015: "2015",
-                                            2020: "2020",
-                                            2024: "2024",
-                                        },
-                                        allowCross=False,
-                                        tooltip={"placement": "bottom"},
-                                    ),
-                                ],
-                                className="m5-window",
+                            components.field(
+                                "Product",
+                                dcc.Dropdown(
+                                    id=cid("product"),
+                                    options=[{"label": "All products", "value": "TOTAL"}]
+                                    + [{"label": label(p), "value": p} for p in chapters()],
+                                    value="TOTAL",
+                                    clearable=False,
+                                ),
+                                extra_class="comparison-wide",
+                            ),
+                            components.field(
+                                "Baseline year",
+                                dcc.Dropdown(id=cid("baseline"), options=YEARS, value=2019, clearable=False),
+                                extra_class="comparison-year",
+                            ),
+                            components.field(
+                                "Event year",
+                                dcc.Dropdown(id=cid("event"), options=YEARS, value=2020, clearable=False),
+                                extra_class="comparison-year",
                             ),
                         ],
-                        className="m5-methods m5-custom toolbar-disclosure",
+                        [
+                            components.field(
+                                "Observation window",
+                                dcc.RangeSlider(
+                                    id=cid("window"),
+                                    min=1995,
+                                    max=2024,
+                                    value=[2016, 2024],
+                                    step=1,
+                                    marks={year: str(year) for year in (1995, 2000, 2005, 2010, 2015, 2020, 2024)},
+                                    allowCross=False,
+                                    tooltip={"placement": "bottom"},
+                                ),
+                                extra_class="comparison-range",
+                            ),
+                        ],
+                        id=cid("customize"),
                     ),
                 ],
                 className="m5-toolbar module-toolbar toolbar-row",
@@ -297,7 +239,6 @@ def layout():
                         ],
                         id=cid("presets"), className="m5-presets",
                     ),
-                    html.Div(id=cid("import-preview"), className="m5-hint"),
                     html.Div(id=cid("import-note"), className="m5-hint", role="status"),
                 ],
                 className="module-toolbar toolbar-row",
@@ -340,7 +281,6 @@ def layout():
                         ],
                         className="card m5-story m5-recovery-chart",
                     ),
-                    section_findings("recovery-finding-question", "finding", "recovery-interpretation"),
                 ],
                 id=cid("recovery-panel"),
                 className="m5-section-panel",
@@ -384,7 +324,6 @@ def layout():
                         ], extra_class="m5-change-card"),
                     ], className="m5-structure-pair"),
                 ], className="card m5-story m5-structure-chart"),
-                section_findings("structure-finding-question", "implication", "structure-interpretation"),
                 html.Div([
                     html.H3(["Annual detail", html.Span(id=cid("detail-year"))],
                         className="m5-detail-heading"),
@@ -392,107 +331,74 @@ def layout():
                 ], className="m5-analysis-rail m5-structure-detail"),
             ], id=cid("structure-panel"), className="m5-section-panel", style={"display": "none"}),
             html.Div(id=cid("message"), className="m5-source"),
-            html.Details(
+            components.findings_card(
+                finding=html.P(id=cid("summary-finding")),
+                implication=html.P(id=cid("summary-implication")),
+                limits=html.P(
+                    "Current-dollar values reflect prices and exchange rates. Missing years can obscure recovery timing, and unknown partner regions can affect conclusions about regional change."
+                ),
+            ),
+            components.module_data_details(
                 [
-                    html.Summary("Recovery status · expand for the complete table"),
-                    html.Div(
+                    html.P(
+                        "Recovery is the first observed return to 100 or above after a loss. The table flags cases with no observed loss. The CSV includes annual values for the selected comparison."
+                    ),
+                    components.module_data_table_header(
+                        "Recovery status",
+                        download_id=cid("download-button"),
+                        download_label="Download selected annual evidence (CSV)",
+                    ),
+                    dash_table.DataTable(
+                        id=cid("summary"),
+                        columns=[
+                            {"name": "Economy", "id": "country"},
+                            {"name": "Observed status", "id": "status_label"},
+                            {"name": "First observed return ≥100", "id": "first_at_baseline"},
+                            {
+                                "name": "End index",
+                                "id": "end_index",
+                                "type": "numeric",
+                                "format": {"specifier": ".1f"},
+                            },
+                            {"name": "Observed / expected years", "id": "coverage"},
+                            {"name": "Timing", "id": "timing_label"},
+                        ],
+                        data=[],
+                        style_cell={
+                            "textAlign": "left",
+                            "whiteSpace": "normal",
+                            "height": "auto",
+                            "padding": "12px",
+                            "fontFamily": "inherit",
+                            "fontSize": 12,
+                        },
+                        style_header={"fontWeight": 600, "backgroundColor": "#f3f6fa"},
+                        style_table={"overflowX": "auto"},
+                    ),
+                    components.module_data_methods(
                         [
                             html.P(
-                                "First observed return ≥100 follows an observed below-baseline loss. It is not necessarily an exact recovery date. No observed loss is identified separately.",
-                                className="m5-hint",
+                                "BACI HS92 V202601 covers 1995–2024 in thousand current USD. The value index follows the selected product scope. Product share uses all goods exports as its denominator. Annual gaps stay missing."
                             ),
-                            dash_table.DataTable(
-                                id=cid("summary"),
-                                columns=[
-                                    {"name": "Economy", "id": "country"},
-                                    {"name": "Observed status", "id": "status_label"},
-                                    {
-                                        "name": "First observed return ≥100",
-                                        "id": "first_at_baseline",
-                                    },
-                                    {
-                                        "name": "End index",
-                                        "id": "end_index",
-                                        "type": "numeric",
-                                        "format": {"specifier": ".1f"},
-                                    },
-                                    {
-                                        "name": "Observed / expected years",
-                                        "id": "coverage",
-                                    },
-                                    {"name": "Timing", "id": "timing_label"},
-                                ],
-                                data=[],
-                                style_cell={
-                                    "textAlign": "left",
-                                    "whiteSpace": "normal",
-                                    "height": "auto",
-                                    "padding": "12px",
-                                    "fontFamily": "inherit",
-                                    "fontSize": 12,
-                                },
-                                style_header={
-                                    "fontWeight": 600,
-                                    "backgroundColor": "#f3f6fa",
-                                },
-                                style_table={"overflowX": "auto"},
+                            html.P(
+                                "Regional shares use Africa, the Americas, Asia, Europe and Oceania. The denominator includes destinations with unknown regions, so the observed same-region share is a lower bound. Change intervals account for unknown destinations. Regional shares require a known origin region."
                             ),
-                        ]
-                    ),
-                ],
-                className="m5-methods",
-            ),
-            html.Details(
-                [
-                    html.Summary("Methods, provenance & evidence download"),
-                    html.Div(
-                        [
-                            html.Section(
-                                [
-                                    html.H4("01 / Measurement"),
-                                    html.P(
-                                        "BACI HS92 V202601 · 1995–2024 · nominal merchandise exports, thousand current USD. Value index uses the selected product scope; product share always divides by ALL products. Annual records are not interpolated or filled with zeros."
-                                    ),
-                                ]
+                            html.P(
+                                "The baseline precedes the event within the comparison window. Recovery is tracked through the end of that window. Missing annual observations can affect the observed timing. Nominal values can reflect prices and exchange rates. Event markers support before-and-after comparisons."
                             ),
-                            html.Section(
-                                [
-                                    html.H4("02 / Region uncertainty"),
-                                    html.P(
-                                        "Regions use the project’s fixed Africa / America / Asia / Europe / Pacific (Oceania) classification. America includes the whole Americas, not only North America or a trade agreement area. Unknown destinations remain in the full denominator: known same-region, known other-region and unknown destinations are shown separately. Observed intra-regional share is a lower bound; the change interval retains unknown destinations. Unknown origins have no regional share."
-                                    ),
-                                ]
+                            html.P(
+                                "The regional inputs were rebuilt from official BACI annual files and reconciled at the exporter–importer–HS2 and exporter–HS2 levels. Source and output SHA256 hashes are in the audit manifest."
                             ),
-                            html.Section(
-                                [
-                                    html.H4("03 / Provenance"),
-                                    html.P(
-                                        "Regional inputs were rebuilt from official BACI HS92 V202601 annual CSVs for 1995–2024. Every exporter×importer×HS2 allocation and exporter×HS2 total was independently reconciled; source and output SHA256 hashes are recorded in the audit manifest."
-                                    ),
-                                ]
+                            html.P(id=cid("limits")),
+                            html.A(
+                                "CEPII BACI source attribution",
+                                href="https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37",
+                                target="_blank",
                             ),
                         ],
-                        className="m5-methods-grid",
-                    ),
-                    html.P(
-                        "Event markers support before/after exploration, not causal attribution. Nominal recovery can reflect prices and exchange rates. These two shares do not describe the entire export basket or partner distribution. The default CHN/DEU/MEX group is a time comparison, not a similar-income group. Similar-income matching belongs to M4."
-                    ),
-                    html.P(
-                        "Recovery horizon ends at the displayed window endpoint. Baseline must precede the event and both must be in the window. Missing annual observations qualify timing."
-                    ),
-                    html.P(id=cid("limits")),
-                    html.A(
-                        "CEPII BACI source attribution",
-                        href="https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37",
-                        target="_blank",
-                    ),
-                    html.Button(
-                        "Download displayed annual evidence (CSV)",
-                        id=cid("download-button"),
-                        n_clicks=0,
                     ),
                 ],
-                className="m5-methods",
+                id=cid("data-details"),
             ),
         ],
     )
@@ -650,10 +556,8 @@ def compute_view(
             rows=[],
             summary=[],
             message=message,
-            finding=message,
-            implication="",
-            recovery_interpretation="No conclusion without comparable observations.",
-            structure_interpretation="No conclusion without comparable observations.",
+            summary_finding="The current selection has no comparable evidence.",
+            implication="Use a valid selection to compare export recovery and structure.",
             **story_headlines(None, product, baseline, metric),
             preset_class="m5-presets",
             detail=[],
@@ -741,9 +645,9 @@ def compute_view(
     structure_summary = comparison_summary(summary, snapshot_rows, baseline, selected)
     structure_change = change_figure(json_records(structure_summary), countries, metric, baseline, selected, colors, structure.layout.height)
     note = (
-        f"{baseline} vs {selected} · Selected chapter / all exports · Change in percentage points"
+        "Selected chapter / all exports · Change in percentage points"
         if metric == "product"
-        else f"{baseline} vs {selected} · Bars use known same-region shares · Unknown destinations stay separate"
+        else "Bars use known same-region shares · Unknown destinations stay separate"
     )
     summary["status_label"] = summary.status.map(STATUS)
     summary["coverage"] = (
@@ -757,8 +661,8 @@ def compute_view(
     )
     valid = summary.end_index.notna()
     above = int(summary.loc[valid, "end_index"].ge(100 - 1e-9).sum())
-    finding = (
-        f"{end}: {above} of {int(valid.sum())} economies at/above the {baseline} baseline."
+    summary_finding = (
+        f"In {end}, {above} of {int(valid.sum())} comparable economies were at or above their {baseline} export level."
         if valid.any()
         else "The selected series have no comparable baseline and endpoint amounts."
     )
@@ -791,44 +695,7 @@ def compute_view(
                 style={"--country-color": colors[row.country]},
             )
         )
-    below = summary.loc[valid & summary.end_index.lt(100 - 1e-9), "country"]
-    if len(below):
-        finding += " Below baseline at the endpoint: " + ", ".join(below) + "."
-    if (~valid).any():
-        finding += (
-            " Missing comparison: " + ", ".join(summary.loc[~valid, "country"]) + "."
-        )
     implication = describe_structure(structure_summary, metric, product, baseline, selected)
-    returns = summary.dropna(subset=["first_at_baseline"])
-    recovery_notes = []
-    if not returns.empty:
-        recovery_notes.append(
-            "First observed return: "
-            + "; ".join(
-                f"{int(year)} — {', '.join(group.country)}"
-                for year, group in returns.groupby("first_at_baseline", sort=True)
-            )
-            + "."
-        )
-    for status, title in [
-        ("never_below", "No observed loss"),
-        ("not_recovered", "No observed return"),
-        ("unobserved_incomplete", "No observed return; incomplete coverage"),
-    ]:
-        names = summary.loc[summary.status.eq(status), "country"].tolist()
-        if names:
-            recovery_notes.append(f"{title}: {', '.join(names)}.")
-    if (~summary.timing_complete).any():
-        recovery_notes.append("Missing years limit timing precision.")
-    recovery_interpretation = (
-        " ".join(recovery_notes)
-        or "Comparable post-event observations are insufficient."
-    )
-    structure_interpretation = (
-        "Shares measure export-basket composition, not export growth."
-        if metric == "product"
-        else "Regional shares retain unknown destinations. Change intervals crossing zero remain unresolved."
-    )
     signature = (product, baseline, event, (start, end), metric)
     key = next(
         (
@@ -875,12 +742,9 @@ def compute_view(
         change_heading="Who gained or lost product share?" if metric == "product" else "How did known same-region shares change?",
         rows=records,
         summary=summaries,
-        message=f"Official bilateral source audited · {manifest['source_version']} · {start}–{end} · "
-        + ("All products" if product == "TOTAL" else label(product)),
-        finding=finding,
+        message="",
+        summary_finding=summary_finding,
         implication=implication,
-        recovery_interpretation=recovery_interpretation,
-        structure_interpretation=structure_interpretation,
         **story_headlines(structure_summary, product, baseline, metric),
         preset_class="m5-presets " + (key or "custom"),
         detail=details,
@@ -901,7 +765,7 @@ def compute_view(
         ),
         year_options=[{"label": str(y), "value": y} for y in range(start, end + 1)],
         detail_year=str(selected),
-        recovery_caption=f"Nominal exports · {baseline} = 100 · Event {event} · Click a point to inspect",
+        recovery_caption=f"Nominal exports · {baseline} = 100 · Click a point to inspect",
     )
 
 
@@ -917,7 +781,7 @@ def describe_structure(summary, metric, product, baseline, end):
         movement = "gained" if change > 0 else "lost"
         return (
             f"HS{product} {movement} {abs(change):.2f} percentage points of {name}’s export basket "
-            f"from {baseline} to {end}. This is the largest absolute share shift among the selected economies with comparable endpoints."
+            f"from {baseline} to {end}, the largest shift among comparable economies."
         )
     evidence = []
     ambiguous = []
@@ -944,10 +808,9 @@ def describe_structure(summary, metric, product, baseline, end):
             + ", ".join(ambiguous)
             + "."
         )
-    return (
-        " ".join(parts)
-        or "Regional coverage is insufficient to compare the selected endpoints."
-    )
+    if not parts:
+        return "Regional coverage is insufficient to compare the selected endpoints."
+    return f"{baseline} → {end}. " + " ".join(parts)
 
 
 def validate_import(comparison, product):
@@ -966,10 +829,8 @@ def validate_import(comparison, product):
             "M4 economies must be distinct members of USA, DEU, CHN, MEX, NLD, ITA."
         )
     year = comparison.get("year")
-    if isinstance(year, bool) or not isinstance(year, int) or not 2020 <= year <= 2024:
-        raise ValueError(
-            "M4 analysis year must be an integer from 2020 to 2024; M5 was unchanged."
-        )
+    if type(year) is not int or year not in YEARS:
+        raise ValueError("Select an M4 analysis year from 1995 to 2024.")
     scope = "TOTAL" if product in (None, "", "TOTAL") else product
     if not isinstance(scope, str) or (scope != "TOTAL" and scope not in chapters()):
         raise ValueError("M4 product must be a valid HS2 chapter; M5 was unchanged.")
@@ -978,21 +839,6 @@ def validate_import(comparison, product):
 
 def register_callbacks(app):
     import_fields = ("countries", "product", "baseline", "event", "window", "metric")
-
-    @app.callback(
-        Output(cid("import-preview"), "children"),
-        Input("M4-comparison", "data"),
-        Input("M4-inspect", "value"),
-        Input(ACTIVE_MODULE, "data"),
-    )
-    def import_preview(comparison, product, active):
-        guard_active(MODULE_ID, active)
-        try:
-            countries, scope, end = validate_import(comparison, product)
-        except ValueError:
-            return "M4 recovery import · 2020–2024 analysis years · 2019 baseline."
-        label = "All products" if scope == "TOTAL" else "HS" + scope
-        return f"{', '.join(countries)} · {label} · {end} · 2019 baseline · 2020 event"
 
     @app.callback(
         Output(cid("undo-import"), "hidden"),
@@ -1019,11 +865,14 @@ def register_callbacks(app):
     @app.callback(
         Output(cid("metric"), "value", allow_duplicate=True),
         Input(cid("product"), "value"),
+        Input(cid("import-reset"), "data"),
         State(ACTIVE_MODULE, "data"),
         prevent_initial_call=True,
     )
-    def default_metric(product, active):
+    def default_metric(product, _reset, active):
         guard_active(MODULE_ID, active)
+        if f"{cid('import-reset')}.data" in ctx.triggered_prop_ids:
+            return no_update
         return "intra" if product == "TOTAL" else "product"
 
     @app.callback(
@@ -1045,6 +894,7 @@ def register_callbacks(app):
         Input(cid("undo-import"), "n_clicks"),
         State("M4-comparison", "data"),
         State("M4-inspect", "value"),
+        State("M4-products", "value"),
         State(ACTIVE_MODULE, "data"),
         State("M4-year", "value"),
         State("M4-case", "data"),
@@ -1053,7 +903,7 @@ def register_callbacks(app):
         State(cid("import-history"), "data"),
         prevent_initial_call=True,
     )
-    def presets(pandemic, vehicles, crisis, imported, undo, comparison, product,
+    def presets(pandemic, vehicles, crisis, imported, undo, comparison, product, products,
                 active, source_year, source_case, source_detail, *values):
         guard_active(MODULE_ID, active)
         trigger = ctx.triggered_id
@@ -1062,30 +912,44 @@ def register_callbacks(app):
             if not history or local != history["applied"]:
                 return [no_update] * 6 + ["Selection has changed. Nothing to undo."] + [no_update] * 4
             return (
-                *history["before"][:6], "Previous selection restored.",
+                *history["before"][:6], "",
                 {"source": "undo", "click": undo, "year": history["before"][6]},
                 None, None, None,
             )
         if trigger == cid("import"):
             try:
-                countries, scope, end = validate_import(comparison, product)
-                if source_year is not None and source_year != end:
+                # A single chapter filter is an explicit scope even if the
+                # hidden detail chart is still inspecting another chapter.
+                scope = products[0] if isinstance(products, list) and len(products) == 1 else product
+                countries, scope, year = validate_import(comparison, scope)
+                if source_year is not None and source_year != year:
                     raise ValueError("Wait for M4 to finish loading the current year.")
+                if products and not set(products).issubset(comparison.get("products", [])):
+                    raise ValueError("Wait for M4 to finish applying the current products.")
                 request_id = (source_case or {}).get("transfer_request")
                 if request_id and (source_detail or {}).get("transfer_request") != request_id:
                     raise ValueError("Wait for M4 to finish applying the current selection.")
             except ValueError as exc:
                 return [no_update] * 6 + [str(exc)] + [no_update] * 4
-            applied = [countries, scope, 2019, 2020, [2016, end],
+            if year >= 2020:
+                baseline, event, window = 2019, 2020, [2016, year]
+            else:
+                # Historical imports use adjacent years. The earliest year
+                # can only serve as a baseline, but is still the inspected year.
+                baseline = max(YEARS[0], year - 1)
+                event = baseline + 1
+                window = [max(YEARS[0], year - 4), event]
+            applied = [countries, scope, baseline, event, window,
                        "intra" if scope == "TOTAL" else "product"]
+            if applied + [year] == local:
+                return [no_update] * 6 + [""] + [no_update] * 4
             return (
                 *applied,
-                f"Imported from M4: {', '.join(countries)} · "
-                f"{'All products' if scope == 'TOTAL' else 'HS' + scope} · 2016–{end}.",
-                imported,
+                "",
+                {"source": "import", "click": imported, "year": year},
                 None,
                 None,
-                {"before": local, "applied": applied + [end]},
+                {"before": local, "applied": applied + [year]},
             )
         key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
         scope, baseline, event, window, measure = CASES[key][:5]
@@ -1122,7 +986,7 @@ def register_callbacks(app):
             return no_update, no_update
         trigger = ctx.triggered_id
         if f"{cid('import-reset')}.data" in ctx.triggered_prop_ids:
-            if isinstance(reset, dict) and reset.get("source") == "undo":
+            if isinstance(reset, dict):
                 year = reset.get("year")
                 if type(year) is int and window[0] <= year <= window[1]:
                     return year, year
@@ -1167,12 +1031,6 @@ def register_callbacks(app):
         Output(cid("rows"), "data"),
         Output(cid("summary"), "data"),
         Output(cid("message"), "children"),
-        Output(cid("recovery-finding-question"), "children"),
-        Output(cid("structure-finding-question"), "children"),
-        Output(cid("finding"), "children"),
-        Output(cid("implication"), "children"),
-        Output(cid("recovery-interpretation"), "children"),
-        Output(cid("structure-interpretation"), "children"),
         Output(cid("recovery-question"), "children"),
         Output(cid("recovery-title"), "children"),
         Output(cid("structure-question"), "children"),
@@ -1185,6 +1043,8 @@ def register_callbacks(app):
         Output(cid("inspect-year"), "options"),
         Output(cid("detail-year"), "children"),
         Output(cid("recovery-caption"), "children"),
+        Output(cid("summary-finding"), "children"),
+        Output(cid("summary-implication"), "children"),
         Input(cid("countries"), "value"),
         Input(cid("product"), "value"),
         Input(cid("baseline"), "value"),
@@ -1209,8 +1069,6 @@ def register_callbacks(app):
             countries, product, baseline, event, window, metric, selected,
             chart_type="bar", show_country_charts=True
         )
-        v["recovery_finding_question"] = v["recovery_question"].split(" / ", 1)[-1]
-        v["structure_finding_question"] = v["structure_question"].split(" / ", 1)[-1]
         return tuple(
             v[k]
             for k in [
@@ -1224,12 +1082,6 @@ def register_callbacks(app):
                 "rows",
                 "summary",
                 "message",
-                "recovery_finding_question",
-                "structure_finding_question",
-                "finding",
-                "implication",
-                "recovery_interpretation",
-                "structure_interpretation",
                 "recovery_question",
                 "recovery_title",
                 "structure_question",
@@ -1242,6 +1094,8 @@ def register_callbacks(app):
                 "year_options",
                 "detail_year",
                 "recovery_caption",
+                "summary_finding",
+                "implication",
             ]
         )
 

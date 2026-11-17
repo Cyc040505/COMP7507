@@ -29,15 +29,30 @@ def main():
         page.goto(args.url, wait_until="networkidle")
         page.locator("#nav-M1").click()
         expect(page.locator("#M1-finding")).to_contain_text("Japan")
+
+        def choose(control, option):
+            page.locator(f"#M1-{control}").click()
+            page.get_by_role("dialog").get_by_text(option, exact=True).click()
+
+        def expect_match_count(count):
+            page.wait_for_function("""count => {
+                const graph = document.querySelector('#M1-graph .js-plotly-plot');
+                return graph?.data
+                    ?.filter(trace => ['Matches', 'Comparison'].includes(trace.name))
+                    .reduce((n, trace) => n + trace.customdata.length, 0) === count;
+            }""", arg=count)
+
         scope = page.locator("#M1-scope")
-        match_status = page.locator("#M1-match-status")
+        finding = page.locator("#M1-finding")
         expect(scope).to_contain_text("24 economies shown")
-        expect(match_status).to_contain_text("2 other economies match GDP")
+        expect(page.locator("#M1-match-status")).to_have_count(0)
+        expect_match_count(2)
         expect(page.locator("#M1-cards")).to_contain_text("35.27%")
         expect(page.locator("#M1-cards")).to_contain_text("18.70%")
         expect(page.locator("#M1-relative")).to_contain_text("5.5% lower")
         expect(page.locator("#M1-relative")).to_contain_text("49.9% lower")
-        expect(page.locator("#M1-relative")).to_contain_text("16.57 percentage points lower")
+        expect(page.locator("#M1-relative p.m1-note")).to_have_text("Germany = 100")
+        expect(page.locator("#M1-relative")).not_to_contain_text("percentage points lower")
         page.wait_for_function("document.querySelector('#M1-relative-graph .js-plotly-plot')?._fullLayout")
         def check_reference_edges():
             page.wait_for_function("""() => {
@@ -56,25 +71,22 @@ def main():
         check_reference_edges()
         page.screenshot(path=str(screenshots / "M1_desktop.png"), full_page=True)
         checks.append("Default Germany/Japan cards, finding and desktop screenshot")
-        expect(page.locator("#M1-customize")).not_to_have_attribute("open", "")
-        expect(page.locator("#M1-year")).to_be_hidden()
-        expect(page.locator("#M1-amounts")).not_to_have_attribute("open", "")
-        expect(page.locator("#M1-cards")).to_be_hidden()
+        expect(page.locator("#M1-customize")).to_have_count(0)
+        dropdowns = [page.locator(f"#M1-{control}") for control in ("year", "anchor", "factor")]
+        for dropdown in dropdowns:
+            expect(dropdown).to_be_visible()
+        boxes = [dropdown.bounding_box() for dropdown in dropdowns]
+        assert [round(box["height"]) for box in boxes] == [36, 36, 36]
+        assert len({round(box["y"]) for box in boxes}) == 1
+        assert page.locator("#M1-mode").bounding_box()["y"] > boxes[0]["y"] + boxes[0]["height"]
         expect(page.locator("#M1-data-details")).not_to_have_attribute("open", "")
         expect(page.locator("#M1-relative-graph")).to_be_visible()
-        page.locator("#M1-amounts > summary").click()
+        expect(page.locator("#M1-relative + #M1-amounts")).to_be_visible()
         expect(page.locator("#M1-cards")).to_be_visible()
-        page.locator("#M1-amounts > summary").click()
-        customize = page.locator("#M1-customize > summary")
-        customize.focus()
-        page.keyboard.press("Enter")
-        expect(page.locator("#M1-year")).to_be_visible()
-        customize.click()
-        expect(page.locator("#M1-year")).to_be_hidden()
-        customize.click()
-        expect(page.locator('#M1-anchor input[value="DEU"]')).to_be_checked()
+        expect(page.locator("#M1-takeaway")).to_have_count(0)
+        expect(page.locator("#M1-anchor")).to_contain_text("Germany (DEU)")
         expect(page.locator("#nav-M4")).to_be_visible()
-        checks.append("Filters, exact values and data default to collapsed; keyboard toggle preserves selection and module navigation")
+        checks.append("Three aligned dropdowns, Match by below, exact values visible under the bars, and data details collapsed")
 
 
         def ranges():
@@ -129,7 +141,7 @@ def main():
             });
         }""")
         initial = ranges()
-        status = match_status.inner_text()
+        initial_finding = finding.inner_text()
         plot = page.locator("#M1-graph .nsewdrag").bounding_box()
         page.mouse.move(plot["x"] + plot["width"]*.5, plot["y"] + plot["height"]*.5)
         completed = graph.evaluate("g => g.completedGestures")
@@ -161,7 +173,7 @@ def main():
         expect(page.locator("#M4-panel")).to_be_visible()
         page.locator("#nav-M1").click()
         expect(page.locator("#M1-panel")).to_be_visible()
-        expect(match_status).to_have_text(status)
+        expect(finding).to_have_text(initial_finding)
         assert ranges() == panned, (ranges(), panned)
         page.locator("#M1-graph").scroll_into_view_if_needed()
         plot = page.locator("#M1-graph .nsewdrag").bounding_box()
@@ -180,7 +192,7 @@ def main():
         page.locator("#M1-mode").get_by_text("Similar exports", exact=True).click()
         expect(page.locator("#M1-finding")).to_contain_text("USA")
         expect(page.locator("#M1-comparator")).to_contain_text("USA")
-        expect(page.locator("#M1-relative")).to_contain_text("USA compared with Germany")
+        expect(page.locator("#M1-relative p.m1-note")).to_have_text("Germany = 100")
         def check_usa_label():
             page.wait_for_function("""() => {
                 const graph = document.querySelector('#M1-graph');
@@ -211,15 +223,15 @@ def main():
             const g = document.querySelector('#M1-relative-graph .js-plotly-plot');
             return g.data[0].x[0] > 600 && g._fullLayout.xaxis.range[1] > Math.max(...g.data[0].x);
         }""")
-        page.locator("#M1-factor").get_by_text("1.5×", exact=True).click()
-        expect(page.locator("#M1-match-status")).to_contain_text("1.5]")
+        choose("factor", "1.5×")
+        expect(page.locator("#M1-factor")).to_contain_text("1.5×")
         page.locator("#M1-mode").get_by_text("Similar GDP", exact=True).click()
-        expect(page.locator("#M1-match-status")).to_contain_text("4 other economies")
+        expect_match_count(4)
         checks.append("Both matching dimensions and both threshold choices")
 
         # Click an actual SVG scatter point, not the callback endpoint.
-        page.locator("#M1-factor").get_by_text("1.25×", exact=True).click()
-        expect(page.locator("#M1-match-status")).to_contain_text("2 other economies")
+        choose("factor", "1.25×")
+        expect_match_count(2)
         page.wait_for_load_state("networkidle")
         page.locator("#M1-graph").scroll_into_view_if_needed()
         page.wait_for_function("Array.from(document.querySelectorAll('#M1-graph .point')).some(e => e.__data__?.data?.[0] === 'IND')")
@@ -229,35 +241,37 @@ def main():
                 element.click(force=True)
                 break
         expect(page.locator("#M1-finding")).to_contain_text("India")
-        expect(page.locator("#M1-relative")).to_contain_text("India compared with Germany")
+        expect(page.locator("#M1-relative p.m1-note")).to_have_text("Germany = 100")
         checks.append("Actual India scatter point click updates comparison")
 
-        page.locator("#M1-factor").get_by_text("1.5×", exact=True).click()
-        expect(page.locator("#M1-match-status")).to_contain_text("4 other economies")
+        choose("factor", "1.5×")
+        expect_match_count(4)
         page.locator("#M1-year").click()
         page.get_by_role("dialog").get_by_text("2010", exact=True).click()
-        expect(page.locator("#M1-scope")).to_contain_text("2010")
+        expect(page.locator("#M1-year")).to_contain_text("2010")
         expect(page.locator("#M1-finding")).to_contain_text("2010")
         assert "India" not in page.locator("#M1-comparator").inner_text()
         checks.append("Year change clears an ineligible comparison and stale point selection")
 
         page.locator("#M1-year").click()
         page.get_by_role("dialog").get_by_text("2023", exact=True).click()
-        page.locator("#M1-factor").get_by_text("1.25×", exact=True).click()
-        page.locator("#M1-anchor").get_by_text("United States", exact=True).click()
-        expect(page.locator("#M1-match-status")).to_contain_text("No matching economy")
+        choose("factor", "1.25×")
+        choose("anchor", "United States (USA)")
+        expect(page.locator("#M1-comparator")).to_be_disabled()
         expect(scope).to_contain_text("24 economies shown")
-        expect(match_status).to_contain_text("0 other economies match GDP")
+        expect_match_count(0)
         expect(page.locator("#M1-finding")).to_contain_text("No two-country finding")
         expect(page.locator("#M1-relative-graph")).to_have_count(0)
         page.screenshot(path=str(screenshots / "M1_no_match.png"), full_page=True)
         checks.append("No-match state without automatic widening or stale cards")
 
-        assert page.locator('#M1-anchor input[type="radio"]').count() == 6
+        page.locator("#M1-anchor").click()
+        expect(page.get_by_role("dialog").get_by_role("option")).to_have_count(6)
+        page.keyboard.press("Escape")
         assert page.locator('[id^="M1-case-"]').count() == 0
         for code, name in [("CHN", "China"), ("MEX", "Mexico"), ("NLD", "Netherlands"), ("ITA", "Italy"), ("DEU", "Germany")]:
-            page.locator("#M1-anchor").get_by_text(name, exact=True).click()
-            expect(page.locator(f'#M1-anchor input[value="{code}"]')).to_be_checked()
+            choose("anchor", f"{name} ({code})")
+            expect(page.locator("#M1-anchor")).to_contain_text(f"{name} ({code})")
             expect(page.locator("#M1-cards")).to_contain_text(code)
         expect(page.locator("#M1-finding")).to_contain_text("Japan")
         checks.append("Single six-country anchor selector with selected state; global comparison candidates")
@@ -267,7 +281,7 @@ def main():
         expect(page.locator("#M1-finding")).to_contain_text("Japan")
         checks.append("Navigation away and back preserves M1 state")
 
-        page.get_by_text("All matches, data coverage and sources", exact=True).click()
+        page.locator("#M1-data-details > summary").click()
         expect(page.locator("#M1-table")).to_contain_text("India")
         with page.expect_download() as event:
             page.locator("#M1-export").click()
@@ -281,10 +295,9 @@ def main():
         assert abs(jp.gdp_anchor_100 - 100 * 4212944.753 / 4456081.017) < 1e-8
         assert abs(jp.export_gdp_gap_pp + 16.5673056073) < 1e-7
         checks.append("Downloaded CSV agrees with visible matches and selected comparison")
-        checks.append("Relative GDP/export bars, percentage-point gap and CSV agree; >100 values remain visible; empty comparisons clear the chart")
+        checks.append("Relative GDP/export bars agree with CSV indices; CSV retains the percentage-point gap")
 
-        page.get_by_text("All matches, data coverage and sources", exact=True).click()
-        page.locator("#M1-customize > summary").click()
+        page.locator("#M1-data-details > summary").click()
         page.set_viewport_size({"width": 390, "height": 844})
         page.locator("#M1-graph").scroll_into_view_if_needed()
         page.wait_for_function("document.querySelector('#M1-graph .js-plotly-plot')._fullLayout.width < 450")
@@ -301,27 +314,36 @@ def main():
         checks.append("390px viewport without horizontal page overflow or graph/card overlap; mobile screenshot")
 
         page.set_viewport_size({"width": 1440, "height": 1100})
+        choose("comparator", "India · IND")
+        expect(finding).to_contain_text("India")
         page.locator("#nav-M0").click()
         page.locator("#M0-focus-economy").click()
         page.get_by_role("dialog").get_by_text("United States", exact=True).click()
         page.locator("#nav-M1").click()
-        expect(page.locator("#M1-year")).to_be_hidden()
-        expect(page.locator("#M1-handoff-preview")).to_contain_text("USA")
+        expect(page.locator("#M1-year")).to_be_visible()
         page.locator("#M1-handoff").click()
-        expect(page.locator("#M1-handoff-status")).to_contain_text("Applied from Overview · USA · 1995")
-        expect(page.locator("#M1-toolbar-scope")).to_contain_text("USA · 1995")
-        expect(scope).to_contain_text("1995 ·")
-        expect(match_status).to_contain_text("USA")
-        expect(page.locator("#M1-year")).to_be_hidden()
+        expect(page.locator("#M1-year")).to_contain_text("1995")
+        page.wait_for_function("""() => document.querySelector('#M1-graph .js-plotly-plot')
+            ?._fullLayout?.uirevision === 'M1-1995-USA-gdp-1.25'""")
+        expect(page.locator("#M1-anchor")).to_contain_text("United States (USA)")
+        page.locator("#M1-handoff").click()
         page.locator("#nav-M2").click()
-        expect(page.locator("#M2-handoff-preview")).to_contain_text("USA · 1995")
         page.locator("#M2-handoff").click()
-        expect(page.locator("#M2-handoff-status")).to_contain_text("Applied from M1 · USA · 1995")
+        expect(page.locator("#M2-exporter")).to_contain_text("United States")
+        expect(page.locator("#M2-year")).to_contain_text("1995")
+        expect(page.locator("#M2-map-title")).to_contain_text("United States")
+        expect(page.locator("#M2-handoff-preview")).to_have_count(0)
+        expect(page.locator("#M2-handoff-status")).to_be_empty()
+        expect(page.locator("#M2-stats")).not_to_contain_text("have no distance record")
+        expect(page.locator("#M2-stats")).not_to_contain_text("Top partner:")
         page.locator("#nav-M1").click()
         page.locator("#M1-handoff-undo").click()
-        expect(page.locator("#M1-handoff-status")).to_have_text("Previous selection restored.")
-        expect(page.locator("#M1-toolbar-scope")).to_contain_text("DEU · 2023")
-        checks.append("Overview and Geography handoffs, live selection, and Undo work with the Economy filters collapsed")
+        expect(page.locator("#M1-year")).to_contain_text("2023")
+        expect(finding).to_contain_text("Germany")
+        expect(finding).to_contain_text("India")
+        expect(page.locator("#M1-anchor")).to_contain_text("Germany (DEU)")
+        expect(page.locator("#M1-comparator")).to_contain_text("India")
+        checks.append("Overview and Geography handoffs, including Undo restoring the previous comparison economy")
         assert not errors, errors
         browser.close()
     report = {"checks_passed": checks, "browser_errors": errors}

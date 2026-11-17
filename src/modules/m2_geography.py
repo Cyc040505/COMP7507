@@ -500,22 +500,10 @@ def _stats_view(res, demo: bool, requested_metric: str) -> list:
         notes.append(
             f"Requested metric '{requested_metric}' is unavailable; using '{s['metric_used']}' instead."
         )
-    if s["n_missing"]:
-        notes.append(
-            f"{s['n_missing']} partner(s) have no distance record: excluded from distance analysis, retained in share denominators."
-        )
-
     children = [kpis]
     if notes:
         children.append(
             html.Ul([html.Li(note) for note in notes], className="m2-notes")
-        )
-    if s["top_partner"]:
-        children.append(
-            html.P(
-                f"Top partner: {s['top_name']} ({s['top_partner']}) · "
-                f"{s['top_share']:.2f}% of this scope."
-            )
         )
     return children
 
@@ -585,7 +573,7 @@ def layout():
         children=[
             components.module_intro(
                 "Does distance shape trade?",
-                "Locate the main export partners, then compare typical export shares across distance groups.",
+                "Nearby partners often account for larger export shares, and rankings vary by product.",
                 actions=handoffs.actions(cid, "Use current M1 selection"),
             ),
             dcc.Store(id=cid("selected")),
@@ -664,7 +652,6 @@ def layout():
                 html.Div([
                     html.Div([html.Span("PARTNER GEOGRAPHY", className="m2-map-eyebrow"),
                               html.H3(id=cid("map-title"), className="card-title-text")]),
-                    html.Span(id=cid("map-badge"), className="m2-scope-badge"),
                 ], className="m2-map-heading"),
                 html.Div([
                     html.Span([html.I(className="m2-key-exporter"), "Exporter"]),
@@ -710,7 +697,7 @@ def layout():
                             style={"height": "430px"},
                             config={"displayModeBar": False},
                         ),
-                        html.P("Gold line: median share in up to five similarly sized distance groups. Shaded band: the middle 50% of partner shares, not a confidence interval. All valid partners are included regardless of the map filter. This is a descriptive comparison, not a causal effect.", className="m2-scatter-note")],
+                        html.P("Gold line: median share by distance group. Shaded band: the middle 50% of partner shares.", className="m2-scatter-note")],
                     ),
                     components.verification_panel(
                         _HYPOTHESIS,
@@ -725,9 +712,16 @@ def layout():
             html.Div(
                 id=cid("selection-detail"), className="selection-detail", role="status"
             ),
-            html.Details(
+            components.module_data_details(
                 [
-                    html.Summary("Top-share & nearest-partner evidence"),
+                    html.P(
+                        "The table flags partners in the top 10 by export share, the nearest 10, or both. The CSV covers all partners for the selected economy, year and product."
+                    ),
+                    components.module_data_table_header(
+                        "Top-share & nearest-partner evidence",
+                        download_id=cid("export"),
+                        download_label="Download complete partner and distance data (CSV)",
+                    ),
                     dash_table.DataTable(
                         id=cid("comparison-table"),
                         columns=[
@@ -751,29 +745,24 @@ def layout():
                         },
                         style_header={"fontWeight": 600, "backgroundColor": "#eef3ff"},
                     ),
-                ]
-            ),
-            html.Details(
-                className="card",
-                children=[
-                    html.Summary("How this view works"),
-                    html.Button("Download complete partner evidence", id=cid("export")),
-                    html.P(
-                        "The amber country marks the exporter. Partner countries are filled in teal: darker means a larger export share in Top 10 by share and Top 40 partners, or a shorter distance in Nearest 10. Grey countries are outside the displayed selection. Hover over a country to see its export value, share and distance. The ranking summarises the current map selection. The table lists the top-10 partners by share and the nearest 10 partners in one place and marks any overlap."
-                    ),
-                    html.P(
-                        "Spearman ρ is reported as a supporting description of the distance–share association, not a causal estimate."
+                    components.module_data_methods(
+                        [
+                            html.P(
+                                "BACI provides goods exports and GeoDist provides partner distances. Spearman ρ describes the association between the ranks of distance and export share."
+                            ),
+                            html.P(
+                                "Amber marks the exporter. Darker teal marks higher share in the share views and shorter distance in Nearest 10. Grey marks countries outside the displayed selection. Hover over a partner for its value, share and distance."
+                            ),
+                        ],
                     ),
                 ],
+                id=cid("data-details"),
             ),
         ],
     )
 
 
 def register_callbacks(app):
-    def economy_preview(country, year, _context):
-        return "From M1 · " + handoffs.description(country, year) if country and year else ""
-
     def from_economy(country, year, context, _current):
         country, year, product = handoffs.scope(country, year, last_year=2023)
         if not context or context.get("anchor") != country or context.get("year") != year:
@@ -781,13 +770,13 @@ def register_callbacks(app):
         if not context.get("anchor_valid"):
             raise ValueError("The selected M1 economy does not have comparable source data.")
         handoffs.require_trade(country, year, product)
-        return [country, year, product], "Applied from M1 · " + handoffs.description(country, year)
+        return [country, year, product]
 
     handoffs.register_transfer(
         app, MODULE_ID, cid,
         [("exporter", "value", False), ("year", "value", False), ("product", "value", False)],
         [("M1-anchor", "value"), ("M1-year", "value"), ("M1-context", "data")],
-        economy_preview, from_economy,
+        from_economy,
     )
     @app.server.route("/m2-map-assets/<version>/world_50m.json", endpoint="m2_topology")
     def m2_topology(version):
@@ -890,7 +879,6 @@ def register_callbacks(app):
         Output(cid("map-encoding"), "children"),
         Output(cid("map-context"), "data"),
         Output(cid("map-title"), "children"),
-        Output(cid("map-badge"), "children"),
         Output(cid("map-scale"), "children"),
         Output(cid("partner-count"), "children"),
         Input(cid("year"), "value"),
@@ -927,7 +915,7 @@ def register_callbacks(app):
                 options,
                 [],
                 "Select an exporter to colour partner countries",
-                {"rows": {}, "mapCodes": []}, "Select an exporter", "", [], "00",
+                {"rows": {}, "mapCodes": []}, "Select an exporter", [], "00",
             )
 
         res = _analysis(year, exporter, product, dist_metric)
@@ -960,7 +948,6 @@ def register_callbacks(app):
             encoding,
             {**_map_context(res, exporter, show, figure), "key": f"{year}:{exporter}:{product}:{show}:{dist_metric}"},
             f"{meta.set_index('iso3').loc[exporter, 'name']} · Export partners",
-            f"{year} · {len(_focus_subset(res['frame'], show))} partners",
             _scale_view(res, show),
             f"{len(_focus_subset(res['frame'], show)):02}",
         )
@@ -988,8 +975,6 @@ def scatter_figure(res, selected=None):
             hovertemplate="%{text} (%{customdata})<br>%{x:,.0f} km · %{y:.3f}%<extra></extra>",
         )
     )
-    total = res["frame"].value.sum()
-    coverage = d.value.sum() / total if total else 0
     profile = distance_profile(res["frame"])
     if not profile.empty:
         fig.add_trace(go.Scatter(
@@ -1031,13 +1016,8 @@ def scatter_figure(res, selected=None):
         height=430,
         xaxis={"type": "log", "title": "Partner distance (km · log scale)"},
         yaxis={"type": "log", "title": "Export share (% · log scale)"},
-        title=dict(text=(
-            f"Near-group median {profile.iloc[0]['share']:.3f}% → far-group median {profile.iloc[-1]['share']:.3f}%"
-            if not profile.empty else "Too few distinct distances for a grouped trend"
-        ) + f"<br><sup>{len(d)} partners · {coverage:.1%} of export value has valid distance</sup>",
-                   font=dict(size=12, color=theme.MUTED), x=0, xanchor="left"),
         legend=dict(orientation="h", x=0, y=1.02, yanchor="bottom", font=dict(size=10), traceorder="normal"),
-        margin={"l": 75, "r": 20, "t": 95, "b": 60},
+        margin={"l": 75, "r": 20, "t": 42, "b": 60},
         uirevision="M2-distance-share",
     )
     return fig

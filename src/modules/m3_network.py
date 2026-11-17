@@ -47,7 +47,7 @@ def layout():
         children=[
             components.module_intro(
                 "Trade partners & regional reach",
-                "Follow the flows, compare partner shares, then test how destinations change across products.",
+                "Home regions often lead in total exports, and the leading region can change by product.",
                 actions=handoffs.actions(cid, "Use current M2 selection"),
             ),
             dcc.Store(id=cid("selected")),
@@ -115,10 +115,7 @@ def layout():
                 [
                     html.Div(id=cid("kpis")),
                     html.Div(
-                        [
-                            html.Button("Reset case", id=cid("reset")),
-                            html.Button("Export data ↓", id=cid("export")),
-                        ],
+                        html.Button("Reset case", id=cid("reset")),
                         className="m3-actions",
                     ),
                 ],
@@ -163,7 +160,6 @@ def layout():
                                 role="status",
                             ),
                             html.P(
-                                "Arrows point to importers · Width encodes value · Moving arrowheads trace each flow from exporter to importer · The selected partner's country is filled in the same amber as its arc. Capitals locate economies; curves are not transport routes.",
                                 id=cid("map-caption"),
                                 className="m3-map-caption",
                             ),
@@ -194,26 +190,18 @@ def layout():
             html.Div(
                 [
                     components.card(
-                        "Regional shares · current selection",
+                        "Regional shares",
                         html.Div(id=cid("selected-regions")),
                     ),
                     components.card(
                         "03  Does trade follow regional gravity?",
                         [
-                            html.P(
-                                "Same product pair for every case · HS85 electrical equipment vs HS87 vehicles & parts",
-                                className="chart-subtitle",
-                            ),
                             html.H4(id=cid("regional-takeaway"), className="m3-takeaway"),
                             dcc.Graph(
                                 id=cid("gravity"),
                                 responsive=True,
                                 style={"height": "190px"},
                                 config=graph_config,
-                            ),
-                            html.P(
-                                "Each bar is the home region's share minus the share of the largest other region, in percentage points; both shares are printed in the row label. Left of zero means the home region is out-traded — an exception to the gravity pattern. Grey means unknown-region trade is large enough to reverse the verdict.",
-                                className="m3-map-caption",
                             ),
                             html.H5(
                                 "Regional mix by product",
@@ -225,7 +213,10 @@ def layout():
                                 style={"height": "380px"},
                                 config=graph_config,
                             ),
-                            html.P("All partners, including unknown regions, remain in the denominator. Differences use unrounded shares; pp = percentage points.", className="m3-map-caption m3-region-caption"),
+                            html.P(
+                                "Shares include unknown regions. Differences use unrounded values. pp = percentage points.",
+                                className="m3-map-caption m3-region-caption",
+                            ),
                         ],
                     ),
                     components.verification_panel(
@@ -238,15 +229,16 @@ def layout():
                 ],
                 className="m3-secondary",
             ),
-            html.Div(id=cid("scope"), className="scope-note"),
-            html.Details(
+            html.Div(id=cid("scope"), className="scope-note", role="status"),
+            components.module_data_details(
                 [
-                    html.Summary("Scope, methods & complete partner data"),
                     html.P(
-                        "BACI HS92 V202601; nominal merchandise trade, thousand current USD. Shares use all partners before Top-N. Unknown regions remain in the denominator. Regions follow GeoDist: Russia is in Asia; the Americas are not split. The matrix shows the 12 partners with the highest share in any one of the six economies for the selected year, product and direction, ordered by that peak share; Other includes remaining partners and is not Unknown. Blank rows mean no observed total. Zero cells mean no recorded flow in the selected source, not proof of structural absence."
+                        "Shares use all partners, including those with unknown regions. Select a table cell to highlight the partner in the charts."
                     ),
-                    html.P(
-                        "Click a focal economy on the map to switch; other partners select a detail. Select a table cell for the same partner highlight."
+                    components.module_data_table_header(
+                        "Complete partner data",
+                        download_id=cid("export"),
+                        download_label="Download complete partner trade data (CSV)",
                     ),
                     dash_table.DataTable(
                         id=cid("table"),
@@ -285,10 +277,21 @@ def layout():
                             "fontSize": 12,
                         },
                     ),
-                    html.P(
-                        "Trade value is in thousand current USD; table shares are percentages. CSV retains fractional shares and the complete current partner scope."
+                    components.module_data_methods(
+                        [
+                            html.P(
+                                "BACI HS92 V202601 reports nominal goods trade in thousand current USD. The CSV uses fractional shares. GeoDist groups Russia in Asia and treats the Americas as one region."
+                            ),
+                            html.P(
+                                "The matrix ranks partners by their highest share across the six focal economies for the selected year, product and direction, and displays 12. Other groups the remaining partners, while Unknown is a separate region category. A blank row means no observed total. A zero cell means the source recorded no flow."
+                            ),
+                            html.P(
+                                "Select a focal economy on the map to switch the comparison, or select a partner to inspect its trade."
+                            ),
+                        ],
                     ),
-                ]
+                ],
+                id=cid("data-details"),
             ),
         ],
     )
@@ -621,9 +624,6 @@ def figures(country, year, product, direction, top, view, selected):
         if r is not None:
             summaries.append((code, r))
     reg = regional_comparison(country, year, direction)
-    cov = shown.value.sum() / total if total > 0 else 0
-    missing = d.loc[~d.partner.isin(positions().index), "value"].sum()
-    scope = f"{country} · {year} · {product} · {direction} · Top {top} covers {cov:.1%}; all-partner total ${total/1e6:,.2f}bn. Partners lacking coordinates: ${missing/1e6:,.3f}bn, retained in denominators."
     finding = gravity_takeaway(country, year, direction)
     finding += " Bounds are the identified home-region share and the same share if all unknown-region trade were home-region trade: " + (
         "; ".join(
@@ -680,9 +680,8 @@ def figures(country, year, product, direction, top, view, selected):
         direction=direction,
         unit="thousand current USD",
     ).to_dict("records")
-    if total <= 0:
-        scope += " No observed positive total; no share conclusion."
-    return fig, rank, reg, scope, finding, detail, records
+    status = "No recorded trade for this selection." if total <= 0 else ""
+    return fig, rank, reg, status, finding, detail, records
 
 
 def light_map(fig):
@@ -844,6 +843,17 @@ def gravity_test(country, year, direction):
         # Bars long enough to hold the numbers print them inside; a bar too short
         # to hold them (an almost-empty gap) prints them just past its tip.
         inside = abs(row["gap"]) / (2 * span) >= 0.16
+        hover = (
+            f"{REGION_LABEL.get(home, home)}: {row['own']:.1%}<br>"
+            f"Largest other, {REGION_LABEL.get(row['rival'], row['rival'])}: "
+            f"{row['rival_share']:.1%}<br>"
+            f"Unknown: {row['unknown']:.1%}"
+        )
+        if row["verdict"] == "unclear":
+            hover += (
+                "<br>The home region could tie or lead if all unknown trade"
+                "<br>were assigned to it."
+            )
         fig.add_trace(
             go.Bar(
                 x=[row["gap"]],
@@ -856,12 +866,7 @@ def gravity_test(country, year, direction):
                 insidetextanchor="middle",
                 cliponaxis=False,
                 textfont=dict(size=11, color="#ffffff" if inside else theme.INK),
-                hovertemplate=(
-                    f"{REGION_LABEL.get(home, home)}: {row['own']:.1%}<br>"
-                    f"Largest other, {REGION_LABEL.get(row['rival'], row['rival'])}: "
-                    f"{row['rival_share']:.1%}<br>"
-                    f"Unknown: {row['unknown']:.1%}<extra></extra>"
-                ),
+                hovertemplate=hover + "<extra></extra>",
             )
         )
     fig.add_vline(x=0, line_width=1, line_color=theme.MUTED)
@@ -946,23 +951,17 @@ def gravity_takeaway(country, year, direction):
 
 
 def register_geography_transfer(app):
-    def geography_preview(country, year, product):
-        if not (country and year and product):
-            return ""
-        return "From M2 · " + handoffs.description(country, year, product) + " · Exports"
-
     def from_geography(country, year, product, _current):
         country, year, product = handoffs.scope(country, year, product)
         handoffs.require_trade(country, year, product)
-        message = handoffs.description(country, year, product) + " · Exports"
-        return [country, year, product, "export", None], "Applied from M2 · " + message
+        return [country, year, product, "export", None]
 
     handoffs.register_transfer(
         app, MODULE_ID, cid,
         [("country", "value", True), ("year", "value", True), ("product", "value", True),
          ("direction", "value", True), ("selected", "data", True)],
         [("M2-exporter", "value"), ("M2-year", "value"), ("M2-product", "value")],
-        geography_preview, from_geography,
+        from_geography,
     )
 
 
@@ -1099,7 +1098,7 @@ def register_callbacks(app):
             (
                 "Rows = six focal economies; columns = the 12 partners with the highest share in any one row, ordered left to right by that peak share for the current year, product and direction. Each cell is the partner’s share of that row’s trade, not a flow between continents. Common 0–100% scale; Other retains partners outside these columns."
                 if view == "matrix"
-                else "Arrows point to importers · Width encodes value · Moving arrowheads trace each flow from exporter to importer · The selected partner's country is filled in the same amber as its arc. Capitals locate economies; curves are not transport routes."
+                else ""
             ),
         )
 

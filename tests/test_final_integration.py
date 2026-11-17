@@ -137,7 +137,7 @@ class FinalIntegration(unittest.TestCase):
         }
         r = call("M3-graph.figure", values, "active-module.data")
         self.assertEqual(r.status_code, 200, r.data[:300])
-        self.assertIn("50.5%", r.json["response"]["M3-scope"]["children"])
+        self.assertEqual(r.json["response"]["M3-scope"]["children"], "")
         for source, point, expected in [
             ("graph", {"location": "USA"}, "USA"),
             ("graph", {"location": "JPN"}, None),
