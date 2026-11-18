@@ -64,7 +64,7 @@ def layout():
         components.module_intro(
             "Similar GDP. Similar exports?",
             "Similar economic size does not necessarily mean similar goods exports.",
-            actions=handoffs.actions(cid, "Use current overview selection"),
+            actions=handoffs.actions(cid, "Use Overview year"),
         ),
         html.Div([
             html.Div([
@@ -272,15 +272,15 @@ def relative_comparison(a, b, year):
 
 
 def register_callbacks(app):
-    def overview_preview(year, _rendered, _playing, _country):
+    def overview_preview(year, _rendered, _playing):
         return "Latest comparable year: 2023." if year == 2024 else ""
 
-    def from_overview(year, rendered, playing, country, current):
+    def from_overview(year, rendered, playing, current):
         if playing or year is None or rendered != year:
             raise ValueError("Pause Overview and wait for the selected year to finish loading.")
         # The preview explicitly advertises 2023 before the user applies 2024.
         year = 2023 if year == 2024 else year
-        country, year, _ = handoffs.scope(country or current[0], year, last_year=2023)
+        country, year, _ = handoffs.scope(current[0], year, last_year=2023)
         rows = data_for_year(year)
         if not rows.loc[rows.country.eq(country), "valid"].any():
             raise ValueError("Comparable GDP and exports are unavailable for that economy and year.")
@@ -289,8 +289,7 @@ def register_callbacks(app):
     handoffs.register_transfer(
         app, MODULE_ID, cid,
         [("anchor", "value", False), ("year", "value", False)],
-        [("M0-year", "value"), ("M0-rendered-year", "data"),
-         ("M0-playing", "data"), ("M0-focus-economy", "value")],
+        [("M0-year", "value"), ("M0-rendered-year", "data"), ("M0-playing", "data")],
         from_overview, preview=overview_preview,
         restore_on_undo=(("comparator", "value"),),
     )

@@ -129,14 +129,6 @@ def layout():
                         ],
                         className="control-field m0-year",
                     ),
-                    components.field(
-                        "Focus economy",
-                        dcc.Dropdown(
-                            id=cid("focus-economy"),
-                            options=[{"label": name, "value": code} for code, name in FOCUS_NAMES.items()],
-                            placeholder="Optional · carry into Economy",
-                        ),
-                    ),
                     dcc.RadioItems(
                         id=cid("view"),
                         options=[

@@ -98,7 +98,7 @@ module's selection and offers **Undo** in the destination before further edits.
 
 | Transfer | Settings applied |
 |---|---|
-| M0 → M1 | Focus economy when selected and analysis year. The preview shows 2023 as the latest comparable year for an Overview selection of 2024. |
+| M0 → M1 | Analysis year. The starting economy is selected in M1. The preview shows 2023 as the latest comparable year for an Overview selection of 2024. |
 | M1 → M2 | Starting economy and year. Geography starts at all products. |
 | M2 → M3 | Exporter, year and product. Trade direction is exports. |
 | M3 → M4 | Focal economy and year, with a chapter and optional comparison economies selected in M4. An import view requires an explicit switch to comparing exports. |

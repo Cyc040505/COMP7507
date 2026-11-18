@@ -72,7 +72,7 @@ html { scrollbar-gutter: stable; }
   flex-basis: 330px;
 }
 
-.toolbar-row > :is(.control-field,.m3-field):has(#M0-focus-economy,#M1-anchor,#M2-exporter,#M3-country,#M2-product,#M3-product) {
+.toolbar-row > :is(.control-field,.m3-field):has(#M1-anchor,#M2-exporter,#M3-country,#M2-product,#M3-product) {
   flex-basis: var(--toolbar-field);
 }
 .toolbar-row > .control-field:has(#M1-factor) { flex-basis: 125px; }
