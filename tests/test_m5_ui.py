@@ -114,7 +114,7 @@ class TimeInterface(unittest.TestCase):
                 "outputs": output if len(output) > 1 else output[0],
                 "inputs": payload(meta["inputs"]),
                 "state": payload(meta["state"]),
-                "changedPropIds": [changed],
+                "changedPropIds": [changed] if isinstance(changed, str) else changed,
             },
         )
         return res
@@ -161,7 +161,7 @@ class TimeInterface(unittest.TestCase):
     def test_import_rejections_preserve_all_controls(self):
         cases = [([], 2023, "87"), (["CHN"] * 2, 2023, "87"),
                  (["JPN"], 2023, "87"), (list(m.FOCUS_COUNTRIES) + ["JPN"], 2023, "87"),
-                 (["CHN"], 2019, "87"), (["CHN"], 2025, "87"),
+                 (["CHN"], 1994, "87"), (["CHN"], 2025, "87"),
                  (["CHN"], None, "87"), (["CHN"], "2023", "87"),
                  (["CHN"], 2023, "invalid")]
         for countries, year, product in cases:
@@ -198,6 +198,39 @@ class TimeInterface(unittest.TestCase):
             res = self.call(key, {"active-module.data": "M5", "M5-product.value": product}, "M5-product.value")
             self.assertEqual(res.json["response"]["M5-metric"]["value"], metric)
 
+    def test_import_undo_preserves_the_previous_measure_and_year(self):
+        fields = ("countries", "product", "baseline", "event", "window", "metric", "inspect-year")
+        before = [["CHN", "DEU", "MEX"], "87", 2019, 2020, [2016, 2024], "intra", 2021]
+        source = {
+            "active-module.data": "M5",
+            "M5-import.n_clicks": 1,
+            "M4-comparison.data": {"countries": ["CHN", "MEX"], "year": 2023},
+            "M4-inspect.value": "85",
+        }
+        local = {f"M5-{field}.value": value for field, value in zip(fields, before)}
+        imported = self.call("M5-countries.value", source | local, "M5-import.n_clicks")
+        history = imported.json["response"]["M5-import-history"]["data"]
+        self.assertEqual(history["before"], before)
+        current = {f"M5-{field}.value": value for field, value in zip(fields, history["applied"])}
+        current["M5-import-history.data"] = history
+        repeated = self.call(
+            "M5-countries.value", source | current | {"M5-import.n_clicks": 2}, "M5-import.n_clicks"
+        )
+        self.assertNotIn("M5-import-history", repeated.json["response"])
+        undo = self.call(
+            "M5-countries.value", source | current | {"M5-undo-import.n_clicks": 1},
+            "M5-undo-import.n_clicks",
+        ).json["response"]
+        self.assertEqual([undo[f"M5-{field}"]["value"] for field in fields[:-1]], before[:-1])
+        reset = undo["M5-import-reset"]["data"]
+        self.assertEqual(reset["year"], 2021)
+        default = self.call(
+            "M5-metric.value@",
+            source | local | {"M5-import-reset.data": reset},
+            ["M5-product.value", "M5-import-reset.data"],
+        )
+        self.assertNotIn("M5-metric", (default.get_json() or {}).get("response", {}))
+
     def test_explicit_m4_import(self):
         res = self.call(
             "M5-countries.value",
@@ -212,6 +245,37 @@ class TimeInterface(unittest.TestCase):
         self.assertEqual(res.status_code, 200, res.data[:500])
         self.assertEqual(res.json["response"]["M5-product"]["value"], "87")
         self.assertEqual(res.json["response"]["M5-countries"]["value"], ["CHN", "MEX"])
+
+    def test_import_keeps_a_historical_m4_analysis_year(self):
+        for year, window, baseline, event in [
+            (1995, [1995, 1996], 1995, 1996),
+            (2019, [2015, 2019], 2018, 2019),
+        ]:
+            with self.subTest(year=year):
+                imported = self.call("M5-countries.value", {
+                    "active-module.data": "M5", "M5-import.n_clicks": 1,
+                    "M4-year.value": year,
+                    "M4-comparison.data": {"countries": ["DEU", "USA"], "year": year},
+                    "M4-inspect.value": "85",
+                }, "M5-import.n_clicks").json["response"]
+                self.assertEqual(imported["M5-countries"]["value"], ["DEU", "USA"])
+                self.assertEqual(imported["M5-product"]["value"], "85")
+                self.assertEqual(imported["M5-window"]["value"], window)
+                self.assertEqual(imported["M5-baseline"]["value"], baseline)
+                self.assertEqual(imported["M5-event"]["value"], event)
+                inspected = self.call("M5-selected.data", {
+                    "active-module.data": "M5", "M5-window.value": window,
+                    "M5-import-reset.data": imported["M5-import-reset"]["data"],
+                }, "M5-import-reset.data").json["response"]
+                self.assertEqual(inspected["M5-inspect-year"]["value"], year)
+
+    def test_import_prefers_the_only_manual_m4_chapter(self):
+        imported = self.call("M5-countries.value", {
+            "active-module.data": "M5", "M5-import.n_clicks": 1,
+            "M4-comparison.data": {"countries": ["DEU"], "year": 2023, "products": ["87"]},
+            "M4-products.value": ["87"], "M4-inspect.value": "85",
+        }, "M5-import.n_clicks").json["response"]
+        self.assertEqual(imported["M5-product"]["value"], "87")
 
     def test_m4_import_updates_controls_without_locking_presets(self):
         values = {"active-module.data": "M5", "M5-import.n_clicks": 1,

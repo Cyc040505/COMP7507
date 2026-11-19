@@ -11,10 +11,11 @@
     "Year change clears an ineligible comparison and stale point selection",
     "No-match state without automatic widening or stale cards",
     "Single six-country anchor selector with selected state; global comparison candidates",
-    "Navigation away and back preserves M2 state",
+    "Navigation away and back preserves M1 state",
     "Downloaded CSV agrees with visible matches and selected comparison",
     "Relative GDP/export bars, percentage-point gap and CSV agree; >100 values remain visible; empty comparisons clear the chart",
-    "390px viewport without horizontal page overflow or graph/card overlap; mobile screenshot"
+    "390px viewport without horizontal page overflow or graph/card overlap; mobile screenshot",
+    "Overview and Geography handoffs, live selection, and Undo work with the Economy filters collapsed"
   ],
   "browser_errors": []
 }

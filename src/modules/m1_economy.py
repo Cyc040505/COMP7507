@@ -1,4 +1,4 @@
-"""M2: global economic scale, single-dimension matching and two-country evidence."""
+"""M1: global economic scale, single-dimension matching and two-country evidence."""
 
 from functools import lru_cache
 from math import log10
@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, State, ctx, dcc, html, dash_table, ClientsideFunction
 from dash.exceptions import PreventUpdate
 
-from src import components, config, data_loader, theme
+from src import components, config, data_loader, handoffs, theme
 from src.analytics.economy import (
     FOCUS_COUNTRIES, MODES, country_names, prepare_year,
     match_candidates, evidence_frame, display_candidates,
@@ -16,9 +16,9 @@ from src.analytics.economy import (
 from src.ids import ACTIVE_MODULE, mid
 from src.module_base import guard_active
 
-MODULE_ID = "M2"
-NAV_LABEL = "M2  Economy"
-ORDER = 2
+MODULE_ID = "M1"
+NAV_LABEL = "M1  Economy"
+ORDER = 1
 FOCUS_NAMES = ["United States", "Germany", "China", "Mexico", "Netherlands", "Italy"]
 LIMITATION = (
     "Nominal goods exports / nominal GDP compares gross trade with value added; "
@@ -33,9 +33,9 @@ def cid(name):
 
 @lru_cache(maxsize=1)
 def reference():
-    path = config.DATA_DIR / "reference/m2_country_codes_V202601.csv"
+    path = config.DATA_DIR / "reference/m1_country_codes_V202601.csv"
     if not path.exists():
-        raise FileNotFoundError("Missing M2 BACI country dictionary. Restore data/reference/m2_country_codes_V202601.csv.")
+        raise FileNotFoundError("Missing M1 BACI country dictionary. Restore data/reference/m1_country_codes_V202601.csv.")
     return pd.read_csv(path)
 
 
@@ -44,64 +44,93 @@ def data_for_year(year):
 
 
 def field(label, widget):
-    return html.Div([html.Label(label, htmlFor=widget.id), widget], className="m2-field")
+    return html.Div([html.Label(label, htmlFor=widget.id), widget], className="m1-field")
+
+
+def anchor_options(valid_codes=FOCUS_COUNTRIES):
+    return [
+        {
+            "label": f"{name} ({code})" + (" · Data unavailable" if code not in valid_codes else ""),
+            "value": code,
+        }
+        for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)
+    ]
 
 
 def layout():
-    return html.Div(className="module-inner m2", children=[
+    return html.Div(className="module-inner m1", children=[
         dcc.Store(id=cid("context")), dcc.Download(id=cid("download")),
         dcc.Store(id=cid("reference-lines-ready")),
+        components.module_intro(
+            "Similar GDP. Similar exports?",
+            "Similar economic size does not necessarily mean similar goods exports.",
+            actions=handoffs.actions(cid, "Use Overview year"),
+        ),
         html.Div([
-            html.Div("ECONOMIC SCALE / M2", className="m2-eyebrow"),
-            html.H2("Similar GDP. Similar exports?"),
-            html.P("Similar economic size does not necessarily mean similar goods exports.", className="m2-takeaway"),
-        ], className="m2-intro"),
-        html.Details([
-            html.Summary("Customize this comparison"),
             html.Div([
-                html.Div([
-                    field("Analysis year", dcc.Dropdown(id=cid("year"), options=list(range(1995, 2024)), value=2023, clearable=False)),
-                    field("Find similar economies by", dcc.RadioItems(id=cid("mode"), options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}], value="gdp", className="m2-radio")),
-                    field("Similarity range", dcc.RadioItems(id=cid("factor"), options=[{"label": "1.25×", "value": 1.25}, {"label": "1.5×", "value": 1.5}], value=1.25, className="m2-radio")),
-                ], className="m2-controls"),
-                field("Choose your starting economy", dcc.RadioItems(
-                    id=cid("anchor"),
-                    options=[{"label": name, "value": code} for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)],
-                    value="DEU", className="m2-anchors")),
-                html.P("Compare your chosen economy with similar economies around the world. Select 1.5× to explore a wider range.", className="m2-note"),
-            ]),
-        ], id=cid("customize"), className="m2-customize"),
+                components.field(
+                    "Analysis year",
+                    dcc.Dropdown(
+                        id=cid("year"), options=list(range(1995, 2024)),
+                        value=2023, clearable=False, className="ctl-dropdown",
+                    ),
+                ),
+                components.field("Starting economy", dcc.Dropdown(
+                    id=cid("anchor"), options=anchor_options(), value="DEU",
+                    clearable=False, className="ctl-dropdown",
+                )),
+                components.field("Similarity range", dcc.Dropdown(
+                    id=cid("factor"),
+                    options=[{"label": "1.25×", "value": 1.25}, {"label": "1.5×", "value": 1.5}],
+                    value=1.25, clearable=False, className="ctl-dropdown",
+                )),
+            ], className="toolbar-row"),
+            html.Div([
+                components.field("Match by", dcc.RadioItems(
+                    id=cid("mode"),
+                    options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}],
+                    value="gdp", className="radio-row",
+                )),
+                handoffs.controls(cid, preview=True),
+            ], className="toolbar-row"),
+        ], className="module-toolbar"),
         html.Div([
             components.card("GDP and goods exports", html.Div([
-                html.Div(id=cid("scope"), className="m2-note", role="status"),
-                dcc.Graph(id=cid("graph"), figure=theme.empty_figure("Select M2 to begin."),
+                html.Div(id=cid("scope"), className="m1-note", role="status"),
+                dcc.Graph(id=cid("graph"), figure=theme.empty_figure("Select M1 to begin."),
                           className="graph-interactive",
                           config={"displayModeBar": False, "displaylogo": False,
                                   "responsive": True, "scrollZoom": True, "doubleClick": "reset",
                                   "showAxisDragHandles": False, "showAxisRangeEntryBoxes": False},
                           style={"height": "510px", "minHeight": "510px"}),
-                html.P("Drag to pan · Scroll to zoom · Double-click to reset", className="m2-note"),
+                html.P("Drag to pan · Scroll to zoom · Double-click to reset", className="m1-note"),
                 html.Details([
                     html.Summary("How to read this chart"),
-                    html.P("Both axes use logarithmic scales: equal distances represent equal ratios. Darker blue lines indicate higher exports/GDP (10%, 50%, 100%). The shaded band shows the selected similarity range. Drag to move around; click a highlighted dot to compare.", className="m2-note"),
-                ], className="m2-chart-help"),
+                    html.P("Both axes use logarithmic scales: equal distances represent equal ratios. Darker blue lines indicate higher exports/GDP (10%, 50%, 100%). The shaded band shows the selected similarity range. Drag to move around; click a highlighted dot to compare.", className="m1-note"),
+                ], className="m1-chart-help"),
             ])),
             components.card("Compare two economies", html.Div([
                 field("Choose an economy to compare", dcc.Dropdown(id=cid("comparator"), options=[{"label": "Japan · JPN", "value": "JPN"}], value="JPN", clearable=False)),
-                html.P(id=cid("match-status"), role="status", className="m2-note"),
                 html.Div(id=cid("relative")),
-                html.Div(id=cid("finding"), className="m2-finding"),
-                html.Details([
-                    html.Summary("View exact values"),
-                    html.Div(id=cid("takeaway"), className="m2-pair-evidence", role="status"),
-                    html.Div(id=cid("cards"), className="m2-comparison"),
-                ], id=cid("amounts"), className="m2-amounts"),
+                html.Section([
+                    html.H4("Exact values"),
+                    html.Div(id=cid("cards"), className="m1-comparison"),
+                ], id=cid("amounts"), className="m1-amounts"),
             ])),
-        ], className="m2-analysis"),
-        html.Details([
-            html.Summary("All matches, data coverage and sources"),
-            html.P(LIMITATION, className="m2-note"),
-            html.P("Browse all economies in your similarity range, with the closest matches first. Similarity is based on the measure you selected above.", className="m2-note"),
+        ], className="m1-analysis"),
+        components.findings_card(
+            finding=html.P(id=cid("finding")),
+            implication=html.P(id=cid("implication")),
+            limits=html.P("The comparison uses one year of GDP and goods exports in current USD. Exports can reflect prices and exchange rates."),
+        ),
+        components.module_data_details([
+            html.P("Closest matches for the selected measure and range appear first. The CSV covers the selected year and includes exclusions."),
+            components.module_data_table_header(
+                "Matching economies",
+                download_id=cid("export"),
+                download_label="Download economy comparison data (CSV)",
+                disabled=True,
+            ),
             dash_table.DataTable(id=cid("table"), columns=[
                 {"name": "Economy", "id": "economy"},
                 {"name": "GDP · $bn", "id": "gdp"},
@@ -109,12 +138,13 @@ def layout():
                 {"name": "Exports / GDP", "id": "ratio"},
                 {"name": "Selected measure / starting economy", "id": "matching_ratio"},
             ], data=[], page_size=10, style_table={"overflowX": "auto"}, style_cell={"textAlign": "left", "fontFamily": "inherit", "fontSize": 12, "padding": "9px"}, style_header={"fontWeight": 600, "backgroundColor": theme.ACCENT_SOFT}),
-            html.Div(id=cid("exclusions"), className="m2-note"),
-            html.Button("Download comparison data (CSV)", id=cid("export"), n_clicks=0, className="m2-download", disabled=True),
-            html.P("Download the selected year’s amounts, matching economies and reasons for missing comparisons. Sources: BACI HS92 V202601 and CHELEM GDP-VAL V202502. Charts and cards show billion current USD; the CSV labels the original units for each amount.", className="m2-note"),
-            html.P("Some economies cannot be compared because GDP or exports are missing or non-positive, or their geographic coverage differs between sources. Missing values are not treated as zero.", className="m2-note"),
-            html.P("Historical coverage: Belgium–Luxembourg through 1998 and Sudan through 2011 are excluded because the trade and GDP territories are not directly comparable. Regional or unspecified groups (Other Asia nes, Europe EFTA nes and SACU) are also excluded.", className="m2-note"),
-        ], id=cid("data-details"), className="card m2-details"),
+            components.module_data_methods([
+                html.P(LIMITATION),
+                html.P("Sources are BACI HS92 V202601 and CHELEM GDP-VAL V202502. Charts and cards show billion current USD. The CSV labels each amount’s original unit."),
+                html.P("Matching requires positive GDP and exports with comparable geographic coverage. Territory changes exclude Belgium–Luxembourg through 1998 and Sudan through 2011. Regional or unspecified groups such as Other Asia nes, Europe EFTA nes and SACU are also excluded."),
+                html.Div(id=cid("exclusions"), className="m1-note"),
+            ]),
+        ], id=cid("data-details")),
     ])
 
 
@@ -142,7 +172,7 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
         fig.add_trace(go.Scatter(
             x=[lo, hi], y=[lo * ratio, hi * ratio], mode="lines",
             name=f"Exports/GDP = {ratio:.0%}", line={"color": color, "width": 1.8},
-            hoverinfo="skip", legendgroup=f"ratio-{ratio}", meta={"m2_ratio": ratio},
+            hoverinfo="skip", legendgroup=f"ratio-{ratio}", meta={"m1_ratio": ratio},
         ))
     a = valid[valid.country.eq(anchor)]
     if not a.empty:
@@ -182,20 +212,20 @@ def scatter_figure(rows, anchor, comparator, mode, factor):
         yaxis={"type": "log", "dtick": 1, "title": "Goods exports · billion current USD (log)", "autorange": True,
                "autorangeoptions": {"clipmin": ymin, "clipmax": ymax}},
         legend={"orientation": "h", "y": -0.22, "x": 0, "font": {"size": 11}},
-        uirevision=f"M2-{int(rows.year.iloc[0])}-{anchor}-{mode}-{factor}",
+        uirevision=f"M1-{int(rows.year.iloc[0])}-{anchor}-{mode}-{factor}",
     )
     return fig
 
 
 def economy_card(row, role):
     return html.Div([
-        html.Div(role, className="m2-eyebrow"), html.H3(f"{row['name']} · {row['country']}"),
+        html.Div(role, className="m1-eyebrow"), html.H3(f"{row['name']} · {row['country']}"),
         html.Dl([
             html.Div([html.Dt("GDP"), html.Dd(f"${row['gdp_billion_usd']:,.3f}bn")]),
             html.Div([html.Dt("Goods exports"), html.Dd(f"${row['exports_billion_usd']:,.3f}bn")]),
             html.Div([html.Dt("Exports / GDP"), html.Dd(f"{row['export_gdp_ratio']:.2%}")]),
         ]),
-    ], className="m2-economy", style={"borderTopColor": theme.country_color(row["country"])})
+    ], className="m1-economy", style={"borderTopColor": theme.country_color(row["country"])})
 
 
 def finding_text(a, b, mode, year):
@@ -232,41 +262,39 @@ def relative_comparison(a, b, year):
         text = ("Same at displayed precision" if round(abs(delta), 1) == 0 else
                 f"{abs(delta):,.1f}% {'higher' if delta > 0 else 'lower'}")
         differences.append(html.Div([html.Span(label), html.Strong(text)]))
-    pp = 100 * (b["export_gdp_ratio"] - a["export_gdp_ratio"])
-    gap = ("equal at displayed precision" if round(abs(pp), 2) == 0 else
-           f"{abs(pp):,.2f} percentage points {'higher' if pp > 0 else 'lower'}")
     return html.Div([
         html.H4(f"Relative size · {year}"),
-        html.P(f"{b['name']} compared with {a['name']}. The dashed line marks {a['name']} = 100 for each measure.", className="m2-note"),
+        html.P(f"{a['name']} = 100", className="m1-note"),
         dcc.Graph(id=cid("relative-graph"), figure=fig,
                   config={"displayModeBar": False, "responsive": True}, style={"height": "230px"}),
-        html.Div(differences, className="m2-differences"),
-        html.P(f"Exports / GDP: {b['name']} {b['export_gdp_ratio']:.2%} versus "
-               f"{a['name']} {a['export_gdp_ratio']:.2%} — {gap}.", className="m2-ratio-gap"),
-    ], className="m2-relative")
+        html.Div(differences, className="m1-differences"),
+    ], className="m1-relative")
 
 
 def register_callbacks(app):
-    @app.callback(Output(cid("takeaway"), "children"), Input(cid("context"), "data"), Input(ACTIVE_MODULE, "data"))
-    def takeaway(context, active):
-        guard_active(MODULE_ID, active)
-        if not context or not context.get("comparator"):
-            return html.H3("Choose two economies with comparable data")
-        try:
-            d = data_for_year(context["year"]).set_index("country")
-            a, b = d.loc[context["anchor"]], d.loc[context["comparator"]]
-            full_names = dict(zip(FOCUS_COUNTRIES, FOCUS_NAMES))
-            aname = full_names.get(context["anchor"], a['name'])
-            bname = full_names.get(context["comparator"], b['name'])
-            return html.Div([
-                html.H3(f"{bname} has {100*b.gdp/a.gdp:.1f}% of {aname}’s GDP, but {100*b.export_value/a.export_value:.1f}% of its goods exports"),
-                html.P(f"{context['year']} · Matched by {MODES[context['mode']]}. Each percentage compares the same measure between the two economies; it is not exports divided by GDP.")])
-        except (KeyError, ValueError, FileNotFoundError):
-            return html.H3("No comparable pair in this selection")
+    def overview_preview(year, _rendered, _playing):
+        return "Latest comparable year: 2023." if year == 2024 else ""
 
+    def from_overview(year, rendered, playing, current):
+        if playing or year is None or rendered != year:
+            raise ValueError("Pause Overview and wait for the selected year to finish loading.")
+        # The preview explicitly advertises 2023 before the user applies 2024.
+        year = 2023 if year == 2024 else year
+        country, year, _ = handoffs.scope(current[0], year, last_year=2023)
+        rows = data_for_year(year)
+        if not rows.loc[rows.country.eq(country), "valid"].any():
+            raise ValueError("Comparable GDP and exports are unavailable for that economy and year.")
+        return [country, year]
 
+    handoffs.register_transfer(
+        app, MODULE_ID, cid,
+        [("anchor", "value", False), ("year", "value", False)],
+        [("M0-year", "value"), ("M0-rendered-year", "data"), ("M0-playing", "data")],
+        from_overview, preview=overview_preview,
+        restore_on_undo=(("comparator", "value"),),
+    )
     app.clientside_callback(
-        ClientsideFunction(namespace="m2", function_name="extendReferenceLines"),
+        ClientsideFunction(namespace="m1", function_name="extendReferenceLines"),
         Output(cid("reference-lines-ready"), "data"),
         Input(cid("graph"), "figure"), Input(ACTIVE_MODULE, "data"),
     )
@@ -274,8 +302,9 @@ def register_callbacks(app):
         Output(cid("graph"), "figure"), Output(cid("anchor"), "options"),
         Output(cid("comparator"), "options"), Output(cid("comparator"), "value"),
         Output(cid("comparator"), "disabled"), Output(cid("scope"), "children"),
-        Output(cid("match-status"), "children"), Output(cid("cards"), "children"),
-        Output(cid("finding"), "children"), Output(cid("table"), "data"),
+        Output(cid("cards"), "children"),
+        Output(cid("finding"), "children"), Output(cid("implication"), "children"),
+        Output(cid("table"), "data"),
         Output(cid("exclusions"), "children"), Output(cid("context"), "data"),
         Output(cid("export"), "disabled"),
         Output(cid("relative"), "children"),
@@ -283,9 +312,10 @@ def register_callbacks(app):
         Input(cid("anchor"), "value"), Input(cid("mode"), "value"),
         Input(cid("factor"), "value"), Input(cid("comparator"), "value"),
         Input(cid("graph"), "clickData"),
+        Input(cid("handoff-history"), "data"),
         State(cid("graph"), "relayoutData"), State(cid("context"), "data"),
     )
-    def _render(active, year, anchor, mode, factor, comparator, click, viewport, previous):
+    def _render(active, year, anchor, mode, factor, comparator, click, handoff, viewport, previous):
         guard_active(MODULE_ID, active)
         try:
             if anchor not in FOCUS_COUNTRIES:
@@ -295,47 +325,53 @@ def register_callbacks(app):
             ref = reference()
         except (ValueError, FileNotFoundError, OSError) as exc:
             message = f"Data unavailable: {exc}"
-            return (theme.empty_figure(message), [{"label": name, "value": code} for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)], [], None, True, message,
-                    "No matching comparison available.", [], "No finding without valid source data.", [], message, None, True, [])
+            return (theme.empty_figure(message), anchor_options(), [], None, True, message,
+                    [], "No finding without valid source data.", "Check the selected year and data coverage.",
+                    [], message, None, True, [])
         valid = rows[rows.valid]
         pool = peers.country.tolist()
-        if ctx.triggered_id == cid("graph") and click:
+        restored = (handoff or {}).get("restored")
+        if restored and f"{cid('handoff-history')}.data" in ctx.triggered_prop_ids:
+            # Restore the selection together with its options so the dropdown accepts it.
+            comparator = restored.get("comparator")
+        elif ctx.triggered_id == cid("graph") and click:
             points = click.get("points") or []
             custom = points[0].get("customdata") if points else None
             if custom and custom[0] in pool:
                 comparator = custom[0]
-        switched = comparator not in pool
-        if switched:
+        if comparator not in pool:
             comparator = pool[0] if pool else None
         names = country_names(ref)
         valid_codes = set(valid.country)
-        options = [{"label": name + (" (data unavailable this year)" if code not in valid_codes else ""), "value": code}
-                   for code, name in zip(FOCUS_COUNTRIES, FOCUS_NAMES)]
+        options = anchor_options(valid_codes)
         peer_options = [{"label": f"{names[c]} · {c}", "value": c} for c in pool]
         shown = display_candidates(rows)
-        scope = f"{year} · {len(shown)} economies shown · billion current USD"
+        scope = f"{len(shown)} economies shown · billion current USD"
         a = valid[valid.country.eq(anchor)]
         cards = []
         relative = []
+        implication = "Choose another starting economy or matching measure."
         if a.empty:
             reason = rows.loc[rows.country.eq(anchor), "exclusion"]
-            status = f"{names.get(anchor, anchor)}: {reason.iloc[0] if len(reason) else 'Data unavailable this year'}. Choose another economy or year to compare."
-            finding = f"No finding for {year}: the anchor has no comparable GDP/export pair."
+            finding = f"{names.get(anchor, anchor)} · {year}: {reason.iloc[0] if len(reason) else 'Data unavailable this year'}."
+            implication = "Choose a selection with comparable GDP and goods exports."
         else:
             a = a.iloc[0]
             cards = [economy_card(a, f"Starting economy · {year}")]
-            status = (f"{len(pool)} other economies match {MODES[mode]} within "
-                      f"[{1 / factor:.3f}, {factor:g}] × {names.get(anchor, anchor)}.")
             if comparator:
                 b = valid.loc[valid.country.eq(comparator)].iloc[0]
                 cards.append(economy_card(b, f"Comparison · {year}"))
                 relative = relative_comparison(a, b, year)
                 finding = finding_text(a, b, mode, year)
-                if switched:
-                    status += " Your previous comparison is outside this range; the closest current match is shown."
+                other = "export_value" if mode == "gdp" else "gdp"
+                other_matches = match_candidates(rows, anchor, other, factor)
+                range_name = f"{factor:g}× similarity range for {MODES[other]}"
+                if comparator in other_matches.country.values:
+                    implication = f"The pair also falls within the {range_name}."
+                else:
+                    implication = f"The pair falls outside the same {range_name}."
             else:
-                status += " No matching economy; the window has not been widened."
-                cards.append(html.Div("No matching economy. Try a different starting economy or widen the range to 1.5×.", className="m2-empty"))
+                cards.append(html.Div("No matching economy in this range.", className="m1-empty"))
                 finding = f"No two-country finding for {year}: the anchor is the only economy in this window."
         table = [{"economy": f"{r.name} · {r.country}", "gdp": f"{r.gdp_billion_usd:,.3f}", "exports": f"{r.exports_billion_usd:,.3f}", "ratio": f"{r.export_gdp_ratio:.2%}", "matching_ratio": f"{r.matching_ratio:.4f}×"} for r in peers.itertuples()]
         excluded = rows[~rows.valid]
@@ -346,7 +382,7 @@ def register_callbacks(app):
                                "valid economies outside the display range remain in the CSV."),
                       html.P(f"Exclusions ({len(excluded)}): {summary}. Reasons and values are included in the CSV."),
                       html.Ul([html.Li(f"{r.name} ({r.country}): {r.exclusion}") for r in excluded.itertuples()])]
-        context = {"year": year, "anchor": anchor, "comparator": comparator, "mode": mode, "factor": factor}
+        context = {"year": year, "anchor": anchor, "comparator": comparator, "mode": mode, "factor": factor, "anchor_valid": not a.empty}
         figure = scatter_figure(rows, anchor, comparator, mode, factor)
         # Dash may recreate the graph on callback updates. Carry the current
         # viewport explicitly when only comparison/highlight/navigation changes.
@@ -367,8 +403,8 @@ def register_callbacks(app):
                     retained[axis] = bounds
             context["viewport"] = retained
         return (figure, options,
-                peer_options, comparator, not bool(pool), scope, status, cards, finding,
-                table, exclusions, context, False, relative)
+                peer_options, comparator, not bool(pool), scope, cards, finding,
+                implication, table, exclusions, context, False, relative)
 
     @app.callback(Output(cid("download"), "data"), Input(cid("export"), "n_clicks"),
                   State(cid("context"), "data"), State(ACTIVE_MODULE, "data"),
@@ -379,4 +415,4 @@ def register_callbacks(app):
             raise PreventUpdate
         rows = data_for_year(context["year"])
         frame = evidence_frame(rows, context["anchor"], context["comparator"], context["mode"], context["factor"])
-        return dcc.send_data_frame(frame.to_csv, f"M2_{context['year']}_{context['anchor']}_{context['mode']}.csv", index=False)
+        return dcc.send_data_frame(frame.to_csv, f"M1_{context['year']}_{context['anchor']}_{context['mode']}.csv", index=False)

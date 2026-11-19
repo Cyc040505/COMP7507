@@ -43,8 +43,8 @@ def _header() -> html.Header:
 def _nav() -> html.Nav:
     titles = {
         "M0": ("Overview", "The global context"),
-        "M1": ("Geography", "Distance & partners"),
-        "M2": ("Economy", "GDP & export scale"),
+        "M2": ("Geography", "Distance & partners"),
+        "M1": ("Economy", "GDP & export scale"),
         "M3": ("Trade partners", "Flows & regions"),
         "M4": ("Product structure", "Share & specialization"),
         "M5": ("Time change", "Recovery & structure"),

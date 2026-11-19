@@ -5,6 +5,7 @@
 .m3-primary { display:grid; grid-template-columns:minmax(0,7fr) minmax(280px,3fr); gap:20px; align-items:stretch; }
 .m3-secondary { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:20px; align-items:stretch; }
 .m3-primary>.card,.m3-secondary>.card { min-width:0; margin:0; }
+.m3-secondary > .card:has(#M3-selected-regions) { grid-column:1 / -1; }
 .card.m3-map-card { position:relative; background:#132b3e; color:#e8f0f5; border-color:#132b3e; padding:18px 20px 14px; overflow:hidden; }
 .m3-map-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .m3-map-card .card-title-text { color:#e8f0f5; margin:0; }
@@ -16,12 +17,14 @@
 #M3-ranking { height:435px; }
 .m3-selection { min-height:45px; padding:10px 14px; border-left:3px solid #d4a15b; background:#1d384d; color:#f0c88c; border-radius:0 4px 4px 0; font-size:13px; line-height:1.6; }
 .m3-map-caption { margin:9px 0 0; font-size:12px; color:#adbfce; line-height:1.5; }
+.m3-map-caption:empty { display:none; }
 .m3-rank-card { display:flex; flex-direction:column; }
 .m3-rank-card .card-title-text { margin-bottom:5px; }
 .chart-subtitle { color:var(--muted); font-size:12px; margin:0 0 5px; }
 .m3-remaining { margin-top:auto; padding-top:12px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px; color:var(--muted); font-size:12px; }
 .m3-remaining strong { color:var(--ink); font-size:22px; font-weight:600; }
 .m3 .scope-note { font-size:12px; color:var(--muted); }
+.m3 .scope-note:empty { display:none; }
 .card.m3-matrix-card { background:white; border-color:var(--line); color:var(--ink); }
 .m3-matrix-card .card-title-text { color:var(--ink); }
 .m3-matrix-card .m3-selection { color:var(--accent); background:var(--accent-soft); border-color:var(--accent); }

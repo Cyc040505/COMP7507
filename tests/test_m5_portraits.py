@@ -304,7 +304,6 @@ class CountryPortraits(unittest.TestCase):
         ordered = [getattr(n, "id", None) for n in walk(panel)]
         self.assertLess(ordered.index("M5-recovery-title"), ordered.index("M5-index"))
         self.assertLess(ordered.index("M5-index"), ordered.index("M5-portraits"))
-        self.assertLess(ordered.index("M5-portraits"), ordered.index("M5-finding"))
 
     def test_http_comparison_graph_keeps_year_and_all_annual_rows(self):
         values = {
@@ -387,29 +386,21 @@ class CountryPortraits(unittest.TestCase):
         self.assertEqual(res.json["response"]["M5-selected"]["data"], 2013)
         self.assertEqual(res.json["response"]["M5-inspect-year"]["value"], 2013)
 
-    def test_major_sections_keep_graphs_and_their_conclusions_together(self):
-        nodes = list(walk(m.layout()))
+    def test_major_sections_share_one_conclusion_before_the_methods(self):
+        layout = m.layout()
+        nodes = list(walk(layout))
         by_id = {getattr(n, "id", None): n for n in nodes if getattr(n, "id", None)}
         self.assertIn("M5-section", by_id)
-        for panel_id, graph_id, evidence_id, conclusion_id in [
-            (
-                "M5-recovery-panel",
-                "M5-index",
-                "M5-finding",
-                "M5-recovery-interpretation",
-            ),
-            (
-                "M5-structure-panel",
-                "M5-structure",
-                "M5-implication",
-                "M5-structure-interpretation",
-            ),
+        for panel_id, graph_id in [
+            ("M5-recovery-panel", "M5-index"),
+            ("M5-structure-panel", "M5-structure"),
         ]:
-            panel_nodes = list(walk(by_id[panel_id]))
-            ids = [getattr(n, "id", None) for n in panel_nodes]
-            self.assertLess(ids.index(graph_id), ids.index(evidence_id))
-            self.assertLess(ids.index(evidence_id), ids.index(conclusion_id))
+            self.assertIn(graph_id, [getattr(n, "id", None) for n in walk(by_id[panel_id])])
+        self.assertNotIn("What the evidence shows", text(layout))
+        self.assertEqual(text(layout).count("Finding / Implication / Limits"), 1)
         ids = [getattr(n, "id", None) for n in nodes if getattr(n, "id", None)]
+        self.assertLess(ids.index("M5-structure-panel"), ids.index("M5-summary-finding"))
+        self.assertLess(ids.index("M5-summary-implication"), ids.index("M5-data-details"))
         self.assertEqual(len(ids), len(set(ids)))
         # Three cases share a single selection across the two major chart views.
         for key in m.CASES:
@@ -434,13 +425,12 @@ class CountryPortraits(unittest.TestCase):
                 "flex" if section == "structure" else "none",
             )
 
-    def test_recovery_conclusion_explains_returns_separately_from_structure(self):
+    def test_recovery_results_and_structure_summary_describe_separate_measures(self):
         v = self.view(list(m.FOCUS_COUNTRIES))
-        self.assertIn("recovery_interpretation", v)
-        self.assertIn("2021", v["recovery_interpretation"])
-        self.assertIn("2022", v["recovery_interpretation"])
-        self.assertNotIn("percentage points", v["recovery_interpretation"])
-        self.assertIn("share", v["structure_interpretation"].lower())
+        returns = {row["first_at_baseline"] for row in v["summary"]}
+        self.assertTrue({2021, 2022} <= returns)
+        self.assertIn("at or above", v["summary_finding"])
+        self.assertNotIn("percentage points", v["summary_finding"])
         self.assertIn("3.00 percentage points", v["implication"])
 
     def test_questions_are_inside_each_chart_before_the_data(self):

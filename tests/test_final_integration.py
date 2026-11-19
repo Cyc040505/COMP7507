@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from src import data_loader as dl, config
 from src.analytics import partners as p
-from src.modules import m3_network as m, overview, m1_geography as g
+from src.modules import m3_network as m, overview, m2_geography as g
 from src.analytics.geography import analyze, spearman_rho
 import app
 
@@ -137,7 +137,7 @@ class FinalIntegration(unittest.TestCase):
         }
         r = call("M3-graph.figure", values, "active-module.data")
         self.assertEqual(r.status_code, 200, r.data[:300])
-        self.assertIn("50.5%", r.json["response"]["M3-scope"]["children"])
+        self.assertEqual(r.json["response"]["M3-scope"]["children"], "")
         for source, point, expected in [
             ("graph", {"location": "USA"}, "USA"),
             ("graph", {"location": "JPN"}, None),
@@ -161,7 +161,7 @@ class FinalIntegration(unittest.TestCase):
                     response["M3-selected"]["data"],
                     point.get("location") or point["customdata"],
                 )
-        values["active-module.data"] = "M2"
+        values["active-module.data"] = "M1"
         self.assertEqual(
             call("M3-graph.figure", values, "active-module.data").status_code, 204
         )
@@ -178,7 +178,7 @@ class FinalIntegration(unittest.TestCase):
             "thousand current USD", r.json["response"]["M3-download"]["data"]["content"]
         )
 
-    def test_m1_full_sample_and_linked_highlight(self):
+    def test_m2_full_sample_and_linked_highlight(self):
         res = analyze(
             p.flows(2023),
             dl.load_geodist(),
@@ -209,28 +209,28 @@ class FinalIntegration(unittest.TestCase):
             )
         )
         vals = {
-            "active-module.data": "M1",
-            "M1-year.value": 2023,
-            "M1-exporter.value": "CHN",
-            "M1-product.value": "87",
-            "M1-dist-metric.value": "dist",
-            "M1-show.value": "top10",
-            "M1-selected.data": "JPN",
+            "active-module.data": "M2",
+            "M2-year.value": 2023,
+            "M2-exporter.value": "CHN",
+            "M2-product.value": "87",
+            "M2-dist-metric.value": "dist",
+            "M2-show.value": "top10",
+            "M2-selected.data": "JPN",
         }
         self.assertEqual(
-            call("M1-finding.children", vals, "M1-product.value").status_code, 200
+            call("M2-finding.children", vals, "M2-product.value").status_code, 200
         )
         # Selection is now local; the Python scatter callback still consumes
         # the same selected partner without replacing the map or its ranking.
         dependencies = app.server.test_client().get("/_dash-dependencies").json
-        selection = next(d for d in dependencies if d["output"] == "M1-selected.data")
-        self.assertEqual(selection["clientside_function"], {"namespace": "m1", "function_name": "choose"})
+        selection = next(d for d in dependencies if d["output"] == "M2-selected.data")
+        self.assertEqual(selection["clientside_function"], {"namespace": "m2", "function_name": "choose"})
         inputs = {i["id"] for i in selection["inputs"]}
-        self.assertTrue({"M1-map", "M1-scatter", "M1-clear-selection"}.issubset(inputs))
-        self.assertTrue(any("M1-partner" in i for i in inputs))
-        response = call("M1-scatter.figure", vals, "M1-selected.data")
+        self.assertTrue({"M2-map", "M2-scatter", "M2-clear-selection"}.issubset(inputs))
+        self.assertTrue(any("M2-partner" in i for i in inputs))
+        response = call("M2-scatter.figure", vals, "M2-selected.data")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("JPN", response.json["response"]["M1-scatter"]["figure"]["data"][0]["customdata"])
+        self.assertIn("JPN", response.json["response"]["M2-scatter"]["figure"]["data"][0]["customdata"])
 
     def test_m0_full_trends_and_year_ranking(self):
         for year in [2010, 2023, 2024]:

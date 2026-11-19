@@ -8,11 +8,7 @@
 .m5-story .m5-story-title { margin:0; font-size:21px; font-weight:700; line-height:1.4; letter-spacing:normal; color:var(--ink); }
 .m5-story .m5-section-heading { margin:0; align-items:flex-end; }
 .m5-section-heading .m5-story-heading { margin:0; }
-.m5-section-findings .verify-list li:first-child p { color:var(--accent); font-size:13px; font-weight:400; }
-.m5-section-findings .verify-list li:nth-child(2) p { color:var(--ink); font-size:13px; font-weight:400; }
-.m5-fieldnotes #M5-finding,.m5-fieldnotes #M5-implication { font-size:13px; line-height:1.7; font-weight:400; }
 .m5-fieldnotes .m5-toolbar { display:grid; grid-template-columns:125px minmax(0,1fr) auto 205px; gap:20px; align-items:end; background:transparent; border:0; padding:0; }
-.m5-fieldnotes #M5-import { color:var(--accent); border-color:#c4d0dd; font-size:12px; font-weight:400; line-height:1.5; padding:8px 12px; }
 .m5-fieldnotes #M5-inspect-year { padding:0; height:36px; }
 .m5-fieldnotes .m5-presets { flex-wrap:wrap; gap:8px; }
 .m5-fieldnotes button { font-family:inherit; line-height:1.35; transition:background-color .15s,border-color .15s; }
@@ -21,14 +17,7 @@
 .m5-fieldnotes .m5-presets button::before { content:""; width:10px; height:10px; flex-shrink:0; border:1px solid var(--accent-line); border-radius:50%; background:var(--panel); }
 .m5-presets.pandemic #M5-pandemic::before,.m5-presets.vehicles #M5-vehicles::before,.m5-presets.crisis #M5-crisis::before { border-color:var(--accent); background:var(--accent); box-shadow:inset 0 0 0 2px var(--panel); }
 .m5-fieldnotes button:hover { border-color:var(--accent-line); background:var(--accent-soft); }
-.m5-fieldnotes .m5-custom { border:1px solid var(--line); border-radius:5px; padding:8px 12px; min-width:0; background:var(--panel); font-size:13px; line-height:1.5; }
-.m5-fieldnotes .m5-custom>summary { padding:0; white-space:nowrap; font-size:12px; font-weight:550; line-height:18px; }
-.m5-fieldnotes .m5-custom[open] { grid-column:1/-1; }
-.m5-fieldnotes .m5-custom[open]>summary { margin-bottom:12px; }
-.m5-fieldnotes .m5-controls { grid-template-columns:1.5fr 1.6fr 1fr 1fr; gap:18px; }
-.m5-fieldnotes .m5-window { padding:8px 10px 0; }
 .m5-fieldnotes #M5-import-note:empty { display:none; }
-.m5-fieldnotes #M5-import-note:not(:empty) { background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:8px; padding:12px 16px; }
 .m5-section-heading { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin:3px 0 -5px; }
 .m5-section-heading h3 { font-size:20px; letter-spacing:-.4px; font-weight:550; margin:0; }
 .m5-section-heading>span { color:var(--muted); font-size:11px; text-align:right; }
@@ -53,7 +42,6 @@
 .m5-fieldnotes #M5-chart-type label.selected { color:var(--accent); }
 .m5-fieldnotes>#M5-presets { display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:0; margin:0; }
 .m5-section-panel { flex-direction:column; gap:20px; min-width:0; }
-.m5-section-panel>.verify { margin-top:2px; }
 .m5-section-panel>.m5-overlay { padding:12px 18px; }
 @media(max-width:560px) {
   .m5-major-tabs { grid-column:1/-1; }
@@ -108,17 +96,7 @@
 .m5-fieldnotes .dash-slider-range { background:var(--accent); }
 .m5-fieldnotes .dash-slider-thumb { background:var(--accent); border-color:var(--accent); }
 .m5-fieldnotes .dash-slider-thumb:focus-visible { outline:2px solid var(--accent-line); outline-offset:3px; }
-.m5-fieldnotes>details.m5-methods { padding:18px 22px; background:var(--panel); border:1px solid var(--line); border-radius:10px; }
-.m5-fieldnotes>details.m5-methods>summary { font-size:12px; line-height:1.5; font-weight:500; }
-.m5-fieldnotes>details.m5-methods[open]>summary { padding-bottom:18px; margin-bottom:16px; border-bottom:1px solid var(--line); }
-.m5-fieldnotes .m5-methods p { color:var(--muted); font-size:12px; line-height:1.7; margin:0 0 15px; }
-.m5-fieldnotes #M5-download-button { margin-top:20px; background:var(--accent); border-color:var(--accent); color:var(--panel); padding:10px 15px; }
-.m5-fieldnotes #M5-download-button:disabled { opacity:.5; }
 .m5-fieldnotes .m5-source { font-size:12px; line-height:1.6; }
-.m5-methods-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:0 0 20px; }
-.m5-methods-grid h4 { margin:0 0 10px; font-size:12px; font-weight:600; }
-.m5-fieldnotes .m5-methods-grid p { margin-bottom:0; }
-.m5-methods-notes { border-top:1px solid var(--line); padding-top:18px; }
 @media(max-width:1150px) {
   .m5-fieldnotes .m5-toolbar { grid-template-columns:125px minmax(0,1fr); }
   .m5-fieldnotes .m5-analysis { grid-template-columns:minmax(0,2.4fr) minmax(240px,1fr); }
@@ -131,8 +109,6 @@
   body:has(#M5-panel:not(.panel-hidden)) .workspace { padding-left:18px; padding-right:18px; }
   .m5-fieldnotes .m5-analysis { grid-template-columns:minmax(0,1fr); }
   .m5-country-grid,.m5-country-grid:has(>.m5-country-card:nth-of-type(4):last-of-type),.m5-country-grid:has(>.m5-country-card:nth-of-type(2):last-of-type) { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .m5-fieldnotes .m5-controls { grid-template-columns:1fr 1fr; }
-  .m5-methods-grid { grid-template-columns:1fr; }
 }
 @media(max-width:560px) {
   body:has(#M5-panel:not(.panel-hidden)) .app-header { padding-left:18px; padding-right:18px; height:auto; min-height:60px; flex-wrap:wrap; gap:6px; padding-top:10px; padding-bottom:10px; }
@@ -151,9 +127,6 @@
   .m5-country-grid,.m5-country-grid:has(>.m5-country-card:nth-of-type(4):last-of-type),.m5-country-grid:has(>.m5-country-card:nth-of-type(2):last-of-type) { grid-template-columns:minmax(0,1fr); }
   .m5-country-card { padding:20px; }
   .m5-country-index>strong { font-size:43px; }
-  .m5-fieldnotes .m5-controls { grid-template-columns:minmax(0,1fr); }
-  .m5-fieldnotes .m5-custom>summary { white-space:normal; }
-  .m5-fieldnotes>details.m5-methods { padding:16px; }
 }
 @media(prefers-reduced-motion:reduce) { .m5-fieldnotes button { transition:none; } }
 @media(max-width:1250px) { .m5-fieldnotes .m5-intro h2 { font-size:26px; } }
@@ -173,6 +146,4 @@
 @media(max-width:560px) { .m5-structure-pair>.card { overflow-x:auto; } #M5-structure,#M5-structure-change { min-width:440px; } }
 
 .m5-structure-chart { display:flex; flex-direction:column; gap:20px; padding:20px; }
-.m5-section-findings .verify-list li p { font-size:13px; line-height:1.7; font-weight:400; }
-.m5-section-findings .verify-list li:nth-child(3) p { color:var(--ink); }
 @media(max-width:560px) { .m5-structure-chart { padding:16px; } }

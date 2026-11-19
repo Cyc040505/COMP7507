@@ -19,9 +19,9 @@ Question / concise context
 Compact controls
 
 M0 [ global trajectory 50% ][ country evidence 50% ]
-M1 [ distance scatter 70%  ][ evidence 30%         ]
+M2 [ distance scatter 70%  ][ evidence 30%         ]
    [ geographical context / partner ranking      ]
-M2 [ global scatter 64%    ][ paired evidence 36%  ]
+M1 [ global scatter 64%    ][ paired evidence 36%  ]
 M3 [ dark flow map 70%     ][ partner shares 30%   ]
    [ region comparison    ][ interpretation       ]
 M4 [ product heatmap 55%   ][ detail comparison 45% ]

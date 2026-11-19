@@ -26,24 +26,24 @@
       "graphs": [
         {
           "height": 430,
-          "id": "M1-scatter",
+          "id": "M2-scatter",
           "top": 447.5390625,
           "width": 903.0859375
         },
         {
           "height": 410,
-          "id": "M1-map",
+          "id": "M2-map",
           "top": 1077.484375,
           "width": 1064
         },
         {
           "height": 410,
-          "id": "M1-ranking",
+          "id": "M2-ranking",
           "top": 1077.484375,
           "width": 253
         }
       ],
-      "module": "M1-panel",
+      "module": "M2-panel",
       "pageHeight": 1886,
       "pageWidth": 1440,
       "width": 1440
@@ -52,12 +52,12 @@
       "graphs": [
         {
           "height": 510,
-          "id": "M2-graph",
+          "id": "M1-graph",
           "top": 492.625,
           "width": 811.7734375
         }
       ],
-      "module": "M2-panel",
+      "module": "M1-panel",
       "pageHeight": 1266,
       "pageWidth": 1440,
       "width": 1440
@@ -290,24 +290,24 @@
       "graphs": [
         {
           "height": 430,
-          "id": "M1-scatter",
+          "id": "M2-scatter",
           "top": 447.5390625,
           "width": 903.0859375
         },
         {
           "height": 410,
-          "id": "M1-map",
+          "id": "M2-map",
           "top": 1077.484375,
           "width": 1064
         },
         {
           "height": 260,
-          "id": "M1-ranking",
+          "id": "M2-ranking",
           "top": 1077.484375,
           "width": 253
         }
       ],
-      "module": "M1-panel",
+      "module": "M2-panel",
       "pageHeight": 1772,
       "pageWidth": 1440,
       "width": 1440
@@ -386,7 +386,7 @@
     }
   ],
   "long_ranking": {
-    "module": "M1",
+    "module": "M2",
     "bars": 40,
     "graph_height": 880,
     "scroll_container_height": 550,

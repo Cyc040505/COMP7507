@@ -48,7 +48,7 @@ python scripts/build_analytics.py
 `data/processed/`。临时数据库和标记文件已被 Git 忽略；只有组里明确同意共享的
 小型分析表才提交到仓库。
 
-M1 的 `country_pair_hs2_year.parquet` 体积超过普通 Git 的单文件限制，
+M2 的 `country_pair_hs2_year.parquet` 体积超过普通 Git 的单文件限制，
 不随代码提交。组员可使用上述脚本在本地生成，或通过单独的数据共享渠道获取后
 放入 `data/processed/`。日常运行使用已随仓库交付的 `country_pair_hs2_focus_year.parquet`（约26MB），包含六国与全球伙伴的完整双向明细，不做Top-N截取。全量文件可选；两份都缺失则明确报错，不使用演示数据。
 

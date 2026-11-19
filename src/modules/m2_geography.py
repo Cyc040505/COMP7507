@@ -1,4 +1,4 @@
-"""Module 1 — Geography.
+"""Module 2 — Geography.
 
 Map-first view of an exporter's partners. Country fills encode export share
 or proximity, with a matching partner ranking beside the atlas.
@@ -18,7 +18,7 @@ from dash import ALL, ClientsideFunction, Input, Output, State, dcc, html, dash_
 from flask import Response, request
 import plotly.colors as pc
 
-from src import components, config, data_loader, theme
+from src import components, config, data_loader, handoffs, theme
 from src.analytics.partners import FOCUS, flows
 from src.analytics.geography import METRIC_LABELS, analyze, distance_profile
 from src.analytics.product import chapters, label
@@ -26,9 +26,9 @@ from src.ids import ACTIVE_MODULE, mid
 from src.module_base import guard_active
 from src.geo_topology import optimized_world
 
-MODULE_ID = "M1"
-NAV_LABEL = "M1  Geography"
-ORDER = 1
+MODULE_ID = "M2"
+NAV_LABEL = "M2  Geography"
+ORDER = 2
 
 _HYPOTHESIS = (
     "Bilateral trade intensity is associated with geographic proximity "
@@ -78,7 +78,7 @@ _EXPORTER_COLOR = "#b27a2a"
 @lru_cache(maxsize=1)
 def _map_asset_url():
     version = hashlib.sha256(optimized_world()).hexdigest()[:12]
-    return f"/m1-map-assets/{version}/"
+    return f"/m2-map-assets/{version}/"
 
 
 @lru_cache(maxsize=24)
@@ -215,7 +215,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             showlegend=False,
         )
     )
-    theme.style_figure(fig, height=520, uirevision=f"M1-map-{exporter}")
+    theme.style_figure(fig, height=520, uirevision=f"M2-map-{exporter}")
     fig.update_layout(
         dragmode="pan",
         margin=dict(l=5, r=5, t=5, b=5),
@@ -226,7 +226,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
         geo=dict(
             projection=dict(type="natural earth", scale=1, rotation=dict(lon=0, lat=0)),
             center=dict(lon=0, lat=13.5),
-            uirevision=f"M1-map-{exporter}",
+            uirevision=f"M2-map-{exporter}",
             resolution=50,
             showframe=False,
             bgcolor="#f2f7f9",
@@ -280,7 +280,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
 def _map_summary(res, exporter, show) -> list:
     subset = _focus_subset(res["frame"], show)
     if subset.empty:
-        return [html.P("No partners to display.", className="m1-empty")]
+        return [html.P("No partners to display.", className="m2-empty")]
     by_distance = show == "nearest10"
     metric = "distance" if by_distance else "share_pct"
     ordered = subset.sort_values(metric, ascending=by_distance)
@@ -294,7 +294,7 @@ def _map_summary(res, exporter, show) -> list:
                     html.Div(
                         [
                             html.Span(
-                                r.partner, className="m1-partner-code", title=r.name
+                                r.partner, className="m2-partner-code", title=r.name
                             ),
                             html.Strong(
                                 f"{r.distance:,.0f} km"
@@ -302,37 +302,37 @@ def _map_summary(res, exporter, show) -> list:
                                 else f"{r.share_pct:.1f}%"
                             ),
                         ],
-                        className="m1-rank-line",
+                        className="m2-rank-line",
                     ),
                     html.Div(
                         html.Span(
                             style={"width": f"{getattr(r, metric) / peak * 100:.1f}%"}
                         ),
-                        className="m1-rank-track",
+                        className="m2-rank-track",
                     ),
                 ],
                 title=f"{r.name} · {r.distance:,.0f} km · {theme.fmt_usd(r.value)}",
             )
         )
     return [
-        html.Div("PARTNERS IN VIEW", className="m1-eyebrow"),
+        html.Div("PARTNERS IN VIEW", className="m2-eyebrow"),
         html.Div(
             [html.Strong(f"{share:.1f}%"), html.Span("of selected exports")],
-            className="m1-map-total",
+            className="m2-map-total",
         ),
-        html.P(f"{len(subset)} partners · {exporter}", className="m1-map-scope"),
+        html.P(f"{len(subset)} partners · {exporter}", className="m2-map-scope"),
         html.Div(
             "NEAREST PARTNERS IN VIEW" if by_distance else "LARGEST SHARES IN VIEW",
-            className="m1-eyebrow",
+            className="m2-eyebrow",
         ),
-        html.Ol(entries, className="m1-rank-list"),
+        html.Ol(entries, className="m2-rank-list"),
         html.P(
             (
                 "Bars show distance. Darker country fills indicate nearer partners."
                 if by_distance
                 else "Shares use all exports in the selected year and product scope."
             ),
-            className="m1-rail-note",
+            className="m2-rail-note",
         ),
     ]
 
@@ -340,7 +340,7 @@ def _map_summary(res, exporter, show) -> list:
 def _partner_list(res, show):
     subset = _focus_subset(res["frame"], show)
     if subset.empty:
-        return html.P("No partners to display.", className="m1-empty")
+        return html.P("No partners to display.", className="m2-empty")
     metric = "distance" if show == "nearest10" else "share_pct"
     maximum, peak_share = float(subset[metric].max()), float(subset.share_pct.max())
     rows = []
@@ -348,16 +348,16 @@ def _partner_list(res, show):
         intensity = float(getattr(row, metric)) / maximum if maximum else 0
         color = pc.sample_colorscale(_MAP_SCALE, 1 - intensity if show == "nearest10" else intensity)[0]
         rows.append(html.Button([
-            html.Span(f"{rank:02}", className="m1-rank-number"),
+            html.Span(f"{rank:02}", className="m2-rank-number"),
             html.Div([
-                html.Div([html.Strong(row.name), html.Small(row.partner)], className="m1-rank-name"),
+                html.Div([html.Strong(row.name), html.Small(row.partner)], className="m2-rank-name"),
                 html.Div(html.I(style={"width": f"{max(2, row.share_pct / max(peak_share, .01) * 100)}%",
-                                      "background": color}), className="m1-rank-track"),
-            ], className="m1-rank-country"),
+                                      "background": color}), className="m2-rank-track"),
+            ], className="m2-rank-country"),
             html.Div([html.Strong(f"{row.share_pct:.2f}%"), html.Small(f"{row.distance:,.0f}")],
-                     className="m1-rank-values"),
-        ], id={"type": "M1-partner", "code": row.partner}, n_clicks=0,
-            title=f"{row.name} ({row.partner})", className="m1-partner-row"))
+                     className="m2-rank-values"),
+        ], id={"type": "M2-partner", "code": row.partner}, n_clicks=0,
+            title=f"{row.name} ({row.partner})", className="m2-partner-row"))
     return rows
 
 
@@ -375,9 +375,9 @@ def _scale_view(res, show):
     maximum = float(subset["distance" if near else "share_pct"].max()) if not subset.empty else 0
     return [
         html.Div([html.Strong("Distance / km" if near else "Export share / %"),
-                  html.Span("Darker = nearer" if near else "Darker = larger share")], className="m1-scale-title"),
-        html.Div(className="m1-scale-gradient" + (" reverse" if near else "")),
-        html.Div([html.Span("0"), html.Span(f"{maximum:,.0f}" if near else f"{maximum:.2f}%")], className="m1-scale-ticks"),
+                  html.Span("Darker = nearer" if near else "Darker = larger share")], className="m2-scale-title"),
+        html.Div(className="m2-scale-gradient" + (" reverse" if near else "")),
+        html.Div([html.Span("0"), html.Span(f"{maximum:,.0f}" if near else f"{maximum:.2f}%")], className="m2-scale-ticks"),
     ]
 
 
@@ -500,22 +500,10 @@ def _stats_view(res, demo: bool, requested_metric: str) -> list:
         notes.append(
             f"Requested metric '{requested_metric}' is unavailable; using '{s['metric_used']}' instead."
         )
-    if s["n_missing"]:
-        notes.append(
-            f"{s['n_missing']} partner(s) have no distance record: excluded from distance analysis, retained in share denominators."
-        )
-
     children = [kpis]
     if notes:
         children.append(
-            html.Ul([html.Li(note) for note in notes], className="m1-notes")
-        )
-    if s["top_partner"]:
-        children.append(
-            html.P(
-                f"Top partner: {s['top_name']} ({s['top_partner']}) · "
-                f"{s['top_share']:.2f}% of this scope."
-            )
+            html.Ul([html.Li(note) for note in notes], className="m2-notes")
         )
     return children
 
@@ -581,11 +569,12 @@ def layout():
         for y in range(config.YEAR_MIN, config.YEAR_MAX + 1)
     ]
     return html.Div(
-        className="module-inner m1-module",
+        className="module-inner m2-module",
         children=[
             components.module_intro(
                 "Does distance shape trade?",
-                "Locate the main export partners, then compare typical export shares across distance groups.",
+                "Nearby partners often account for larger export shares, and rankings vary by product.",
+                actions=handoffs.actions(cid, "Use current M1 selection"),
             ),
             dcc.Store(id=cid("selected")),
             dcc.Store(id=cid("map-context")),
@@ -596,7 +585,7 @@ def layout():
                 html.Div(
                     [
                         components.field(
-                            "Year",
+                            "Analysis year",
                             dcc.Dropdown(
                                 id=cid("year"),
                                 options=year_options,
@@ -652,24 +641,24 @@ def layout():
                                 className="ctl-dropdown",
                             ),
                         ),
+                        handoffs.controls(cid),
                     ],
-                    className="chips",
+                    className="chips toolbar-row",
                 ),
-                className="module-controls",
+                className="module-controls module-toolbar",
             ),
             html.Div(id=cid("stats"), className="stats-body"),
             html.Div([
                 html.Div([
-                    html.Div([html.Span("PARTNER GEOGRAPHY", className="m1-map-eyebrow"),
+                    html.Div([html.Span("PARTNER GEOGRAPHY", className="m2-map-eyebrow"),
                               html.H3(id=cid("map-title"), className="card-title-text")]),
-                    html.Span(id=cid("map-badge"), className="m1-scope-badge"),
-                ], className="m1-map-heading"),
+                ], className="m2-map-heading"),
                 html.Div([
-                    html.Span([html.I(className="m1-key-exporter"), "Exporter"]),
-                    html.Span([html.I(className="m1-key-partner"), "Trade partner"]),
-                    html.Span([html.I(className="m1-key-selected"), "Selected partner"]),
-                    html.Span(id=cid("map-encoding"), className="m1-encoding-key"),
-                ], className="m1-map-legend"),
+                    html.Span([html.I(className="m2-key-exporter"), "Exporter"]),
+                    html.Span([html.I(className="m2-key-partner"), "Trade partner"]),
+                    html.Span([html.I(className="m2-key-selected"), "Selected partner"]),
+                    html.Span(id=cid("map-encoding"), className="m2-encoding-key"),
+                ], className="m2-map-legend"),
                 html.Div([
                     html.Div([
                         dcc.Graph(id=cid("map"), style={"height": "520px"},
@@ -679,36 +668,36 @@ def layout():
                                           "topojsonURL": _map_asset_url(), "responsive": True,
                                           "scrollZoom": True, "doubleClick": "reset",
                                           "modeBarButtons": [["zoomInGeo", "zoomOutGeo", "resetGeo"]]}),
-                        html.Div(id=cid("map-scale"), className="m1-map-scale"),
+                        html.Div(id=cid("map-scale"), className="m2-map-scale"),
                         html.Div([html.Span("Scroll to zoom · Drag to pan · Reset for world view"),
-                                  html.Span("Click a country or partner")], className="m1-map-tools"),
-                    ], className="m1-map-stage"),
+                                  html.Span("Click a country or partner")], className="m2-map-tools"),
+                    ], className="m2-map-stage"),
                     html.Aside([
-                        html.Div([html.Span("PARTNERS IN VIEW", className="m1-map-eyebrow"),
-                                  html.Strong(id=cid("partner-count"))], className="m1-rail-heading"),
-                        html.Div([html.Span("Partner / share"), html.Span("Share / distance km")], className="m1-rank-head"),
-                        html.Div(id=cid("partner-list"), className="m1-partner-list"),
-                        html.Div(id=cid("map-summary"), className="m1-rail-total"),
-                    ], className="m1-map-rail"),
-                ], className="m1-map-grid"),
+                        html.Div([html.Span("PARTNERS IN VIEW", className="m2-map-eyebrow"),
+                                  html.Strong(id=cid("partner-count"))], className="m2-rail-heading"),
+                        html.Div([html.Span("Partner / share"), html.Span("Share / distance km")], className="m2-rank-head"),
+                        html.Div(id=cid("partner-list"), className="m2-partner-list"),
+                        html.Div(id=cid("map-summary"), className="m2-rail-total"),
+                    ], className="m2-map-rail"),
+                ], className="m2-map-grid"),
                 html.Div([
                     html.Div(id=cid("map-detail"), role="status"),
-                    html.Button("Clear selection", id=cid("clear-selection"), className="m1-clear-button"),
-                ], className="m1-detail-strip"),
-                html.Div([html.Span("PATTERN", className="m1-eyebrow"),
-                          html.P(id=cid("finding"))], className="m1-map-finding"),
-            ], className="card m1-map-card"),
+                    html.Button("Clear selection", id=cid("clear-selection"), className="m2-clear-button"),
+                ], className="m2-detail-strip"),
+                html.Div([html.Span("PATTERN", className="m2-eyebrow"),
+                          html.P(id=cid("finding"))], className="m2-map-finding"),
+            ], className="card m2-map-card"),
             html.Div(
                 [
                     components.card(
                         "Do nearer partners receive larger shares?",
-                        [html.P("Each dot is a partner. The gold line shows the typical share across distance groups.", className="m1-scatter-intro"),
+                        [html.P("Each dot is a partner. The gold line shows the typical share across distance groups.", className="m2-scatter-intro"),
                         dcc.Graph(
                             id=cid("scatter"),
                             style={"height": "430px"},
                             config={"displayModeBar": False},
                         ),
-                        html.P("Gold line: median share in up to five similarly sized distance groups. Shaded band: the middle 50% of partner shares, not a confidence interval. All valid partners are included regardless of the map filter. This is a descriptive comparison, not a causal effect.", className="m1-scatter-note")],
+                        html.P("Gold line: median share by distance group. Shaded band: the middle 50% of partner shares.", className="m2-scatter-note")],
                     ),
                     components.verification_panel(
                         _HYPOTHESIS,
@@ -718,14 +707,21 @@ def layout():
                         conclusion_id=cid("conclusion"),
                     ),
                 ],
-                className="m1-analysis",
+                className="m2-analysis",
             ),
             html.Div(
                 id=cid("selection-detail"), className="selection-detail", role="status"
             ),
-            html.Details(
+            components.module_data_details(
                 [
-                    html.Summary("Top-share & nearest-partner evidence"),
+                    html.P(
+                        "The table flags partners in the top 10 by export share, the nearest 10, or both. The CSV covers all partners for the selected economy, year and product."
+                    ),
+                    components.module_data_table_header(
+                        "Top-share & nearest-partner evidence",
+                        download_id=cid("export"),
+                        download_label="Download complete partner and distance data (CSV)",
+                    ),
                     dash_table.DataTable(
                         id=cid("comparison-table"),
                         columns=[
@@ -749,50 +745,63 @@ def layout():
                         },
                         style_header={"fontWeight": 600, "backgroundColor": "#eef3ff"},
                     ),
-                ]
-            ),
-            html.Details(
-                className="card",
-                children=[
-                    html.Summary("How this view works"),
-                    html.Button("Download complete partner evidence", id=cid("export")),
-                    html.P(
-                        "The amber country marks the exporter. Partner countries are filled in teal: darker means a larger export share in Top 10 by share and Top 40 partners, or a shorter distance in Nearest 10. Grey countries are outside the displayed selection. Hover over a country to see its export value, share and distance. The ranking summarises the current map selection. The table lists the top-10 partners by share and the nearest 10 partners in one place and marks any overlap."
-                    ),
-                    html.P(
-                        "Spearman ρ is reported as a supporting description of the distance–share association, not a causal estimate."
+                    components.module_data_methods(
+                        [
+                            html.P(
+                                "BACI provides goods exports and GeoDist provides partner distances. Spearman ρ describes the association between the ranks of distance and export share."
+                            ),
+                            html.P(
+                                "Amber marks the exporter. Darker teal marks higher share in the share views and shorter distance in Nearest 10. Grey marks countries outside the displayed selection. Hover over a partner for its value, share and distance."
+                            ),
+                        ],
                     ),
                 ],
+                id=cid("data-details"),
             ),
         ],
     )
 
 
 def register_callbacks(app):
-    @app.server.route("/m1-map-assets/<version>/world_50m.json", endpoint="m1_topology")
-    def m1_topology(version):
+    def from_economy(country, year, context, _current):
+        country, year, product = handoffs.scope(country, year, last_year=2023)
+        if not context or context.get("anchor") != country or context.get("year") != year:
+            raise ValueError("Open M1 and wait for the current economy and year to finish loading.")
+        if not context.get("anchor_valid"):
+            raise ValueError("The selected M1 economy does not have comparable source data.")
+        handoffs.require_trade(country, year, product)
+        return [country, year, product]
+
+    handoffs.register_transfer(
+        app, MODULE_ID, cid,
+        [("exporter", "value", False), ("year", "value", False), ("product", "value", False)],
+        [("M1-anchor", "value"), ("M1-year", "value"), ("M1-context", "data")],
+        from_economy,
+    )
+    @app.server.route("/m2-map-assets/<version>/world_50m.json", endpoint="m2_topology")
+    def m2_topology(version):
         response = Response(optimized_world(), mimetype="application/json")
         response.cache_control.public = True
         response.cache_control.max_age = 86400
         response.add_etag()
         return response.make_conditional(request)
 
-    app.clientside_callback(ClientsideFunction(namespace="m1", function_name="choose"),
+    app.clientside_callback(ClientsideFunction(namespace="m2", function_name="choose"),
         Output(cid("selected"), "data"),
         Input(cid("map"), "clickData"), Input(cid("scatter"), "clickData"),
-        Input({"type": "M1-partner", "code": ALL}, "n_clicks"),
+        Input({"type": "M2-partner", "code": ALL}, "n_clicks"),
         Input(cid("clear-selection"), "n_clicks"),
         Input(cid("exporter"), "value"), Input(cid("year"), "value"),
         Input(cid("product"), "value"), Input(cid("show"), "value"),
-        State(cid("map-context"), "data"), State({"type": "M1-partner", "code": ALL}, "id"),
+        State(cid("map-context"), "data"), State({"type": "M2-partner", "code": ALL}, "id"),
         State(ACTIVE_MODULE, "data"), prevent_initial_call=True)
-    app.clientside_callback(ClientsideFunction(namespace="m1", function_name="highlight"),
+    app.clientside_callback(ClientsideFunction(namespace="m2", function_name="highlight"),
         Output(cid("map-detail"), "children"),
-        Output({"type": "M1-partner", "code": ALL}, "className"),
+        Output({"type": "M2-partner", "code": ALL}, "className"),
         Output(cid("highlight-token"), "data"),
         Input(cid("selected"), "data"), Input(cid("map-context"), "data"),
-        State({"type": "M1-partner", "code": ALL}, "id"))
-    app.clientside_callback(ClientsideFunction(namespace="m1", function_name="rememberView"),
+        State({"type": "M2-partner", "code": ALL}, "id"))
+    app.clientside_callback(ClientsideFunction(namespace="m2", function_name="rememberView"),
         Output(cid("map-view"), "data"), Input(cid("map"), "relayoutData"),
         Input(cid("exporter"), "value"), State(cid("map-view"), "data"))
 
@@ -838,7 +847,7 @@ def register_callbacks(app):
                 unit="thousand current USD",
             )
             .to_csv,
-            "M1_evidence.csv",
+            "M2_evidence.csv",
             index=False,
         )
 
@@ -870,7 +879,6 @@ def register_callbacks(app):
         Output(cid("map-encoding"), "children"),
         Output(cid("map-context"), "data"),
         Output(cid("map-title"), "children"),
-        Output(cid("map-badge"), "children"),
         Output(cid("map-scale"), "children"),
         Output(cid("partner-count"), "children"),
         Input(cid("year"), "value"),
@@ -907,7 +915,7 @@ def register_callbacks(app):
                 options,
                 [],
                 "Select an exporter to colour partner countries",
-                {"rows": {}, "mapCodes": []}, "Select an exporter", "", [], "00",
+                {"rows": {}, "mapCodes": []}, "Select an exporter", [], "00",
             )
 
         res = _analysis(year, exporter, product, dist_metric)
@@ -940,7 +948,6 @@ def register_callbacks(app):
             encoding,
             {**_map_context(res, exporter, show, figure), "key": f"{year}:{exporter}:{product}:{show}:{dist_metric}"},
             f"{meta.set_index('iso3').loc[exporter, 'name']} · Export partners",
-            f"{year} · {len(_focus_subset(res['frame'], show))} partners",
             _scale_view(res, show),
             f"{len(_focus_subset(res['frame'], show)):02}",
         )
@@ -968,8 +975,6 @@ def scatter_figure(res, selected=None):
             hovertemplate="%{text} (%{customdata})<br>%{x:,.0f} km · %{y:.3f}%<extra></extra>",
         )
     )
-    total = res["frame"].value.sum()
-    coverage = d.value.sum() / total if total else 0
     profile = distance_profile(res["frame"])
     if not profile.empty:
         fig.add_trace(go.Scatter(
@@ -1011,14 +1016,9 @@ def scatter_figure(res, selected=None):
         height=430,
         xaxis={"type": "log", "title": "Partner distance (km · log scale)"},
         yaxis={"type": "log", "title": "Export share (% · log scale)"},
-        title=dict(text=(
-            f"Near-group median {profile.iloc[0]['share']:.3f}% → far-group median {profile.iloc[-1]['share']:.3f}%"
-            if not profile.empty else "Too few distinct distances for a grouped trend"
-        ) + f"<br><sup>{len(d)} partners · {coverage:.1%} of export value has valid distance</sup>",
-                   font=dict(size=12, color=theme.MUTED), x=0, xanchor="left"),
         legend=dict(orientation="h", x=0, y=1.02, yanchor="bottom", font=dict(size=10), traceorder="normal"),
-        margin={"l": 75, "r": 20, "t": 95, "b": 60},
-        uirevision="M1-distance-share",
+        margin={"l": 75, "r": 20, "t": 42, "b": 60},
+        uirevision="M2-distance-share",
     )
     return fig
 

@@ -1,4 +1,4 @@
-"""M2 same-year scale comparisons. BACI: thousand USD; CHELEM: million USD.
+"""M1 same-year scale comparisons. BACI: thousand USD; CHELEM: million USD.
 
 No imputation, geographic remapping, or mutation of the shared loader frames.
 """
@@ -26,18 +26,18 @@ def prepare_year(exports, gdp, reference, year):
     series for a different territory. The original shared tables remain intact.
     """
     if year not in range(1995, 2024):
-        raise ValueError("M2 requires a historical year from 1995 to 2023.")
+        raise ValueError("M1 requires a historical year from 1995 to 2023.")
     if exports.attrs.get("demo") or gdp.attrs.get("demo"):
-        raise ValueError("M2 requires real BACI and CHELEM tables; demo data cannot support findings.")
+        raise ValueError("M1 requires real BACI and CHELEM tables; demo data cannot support findings.")
     for data, cols in [(exports, ["export_value"]), (gdp, ["gdp"])]:
         if not {"year", "country", *cols}.issubset(data.columns):
-            raise ValueError("An M2 source table has missing columns.")
+            raise ValueError("An M1 source table has missing columns.")
         if data.duplicated(["year", "country"]).any():
-            raise ValueError("Duplicate country/year keys in an M2 source table.")
+            raise ValueError("Duplicate country/year keys in an M1 source table.")
     e = exports.loc[exports.year.eq(year), ["country", "export_value"]]
     g = gdp.loc[gdp.year.eq(year), ["country", "gdp"]]
     if e.empty or g.empty:
-        raise ValueError(f"Missing source data for {year}; M2 does not substitute another year.")
+        raise ValueError(f"Missing source data for {year}; M1 does not substitute another year.")
     rows = e.merge(g, on="country", how="outer", validate="one_to_one")
     names = country_names(reference)
     eligible = set(reference.loc[~reference.country_code.isin(SPECIAL_CODES), "country_iso3"])

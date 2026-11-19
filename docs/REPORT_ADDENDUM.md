@@ -4,9 +4,9 @@ The final dashboard follows a six-stage narrative: global context, geographic di
 
 We changed the proposal’s global filters to independent module controls so that navigating the narrative preserves each analysis. The abstract partner network became a directed geographic map. Capitals locate economies; curved links represent bilateral relationships, not transport routes. A fixed-column six-economy partner matrix remains available as an alternative view. M5 explicitly imports the current M4 sample, product and analysis year on request; subsequent M4 changes do not silently change M5.
 
-In M1, China’s 2023 all-product partner shares show a negative descriptive association with distance (Spearman approximately −0.33). The distance–share scatter uses all positive-trade partners with valid distances; missing distances remain in share denominators. The map and ranking help locate partners that differ from the overall pattern. This is not evidence that distance alone causes trade differences.
+In M2, China’s 2023 all-product partner shares show a negative descriptive association with distance (Spearman approximately −0.33). The distance–share scatter uses all positive-trade partners with valid distances; missing distances remain in share denominators. The map and ranking help locate partners that differ from the overall pattern. This is not evidence that distance alone causes trade differences.
 
-M2 compares Germany and Japan in 2023. Japan’s GDP was approximately 0.95 times Germany’s, but its merchandise exports were approximately 0.50 times Germany’s. Exports/GDP was 18.70% in Japan and 35.27% in Germany. Similarity in one scale measure therefore leaves substantial variation in the other. This ratio compares gross merchandise trade with value added; it is neither a GDP contribution rate nor a measure of efficiency.
+M1 compares Germany and Japan in 2023. Japan’s GDP was approximately 0.95 times Germany’s, but its merchandise exports were approximately 0.50 times Germany’s. Exports/GDP was 18.70% in Japan and 35.27% in Germany. Similarity in one scale measure therefore leaves substantial variation in the other. This ratio compares gross merchandise trade with value added; it is neither a GDP contribution rate nor a measure of efficiency.
 
 M3 distinguishes export destinations from import suppliers. China’s 2023 HS87 exports totalled US$184.49 billion; the ten largest destinations represented 50.55%. HS87 imports totalled US$64.93 billion, with the ten largest suppliers representing 90.22%. All shares use complete partner totals. For China’s exports, the same-region share was approximately 48.3–51.8% for HS85 and 40.7–42.0% for HS87, with intervals allowing unknown destinations to be inside the region. These descriptive differences do not establish preferences after controlling for region size.
 
@@ -19,6 +19,6 @@ All findings derive from real data. Official annual bilateral files were reaggre
 
 ## 2026-11-06 电脑端视觉重构
 
-六模块改用顶部导航与完整电脑宽度。M2、M4将关联比较图并列，M5将发现与指标放到右侧并保持两图横轴对齐；M3保留深色地图，扩大地理视图，加入欧洲标签引线和清晰的选中金额。字体改为Avenir Next及系统后备字体，界面以白、灰蓝、单一蓝色强调为主，金色标记焦点和选择，国家颜色跨模块保持一致。
+六模块改用顶部导航与完整电脑宽度。M1、M4将关联比较图并列，M5将发现与指标放到右侧并保持两图横轴对齐；M3保留深色地图，扩大地理视图，加入欧洲标签引线和清晰的选中金额。字体改为Avenir Next及系统后备字体，界面以白、灰蓝、单一蓝色强调为主，金色标记焦点和选择，国家颜色跨模块保持一致。
 
 图表类型、真实坐标、金额、分母、样本范围和验收目标不变；35组绘图场景与22个数据/分析文件均通过前后比对，91项检查通过。此次仅优化电脑端。完整评价与真实页面设计稿见 [VISUAL_REVIEW.md](VISUAL_REVIEW.md)。

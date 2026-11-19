@@ -1,4 +1,4 @@
-"""Pure M1 calculations: distance vs partner export share.
+"""Pure M2 calculations: distance vs partner export share.
 
 Presentation filters (year / exporter / product / distance metric) never define
 reference totals. The partner share denominator is always the exporter's total
@@ -267,7 +267,7 @@ def analyze(
     hs2: str | None = None,
     metric: str = DEFAULT_METRIC,
 ) -> dict:
-    """Run the full M1 computation for one selection."""
+    """Run the full M2 computation for one selection."""
     frame, metric_used = partner_frame(
         pair, geodist, meta, exporter, year, hs2=hs2, metric=metric
     )

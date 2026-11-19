@@ -1,0 +1,247 @@
+/* Transparent page controls. Chart cards keep their module-specific layout. */
+html { scrollbar-gutter: stable; }
+
+.module-inner {
+  --toolbar-gap: 12px;
+  --toolbar-height: 36px;
+  --toolbar-font: 12px;
+  --toolbar-year: 118px;
+  --toolbar-field: 184px;
+  --toolbar-multi: 232px;
+  --toolbar-text: #53677b;
+  --toolbar-border: #c3d0dd;
+  --toolbar-selected: #274f77;
+  --toolbar-selected-fill: #eaf1f8;
+  --toolbar-selected-border: #97b0c9;
+}
+
+.module-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px 16px;
+}
+.module-heading-row > div:first-child { flex: 1 1 360px; min-width: 0; }
+.module-heading-row .toolbar-actions { margin-inline-start: auto; max-inline-size: 100%; }
+.module-heading-row .handoff-apply { inline-size: 202px; max-inline-size: 100%; }
+.module-heading-row .toolbar-actions button {
+  background: var(--panel);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: var(--toolbar-font);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.module-heading-row .toolbar-actions button:hover:not(:disabled) {
+  background: var(--toolbar-selected-fill);
+  border-color: var(--toolbar-selected-border);
+}
+
+.module-toolbar {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.module-inner .toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  column-gap: var(--toolbar-gap);
+  row-gap: 9px;
+  margin: 0;
+}
+
+.toolbar-row > :is(.control-field,.m1-field,.m3-field,.m4-field,.m5-field) {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.toolbar-row > :is(.control-field,.m1-field,.m3-field,.m4-field,.m5-field):has([id$="-year"]) {
+  flex-basis: var(--toolbar-year);
+}
+
+.toolbar-row > .control-field.m0-year:has(#M0-year) {
+  flex-basis: 330px;
+}
+
+.toolbar-row > :is(.control-field,.m3-field):has(#M1-anchor,#M2-exporter,#M3-country,#M2-product,#M3-product) {
+  flex-basis: var(--toolbar-field);
+}
+.toolbar-row > .control-field:has(#M1-factor) { flex-basis: 125px; }
+.toolbar-row :is(#M2-dist-metric,#M2-show,#M3-direction,#M3-top) { min-width: min(125px, 100%); }
+
+.module-inner .dash-dropdown {
+  min-height: var(--toolbar-height) !important;
+  font-family: inherit !important;
+  font-size: var(--toolbar-font) !important;
+  border-color: var(--toolbar-border) !important;
+}
+.module-inner .dash-dropdown-trigger { min-height: calc(var(--toolbar-height) - 2px) !important; }
+.module-inner :is(.dash-dropdown-value-item,.dash-dropdown-option,.dash-dropdown-placeholder,.dash-dropdown-value-count) {
+  font-family: inherit !important;
+  font-size: var(--toolbar-font) !important;
+}
+.module-inner :is(.dash-dropdown-value-item,.dash-dropdown-value-count) { color: var(--toolbar-selected); }
+.module-inner .dash-dropdown-option[aria-selected="true"] {
+  color: var(--toolbar-selected) !important;
+  background: var(--toolbar-selected-fill);
+  font-weight: 600;
+}
+.module-inner .dash-dropdown-option[aria-selected="true"] .dash-options-list-option-text {
+  color: inherit !important;
+}
+.module-inner .dash-dropdown-option input { accent-color: var(--accent); }
+.module-inner .dash-dropdown:is(:hover,:focus-within) { border-color: var(--toolbar-selected-border) !important; }
+
+.module-inner :is(.control-field,.m1-field,.m3-field,.m4-field) > label,
+.module-inner .m5-field > span {
+  color: var(--toolbar-text);
+  font-size: var(--toolbar-font);
+  font-weight: 500;
+}
+
+.module-toolbar :is(.m4-steps,.m5-major-tabs,.m5-presets),
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+}
+
+.module-inner :is(.radio-row,.m5-major-tabs,.m5-chart-switch) label,
+.module-toolbar :is(.m4-step,.m5-presets button,.toolbar-actions button,.handoff-controls > button),
+.module-inner > .handoff-controls > button,
+.module-inner .comparison-row > button,
+.module-inner .toolbar-disclosure > summary {
+  min-height: var(--toolbar-height);
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--toolbar-text);
+  font-family: inherit;
+  font-size: var(--toolbar-font);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.module-inner :is(.radio-row,.m5-major-tabs,.m5-chart-switch) label,
+.module-toolbar :is(.m4-step,.m5-presets button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.module-inner :is(.radio-row,.m5-major-tabs,.m5-chart-switch) label:has(input:checked),
+.module-toolbar .m4-step.on {
+  border-color: var(--toolbar-selected-border);
+  background: var(--toolbar-selected-fill);
+  color: var(--toolbar-selected);
+  font-weight: 600;
+}
+
+.module-toolbar :is(input[type="radio"],input[type="checkbox"]) { margin: 0; }
+.module-toolbar :is(.m4-step-number,.m5-step-number) { color: #627488; opacity: 1; }
+.module-toolbar :is(.m4-step,.m5-step-label) { gap: 8px; }
+.module-toolbar :is(.m4-step,.m5-step-label) strong { font-weight: 500; }
+.module-toolbar :is(.m4-step.on,.m5-major-tabs label:has(input:checked)) strong { font-weight: 600; }
+
+.module-toolbar > .toolbar-disclosure { margin-inline-start: auto; }
+
+.module-inner .handoff-controls {
+  margin-block: 0;
+  gap: 6px 9px;
+}
+.module-inner .handoff-controls:has(.handoff-note:empty):not(:has(.handoff-choice,.handoff-note:not(:empty))) { display: none; }
+.handoff-controls > .dash-dropdown-wrapper:has(.handoff-choice) {
+  flex: 0 1 var(--toolbar-field);
+  min-width: 0;
+  max-width: 100%;
+}
+.handoff-controls .handoff-choice { width: 100%; }
+.toolbar-row > .handoff-controls {
+  align-content: center;
+  flex: 1 1 140px;
+  min-block-size: var(--toolbar-height);
+  row-gap: 2px;
+}
+.toolbar-row > .handoff-controls .handoff-note {
+  line-height: 16px;
+}
+
+.module-inner .handoff-controls > button,
+.module-inner .toolbar-actions button {
+  min-height: var(--toolbar-height);
+  color: var(--accent);
+  border-color: #c4d0dd;
+  padding: 7px 11px;
+}
+
+.module-inner .toolbar-disclosure {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.module-inner .toolbar-disclosure > summary {
+  display: list-item;
+  width: fit-content;
+  max-width: 100%;
+  color: var(--accent);
+  padding: 8px 11px;
+  line-height: 18px;
+  white-space: normal;
+}
+.module-inner .toolbar-disclosure[open] {
+  flex: 1 1 100%;
+  margin-inline-start: 0;
+}
+.module-inner .toolbar-disclosure[open] > summary { margin-bottom: 10px; }
+.comparison-controls {
+  display: grid;
+  gap: var(--toolbar-gap);
+}
+.comparison-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--toolbar-gap);
+  align-items: end;
+}
+.comparison-row > .control-field { flex: 0 1 var(--toolbar-field); max-inline-size: 100%; }
+.comparison-row > .comparison-wide { flex-basis: var(--toolbar-multi); }
+.comparison-row > .comparison-year { flex-basis: var(--toolbar-year); }
+.comparison-row > .control-field:has(> .radio-row) { flex-basis: auto; }
+.comparison-row > .comparison-range { flex-basis: min(100%, 736px); }
+.comparison-controls .radio-row { gap: 6px; }
+.comparison-controls .dash-dropdown { padding: 0; }
+
+.module-toolbar :is(.handoff-note,.m5-hint) {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.module-toolbar [role="status"].m5-hint:not(:empty) {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  flex-basis: 100%;
+}
+.module-toolbar .m5-presets { width: auto; }
+.module-toolbar .m5-presets button { white-space: normal; }
+.module-inner .toolbar-actions [hidden] { display: none; }
+
+@media (max-width: 700px) {
+  .module-toolbar > .toolbar-disclosure { margin-inline-start: 0; }
+}

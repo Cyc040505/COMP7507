@@ -8,7 +8,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.analytics.geography import analyze, trade_by_partner, partner_frame, distance_profile
-from src.modules.m1_geography import (
+from src.modules.m2_geography import (
     _comparison_rows, _focus_subset, _geo_positions, _map_figure, _map_summary,
     _preserve_map_view, layout,
 )
@@ -222,7 +222,7 @@ class GeographyMapTests(unittest.TestCase):
         self.assertTrue(partners.reversescale)  # Lower km values get the dark end.
         self.assertIn("km", partners.colorbar.title.text)
         summary = _map_summary(result, "AAA", "nearest10")
-        ranking = next(c for c in summary if getattr(c, "className", "") == "m1-rank-list")
+        ranking = next(c for c in summary if getattr(c, "className", "") == "m2-rank-list")
         self.assertEqual(ranking.children[0].children[0].children[0].children, "P1")
         self.assertEqual(ranking.children[0].children[0].children[1].children, "90 km")
 
@@ -264,7 +264,7 @@ class GeographyMapTests(unittest.TestCase):
                     return found
             return None
 
-        exporter = find(layout(), "M1-exporter")
+        exporter = find(layout(), "M2-exporter")
         self.assertIn(exporter.value, {option["value"] for option in exporter.options})
 
 
