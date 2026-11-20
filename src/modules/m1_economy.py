@@ -64,7 +64,6 @@ def layout():
         components.module_intro(
             "Similar GDP. Similar exports?",
             "Similar economic size does not necessarily mean similar goods exports.",
-            actions=handoffs.actions(cid, "Use Overview year"),
         ),
         html.Div([
             html.Div([
@@ -75,6 +74,7 @@ def layout():
                         value=2023, clearable=False, className="ctl-dropdown",
                     ),
                 ),
+                handoffs.actions(cid, "Use Overview year"),
                 components.field("Starting economy", dcc.Dropdown(
                     id=cid("anchor"), options=anchor_options(), value="DEU",
                     clearable=False, className="ctl-dropdown",

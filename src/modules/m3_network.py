@@ -48,7 +48,6 @@ def layout():
             components.module_intro(
                 "Trade partners & regional reach",
                 "Home regions often lead in total exports, and the leading region can change by product.",
-                actions=handoffs.actions(cid, "Use current M2 selection"),
             ),
             dcc.Store(id=cid("selected")),
             dcc.Store(id=cid("records")),
@@ -107,6 +106,7 @@ def layout():
                             clearable=False,
                         ),
                     ),
+                    handoffs.actions(cid, "Use current M2 selection"),
                     handoffs.controls(cid),
                 ],
                 className="m3-controls module-toolbar toolbar-row",

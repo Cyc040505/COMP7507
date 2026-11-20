@@ -263,8 +263,14 @@ html { scrollbar-gutter: stable; }
   gap: 6px;
   margin-inline-start: auto;
 }
-.m4 .m4-toolbar-end .toolbar-actions { flex-wrap: nowrap; }
-.m4 .m4-toolbar-end #M4-handoff-undo[hidden] { display: inline-block; visibility: hidden; }
+/* Reserve Undo's slot so applying a selection never moves the apply button. */
+.module-toolbar .toolbar-actions { flex: none; flex-wrap: nowrap; }
+.module-toolbar .toolbar-actions button[hidden] { display: inline-block; visibility: hidden; }
+.toolbar-row > .toolbar-actions { margin-inline-start: auto; }
+.toolbar-row:has(#M1-year) > .toolbar-actions { margin-inline-start: 0; flex-direction: row-reverse; }
+.toolbar-row:has(#M5-import) > .toolbar-disclosure { margin-inline-start: 0; }
+.toolbar-row:has(> .toolbar-actions) > .handoff-controls { flex-basis: 100%; min-block-size: 0; }
+.toolbar-row:has(> .toolbar-actions) > .handoff-controls:not(:has(.handoff-note:not(:empty))) { display: none; }
 .m4 .m4-settings-toggle {
   display: grid;
   place-items: center;
@@ -278,7 +284,14 @@ html { scrollbar-gutter: stable; }
   border-radius: 5px;
   cursor: pointer;
 }
-.m4 .m4-settings-toggle > span { font-size: 26px; line-height: 1; }
+.m4 .m4-settings-toggle > span {
+  display: block;
+  width: 28px;
+  height: 28px;
+  font-size: 0;
+  background-color: currentColor;
+  mask: url("./m4-settings.svg") center / contain no-repeat;
+}
 .m4 .m4-settings-toggle:is(:hover,[aria-expanded="true"]) { background: var(--toolbar-selected-fill); }
 .m4 #M4-customize { flex: 1 0 100%; min-width: 0; }
 .m4 #M4-customize[hidden] { display: none; }
