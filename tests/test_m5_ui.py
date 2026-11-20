@@ -9,10 +9,10 @@ import app
 class TimeInterface(unittest.TestCase):
     def test_guided_and_custom_selection_follow_actual_inputs(self):
         guided = m.compute_view(
-            ["CHN", "DEU", "MEX"], "87", 2019, 2020, [2016, 2024], "product", 2024
+            ["CHN", "MEX"], "87", 2019, 2020, [2019, 2023], "product", 2023
         )
         self.assertEqual(guided["preset_class"], "m5-presets vehicles")
-        self.assertIn("3.00 percentage points", guided["implication"])
+        self.assertIn("2.66 percentage points", guided["implication"])
         custom = m.compute_view(
             ["DEU"], "87", 2019, 2020, [2016, 2024], "product", 2024
         )
@@ -183,7 +183,7 @@ class TimeInterface(unittest.TestCase):
             self.assertEqual(data["M5-countries"]["value"], ["MEX", "CHN"])
             self.assertEqual(data["M5-product"]["value"], expected)
             self.assertEqual(data["M5-metric"]["value"], metric)
-            self.assertEqual(data["M5-window"]["value"], [2016, 2023])
+            self.assertEqual(data["M5-window"]["value"], [2019 if product == "87" else 2016, 2023])
             self.assertIsNone(data["M5-structure"]["clickData"])
         res = self.call("M5-selected.data", {
             "active-module.data": "M5", "M5-window.value": [2016, 2023],
@@ -292,7 +292,7 @@ class TimeInterface(unittest.TestCase):
             values[f"M5-{case}.n_clicks"] = 1
             res = self.call("M5-countries.value", values, f"M5-{case}.n_clicks")
             updated = res.json["response"]
-            self.assertEqual(updated["M5-countries"]["value"], m.CASE_COUNTRIES)
+            self.assertEqual(updated["M5-countries"]["value"], ["CHN", "MEX"] if case == "vehicles" else m.CASE_COUNTRIES)
             self.assertEqual(updated["M5-product"]["value"], scope)
             self.assertEqual(updated["M5-baseline"]["value"], baseline)
             self.assertEqual(updated["M5-event"]["value"], event)

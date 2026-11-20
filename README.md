@@ -94,6 +94,11 @@ in a shared transparent toolbar. Navigation alone preserves each module's select
 
 M4 and M5 can import a selection from the preceding module. After an import, **Undo** restores the previous selection before further edits.
 
+Economy starts with Germany and Japan in 2023. Geography and Trade partners open on
+US all-product exports in the same year. Product structure opens on the China–Mexico
+income comparison and uses vehicles and parts (HS87) for its specialization step.
+Time change opens on the same two economies and chapter, comparing 2019 with 2023.
+
 M4 opens in **Key findings**. The gear beside **Use current M3 selection** opens
 **Customize this comparison**, including the **Full analysis** view and optional
 product and economy choices for the M3 transfer.

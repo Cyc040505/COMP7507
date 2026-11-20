@@ -50,11 +50,8 @@ def story_guide(context, current, names):
             evidence = f"Vehicles & parts: {a.loc['CHN','share']:.1%} of China’s exports vs {a.loc['MEX','share']:.1%} of Mexico’s."
         return '01 / Do similar incomes mean similar export baskets?', income_text + evidence, explanation
     if step == 'specialization':
-        a = current[current.exporter.eq('CHN')].set_index('hs2')
-        evidence = f"China · {year}. Compare importance within China (left) with concentration relative to the world (right)."
-        if {'85','95'} <= set(a.index):
-            evidence += f" World export shares: electrical equipment {a.loc['85','world_share']:.2%}; toys, games & sports equipment {a.loc['95','world_share']:.2%}."
-        return '02 / Is the largest export category also the most specialized?', evidence, explanation
+        return ('02 / Which economy specializes in vehicles and parts?',
+                f'HS87 · {year} · Compare each economy with the same world export share.', explanation)
     if step == 'change':
         return ('03 / If export share rises, is specialization above the world benchmark?',
                 f'Vehicles & parts · {baseline} → {year} · China and Mexico',
@@ -72,19 +69,22 @@ def presentation(context, current, trade, names):
     selected = current[current.exporter.isin(countries)]
     note = ''
     if step == 'specialization':
-        a = selected[selected.exporter.eq('CHN')].set_index('hs2').reindex(['85','95'])
+        a = selected[selected.hs2.eq('87')].set_index('exporter').reindex(countries)
         fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.13,
-                            subplot_titles=['Share of China’s exports', 'Specialization relative to the world'])
-        ys = [product_name(c) for c in ['85','95']]
-        for col, vals, suffix in [(1,a.share*100,'%'), (2,a.rca,'×')]:
-            bars(fig, vals.tolist(), ys, 'China', ['#7892ac', theme.ACCENT], [['CHN',c] for c in ['85','95']], 1,col,suffix)
-            fig.update_xaxes(title_text='All-product export share (%)' if col==1 else 'Country share ÷ world share (×)',
-                             range=[0,max(1, vals.max()*1.3)], row=1,col=col)
-            fig.update_yaxes(autorange='reversed', row=1,col=col)
+                            subplot_titles=['Share of each economy’s exports', 'Specialization relative to the world'])
+        labels = [names.get(c, c) for c in countries]
+        colors = [theme.country_color(c) for c in countries]
+        for col, vals, suffix in [(1, a.share * 100, '%'), (2, a.rca, '×')]:
+            bars(fig, vals.tolist(), labels, 'HS87', colors, [[c, '87'] for c in countries],
+                 1, col, suffix)
+            fig.update_xaxes(title_text='All-product export share (%)' if col == 1 else 'RCA (× world share)',
+                             range=[0, max(1.3, vals.max() * 1.3)], row=1, col=col)
+            fig.update_yaxes(autorange='reversed', row=1, col=col)
         fig.add_vline(x=1, line_dash='dot', line_color=theme.INK, row=1,col=2)
         fig.add_annotation(x=1, y=.5, xref='x2', yref='y2 domain', text='1× World benchmark', showarrow=False, xanchor='left', xshift=6, bgcolor='white', font=dict(size=12))
-        supported = a.loc['85','share'] > a.loc['95','share'] and a.loc['95','rca'] > a.loc['85','rca']
-        title = ('China: electrical equipment has the larger share; toys are more specialized' if supported else 'Compare product share with the world benchmark')
+        title = 'Vehicles and parts in national and world exports'
+        if a.rca.get('MEX', 0) > 1 > a.rca.get('CHN', float('nan')):
+            title = 'Vehicles exceed the world benchmark in Mexico and fall below it in China'
         fig.update_layout(showlegend=False, height=365)
     elif step == 'change':
         fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.13,

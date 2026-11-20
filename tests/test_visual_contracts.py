@@ -26,9 +26,9 @@ class VisualContracts(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         r = response.get_json()["response"]
         for key, value in [
-            ("country", "CHN"),
+            ("country", "USA"),
             ("year", 2023),
-            ("product", "87"),
+            ("product", "TOTAL"),
             ("direction", "export"),
             ("top", 10),
             ("view", "map"),

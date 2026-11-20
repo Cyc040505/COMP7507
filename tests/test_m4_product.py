@@ -328,7 +328,7 @@ class DashIntegration(unittest.TestCase):
             {"active-module.data": "M4", "M4-step-specialization.n_clicks": 1},
             changed="M4-step-specialization.n_clicks",
         )
-        self.assertEqual(result["M4-case"]["data"]["product"], "95")
+        self.assertEqual(result["M4-case"]["data"]["product"], "87")
         case = result["M4-case"]["data"]
         settings = self.call(
             "M4-countries.options",
@@ -359,8 +359,8 @@ class DashIntegration(unittest.TestCase):
 
     def test_specialization_click_and_two_year_export(self):
         z = self.call("M4-graph.figure", self.inputs("specialization"))
-        self.assertIn("HS95", z["M4-evidence"]["children"])
-        self.assertIn("smaller export share", z["M4-conclusion"]["children"])
+        self.assertIn("HS87", z["M4-evidence"]["children"])
+        self.assertIn("RCA above 1×", z["M4-conclusion"]["children"])
         c = z["M4-comparison"]["data"]
         selected = self.call(
             "M4-inspect.value",
@@ -441,7 +441,7 @@ class DashIntegration(unittest.TestCase):
         self.assertNotIn("export baskets differ", z["M4-conclusion"]["children"])
 
     def test_m5_handoff_uses_actual_comparison_and_inspected_product(self):
-        for step, product in [("structure", "85"), ("specialization", "95"), ("change", "87")]:
+        for step, product in [("structure", "87"), ("specialization", "87"), ("change", "87")]:
             z = self.call("M4-graph.figure", self.inputs(step))
             comparison = z["M4-comparison"]["data"]
             selected = self.call("M4-inspect.value", {

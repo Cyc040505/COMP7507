@@ -38,7 +38,7 @@ python app.py
 | 控件 | 可选范围 | 默认值 | 作用 |
 | --- | --- | --- | --- |
 | 年份 | 1995–2024 | 2023 | 选择贸易数据年份 |
-| 出口国 | 中国、德国、荷兰、意大利、墨西哥、美国；贸易伙伴不限于这六个国家 | China（CHN） | 固定出口方向，查看其目的地伙伴 |
+| 出口国 | 中国、德国、荷兰、意大利、墨西哥、美国；贸易伙伴不限于这六个国家 | United States（USA） | 固定出口方向，查看其目的地伙伴 |
 | 商品 | All products 或一个 HS2 商品章 | All products | 切换全部商品或单一商品范围 |
 | 距离指标 | Simple distance | Simple distance | 使用 GeoDist 的 `dist` 列；其他距离列保留在分析层 |
 | 显示范围 | Top 10 by share / Nearest 10 / Top 40 partners | Top 10 by share | 控制地图和侧栏展示的伙伴集合 |

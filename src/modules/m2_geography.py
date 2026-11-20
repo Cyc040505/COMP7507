@@ -598,7 +598,7 @@ def layout():
                             dcc.Dropdown(
                                 id=cid("exporter"),
                                 options=_country_options(),
-                                value="CHN",
+                                value="USA",
                                 clearable=False,
                                 className="ctl-dropdown",
                             ),

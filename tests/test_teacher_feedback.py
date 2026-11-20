@@ -29,9 +29,9 @@ class TeacherFeedback(unittest.TestCase):
 
     def test_specialization_retains_ratio_and_its_baseline(self):
         title,fig,note=self.render(self.context('specialization'))
-        self.assertIn('toys are more specialized',title)
-        np.testing.assert_allclose(fig.data[0].x,[31.3646,2.5996],atol=.0001)
-        np.testing.assert_allclose(fig.data[1].x,[2.140111,4.118182],atol=.00001)
+        self.assertIn('world benchmark in Mexico',title)
+        np.testing.assert_allclose(fig.data[0].x,[5.40,26.12],atol=.005)
+        np.testing.assert_allclose(fig.data[1].x,[.65,3.14],atol=.005)
         self.assertEqual(fig.layout.shapes[0].x0,1)
         self.assertEqual(note, '')
 
