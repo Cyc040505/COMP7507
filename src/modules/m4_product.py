@@ -188,16 +188,7 @@ def layout():
                             )
                         ],
                     ),
-                    html.Div([
-                        handoffs.actions(cid, "Use current M3 selection"),
-                        html.Button(
-                            html.Span("⚙", **{"aria-hidden": "true"}),
-                            id=cid("settings-toggle"), n_clicks=0,
-                            className="m4-settings-toggle", title="Customize this comparison",
-                            **{"aria-label": "Customize this comparison", "aria-expanded": "false",
-                               "aria-controls": cid("customize")},
-                        ),
-                    ], className="m4-toolbar-end"),
+                    components.comparison_actions(cid, handoffs.actions(cid, "Use current M3 selection")),
                     html.Div(
                         components.comparison_fields(
                             [components.field(
@@ -945,14 +936,7 @@ def rca_explainer():
 
 
 def register_callbacks(app):
-    app.clientside_callback(
-        """function(clicks) {
-            const open = Boolean(clicks % 2);
-            return [!open, String(open)];
-        }""",
-        Output(cid("customize"), "hidden"), Output(cid("settings-toggle"), "aria-expanded"),
-        Input(cid("settings-toggle"), "n_clicks"),
-    )
+    components.register_comparison_toggle(app, cid)
 
     source = [("M3-country", "value"), ("M3-year", "value"), ("M3-product", "value"),
               ("M3-direction", "value"), (cid("handoff-product"), "value"),

@@ -12,7 +12,7 @@
 
 ## 页面与交互
 
-- 顶部提供 Analysis year、01 Compare recovery、02 Check structure，以及可展开的 Customize this comparison。控件、字体和蓝灰配色与 M4 对齐。
+- 顶部提供 Analysis year、01 Compare recovery、02 Check structure，以及联动按钮右侧的齿轮（Customize this comparison）。点击齿轮可展开或收起比较设置。控件、字体和蓝灰配色与 M4 对齐。
 - 支持美、德、中、墨、荷、意中选择 1–6 国，保持输入顺序。桌面国家卡片三列，四国时两列，窄屏自动换列。
 - Compare recovery 保留完整多国折线（基期金额=100），其后为各国关键年份条形及恢复结果。单国折线与图型切换已移除；散点试版已撤回，不在交付中。
 - 国家条形比较基期、事件年和查看年，必要时去重并补窗口末年；所有国家共用从零出发的坐标。结果保留相对基期变化、首次已观测返回、最大观察损失、份额及恢复状态。

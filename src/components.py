@@ -5,7 +5,7 @@ Keeping these in one place means new modules stay small and visually consistent.
 
 from __future__ import annotations
 
-from dash import dcc, html
+from dash import Input, Output, dcc, html
 
 from src import theme
 
@@ -201,12 +201,25 @@ def comparison_fields(*rows):
     )
 
 
-def comparison_controls(*rows, id):
-    return html.Details(
-        [
-            html.Summary("Customize this comparison"),
-            comparison_fields(*rows),
-        ],
-        id=id,
-        className="toolbar-disclosure",
+def comparison_actions(cid, actions):
+    label = "Customize this comparison"
+    return html.Div([
+        actions,
+        html.Button(
+            html.Span(**{"aria-hidden": "true"}),
+            id=cid("settings-toggle"), n_clicks=0,
+            className="comparison-settings-toggle", title=label,
+            **{"aria-label": label, "aria-expanded": "false", "aria-controls": cid("customize")},
+        ),
+    ], className="comparison-actions")
+
+
+def register_comparison_toggle(app, cid):
+    app.clientside_callback(
+        """function(clicks) {
+            const open = Boolean(clicks % 2);
+            return [!open, String(open)];
+        }""",
+        Output(cid("customize"), "hidden"), Output(cid("settings-toggle"), "aria-expanded"),
+        Input(cid("settings-toggle"), "n_clicks"),
     )

@@ -247,7 +247,7 @@ html { scrollbar-gutter: stable; }
 }
 
 /* Keep secondary settings in the comparison panel and the guided cases in view. */
-.m4 #M4-customize .comparison-controls {
+:is(#M4-customize,#M5-customize) .comparison-controls {
   padding: clamp(12px, 1.5vw, 20px);
   background: var(--panel);
   border: 1px solid var(--toolbar-border);
@@ -257,7 +257,7 @@ html { scrollbar-gutter: stable; }
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
 }
-.m4 .m4-toolbar-end {
+.module-toolbar .comparison-actions {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -268,10 +268,9 @@ html { scrollbar-gutter: stable; }
 .module-toolbar .toolbar-actions button[hidden] { display: inline-block; visibility: hidden; }
 .toolbar-row > .toolbar-actions { margin-inline-start: auto; }
 .toolbar-row:has(#M1-year) > .toolbar-actions { margin-inline-start: 0; flex-direction: row-reverse; }
-.toolbar-row:has(#M5-import) > .toolbar-disclosure { margin-inline-start: 0; }
 .toolbar-row:has(> .toolbar-actions) > .handoff-controls { flex-basis: 100%; min-block-size: 0; }
 .toolbar-row:has(> .toolbar-actions) > .handoff-controls:not(:has(.handoff-note:not(:empty))) { display: none; }
-.m4 .m4-settings-toggle {
+.module-toolbar .comparison-settings-toggle {
   display: grid;
   place-items: center;
   padding: 0;
@@ -279,12 +278,12 @@ html { scrollbar-gutter: stable; }
   height: var(--toolbar-height);
   font-family: system-ui, sans-serif;
   color: var(--accent);
-  background: var(--panel);
-  border: 1px solid var(--toolbar-border);
-  border-radius: 5px;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
   cursor: pointer;
 }
-.m4 .m4-settings-toggle > span {
+.module-toolbar .comparison-settings-toggle > span {
   display: block;
   width: 22px;
   height: 22px;
@@ -292,9 +291,10 @@ html { scrollbar-gutter: stable; }
   background-color: currentColor;
   mask: url("./m4-settings.svg") center / contain no-repeat;
 }
-.m4 .m4-settings-toggle:is(:hover,[aria-expanded="true"]) { background: var(--toolbar-selected-fill); }
-.m4 #M4-customize { flex: 1 0 100%; min-width: 0; }
-.m4 #M4-customize[hidden] { display: none; }
+.module-toolbar .comparison-settings-toggle:is(:hover,:focus-visible,[aria-expanded="true"]) { background: var(--toolbar-selected-fill); }
+.module-toolbar .comparison-settings-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:is(#M4-customize,#M5-customize) { flex: 1 0 100%; min-width: 0; }
+:is(#M4-customize,#M5-customize)[hidden] { display: none; }
 .m4 .m4-import { width: 100%; min-width: 0; border: 0; border-top: 1px solid var(--line); margin: 0; padding: 8px 0 0; }
 .m4 .m4-import legend { font-size: var(--toolbar-font); color: var(--toolbar-text); padding-right: 7px; }
 .m4 .m4-import .control-field { flex: 0 1 235px; min-width: 0; }
