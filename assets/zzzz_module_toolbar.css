@@ -286,8 +286,8 @@ html { scrollbar-gutter: stable; }
 }
 .m4 .m4-settings-toggle > span {
   display: block;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   font-size: 0;
   background-color: currentColor;
   mask: url("./m4-settings.svg") center / contain no-repeat;

@@ -79,6 +79,6 @@ python scripts/audit_final_examples.py --source-root /path/to/data
 
 ## 报告同步与边界
 
-各模块保留独立筛选，目标模块可通过右上角按钮主动沿用上一模块的条件，具体规则见 [README](../README.md#module-local-controls-the-current-model)。抽象网络调整为首都定位的有向地理连接，保留六国固定伙伴矩阵及地区集中分析。报告可使用 [最终分析补充稿](REPORT_ADDENDUM.md)。
+各模块保留独立筛选，M1 可在年份旁带入 Overview 年份，M2–M5 可在筛选工具栏主动沿用上一模块的条件，具体规则见 [README](../README.md#module-local-controls-the-current-model)。抽象网络调整为首都定位的有向地理连接，保留六国固定伙伴矩阵及地区集中分析。报告可使用 [最终分析补充稿](REPORT_ADDENDUM.md)。
 
 数据及必达功能没有已知未通过项。六国为案例，不能外推所有国家；地图曲线不是真实运输路线；名义金额受价格与汇率影响；RCA不是效率，出口/GDP不是贡献率；地区未知项可能使跨年变化方向不确定。最终人工审核和合并仍由用户完成。

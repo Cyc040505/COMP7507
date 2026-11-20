@@ -1,6 +1,6 @@
 # M2｜地理距离与贸易伙伴分布
 
-更新日期：2026-11-09
+更新日期：2026-11-20
 项目：COMP7507 Visualization & Visual Analytics · Group 7
 
 模块：M2 Geography
@@ -34,6 +34,8 @@ python app.py
 访问 `http://127.0.0.1:8050`，在导航栏选择 **M2 Geography**。`8050` 是 `app.py` 的默认端口。
 
 ### 2.1 筛选控件
+
+筛选栏末端的 **Use current M1 selection** 带入 M1 的起始经济体和年份，商品范围设为全部。导入改变了筛选条件后，可点相邻的 **Undo** 恢复。
 
 | 控件 | 可选范围 | 默认值 | 作用 |
 | --- | --- | --- | --- |
