@@ -186,5 +186,4 @@ re-shipped as scripts.
 - Final review & demo guide: [docs/FINAL_REVIEW.md](docs/FINAL_REVIEW.md)
 - Data sources & layout: [docs/DATA.md](docs/DATA.md)
 - Module handoffs: `docs/M*_README.md`, `docs/M*_validation.md`, `docs/M*_source_audit.json`
-- Presentation walkthrough: [M0–M5 demo sequence](docs/USER_WALKTHROUGH.html)
 - Report findings: [report addendum](docs/REPORT_ADDENDUM.md)
