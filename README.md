@@ -94,7 +94,8 @@ in a shared transparent toolbar. Navigation alone preserves each module's select
 
 M4 and M5 can import a selection from the preceding module. After an import, **Undo** restores the previous selection before further edits.
 
-Economy starts with Germany and Japan in 2023. Geography and Trade partners open on
+Economy opens on US and German goods exports in 2023. German exports were 82.7%
+of US exports, while US GDP was 6.14 times Germany’s. Geography and Trade partners open on
 US all-product exports in the same year. Product structure opens on the China–Mexico
 income comparison and uses vehicles and parts (HS87) for its specialization step.
 Time change opens on the same two economies and chapter, comparing 2019 with 2023.

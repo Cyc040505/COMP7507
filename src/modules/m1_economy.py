@@ -20,6 +20,10 @@ MODULE_ID = "M1"
 NAV_LABEL = "M1  Economy"
 ORDER = 1
 FOCUS_NAMES = ["United States", "Germany", "China", "Mexico", "Netherlands", "Italy"]
+INTRO = {
+    "export_value": ("Similar exports. Similar GDP?", "Economies with similar goods exports can differ widely in GDP."),
+    "gdp": ("Similar GDP. Similar exports?", "Economies with similar GDP can differ widely in goods exports."),
+}
 LIMITATION = (
     "Nominal goods exports / nominal GDP compares gross trade with value added; "
     "it is not GDP contribution or efficiency. Values above 100% can occur. "
@@ -62,8 +66,8 @@ def layout():
         dcc.Store(id=cid("context")), dcc.Download(id=cid("download")),
         dcc.Store(id=cid("reference-lines-ready")),
         components.module_intro(
-            "Similar GDP. Similar exports?",
-            "Similar economic size does not necessarily mean similar goods exports.",
+            html.Span(INTRO["export_value"][0], id=cid("question")),
+            html.Span(INTRO["export_value"][1], id=cid("summary")),
         ),
         html.Div([
             html.Div([
@@ -75,7 +79,7 @@ def layout():
                     ),
                 ),
                 components.field("Starting economy", dcc.Dropdown(
-                    id=cid("anchor"), options=anchor_options(), value="DEU",
+                    id=cid("anchor"), options=anchor_options(), value="USA",
                     clearable=False, className="ctl-dropdown",
                 )),
                 components.field("Similarity range", dcc.Dropdown(
@@ -86,7 +90,7 @@ def layout():
                 components.field("Match by", dcc.RadioItems(
                     id=cid("mode"),
                     options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}],
-                    value="gdp", className="radio-row",
+                    value="export_value", className="radio-row",
                 )),
             ], className="toolbar-row"),
         ], className="module-toolbar"),
@@ -106,7 +110,7 @@ def layout():
                 ], className="m1-chart-help"),
             ])),
             components.card("Compare two economies", html.Div([
-                field("Choose an economy to compare", dcc.Dropdown(id=cid("comparator"), options=[{"label": "Japan · JPN", "value": "JPN"}], value="JPN", clearable=False)),
+                field("Choose an economy to compare", dcc.Dropdown(id=cid("comparator"), options=[{"label": "Germany · DEU", "value": "DEU"}], value="DEU", clearable=False)),
                 html.Div(id=cid("relative")),
                 html.Section([
                     html.H4("Exact values"),
@@ -225,7 +229,13 @@ def economy_card(row, role):
 
 
 def finding_text(a, b, mode, year):
-    other = "export_value" if mode == "gdp" else "gdp"
+    if mode == "export_value":
+        larger, smaller = sorted((a, b), key=lambda row: row["gdp"], reverse=True)
+        return (
+            f"In {year}, {b['name']}'s goods exports were {b[mode] / a[mode]:.1%} of {a['name']}'s. "
+            f"{larger['name']}'s GDP was {larger['gdp'] / smaller['gdp']:.2f} times {smaller['name']}'s."
+        )
+    other = "export_value"
     return (
         f"In {year}, {b['name']}'s {MODES[mode]} measured {b[mode] / a[mode]:.2f}× "
         f"{a['name']}'s, while its {MODES[other]} measured {b[other] / a[other]:.2f}×. "
@@ -268,6 +278,11 @@ def relative_comparison(a, b, year):
 
 
 def register_callbacks(app):
+    @app.callback(Output(cid("question"), "children"), Output(cid("summary"), "children"),
+                  Input(cid("mode"), "value"))
+    def update_intro(mode):
+        return INTRO[mode]
+
     app.clientside_callback(
         ClientsideFunction(namespace="m1", function_name="extendReferenceLines"),
         Output(cid("reference-lines-ready"), "data"),
