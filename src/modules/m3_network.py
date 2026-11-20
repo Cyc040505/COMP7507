@@ -39,6 +39,24 @@ def positions():
     return pd.read_csv(config.DATA_DIR / "reference/capitals.csv").set_index("iso3")
 
 
+@lru_cache(maxsize=1)
+def regional_record():
+    flows = data_loader.load_country_pair_year()
+    if flows.attrs.get("demo"):
+        return "Historical regional comparison unavailable."
+    regions = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3").region
+    sample = flows.loc[flows.exporter.isin(FOCUS) & flows.year.between(1995, 2024)]
+    totals = sample.groupby(["exporter", "year", sample.importer.map(regions)]).value.sum().unstack(fill_value=0)
+    known = totals.drop(columns="Unknown", errors="ignore")
+    leads = 0
+    for (exporter, year), shares in known.iterrows():
+        home = regions.get(exporter)
+        if home in shares and shares[home] > shares.drop(home).max():
+            leads += 1
+    return (f"1995–2024 · Six economies, all goods exports: the home region ranked first "
+            f"in {leads}/{len(known)} observed economy-years among known destinations.")
+
+
 def layout():
     meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")
     graph_config = {"displaylogo": False, "displayModeBar": False, "responsive": True}
@@ -71,7 +89,7 @@ def layout():
                                 {"label": f"{meta.loc[c, 'name']} ({c})", "value": c}
                                 for c in FOCUS
                             ],
-                            value="CHN",
+                            value="USA",
                             clearable=False,
                         ),
                     ),
@@ -81,7 +99,7 @@ def layout():
                             id=cid("product"),
                             options=[{"label": "All products", "value": "TOTAL"}]
                             + [{"label": label(p), "value": p} for p in chapters()],
-                            value="87",
+                            value="TOTAL",
                             clearable=False,
                         ),
                     ),
@@ -183,7 +201,7 @@ def layout():
                 [
                     components.card(
                         "Regional shares",
-                        html.Div(id=cid("selected-regions")),
+                        [html.P(regional_record(), className="scope-note"), html.Div(id=cid("selected-regions"))],
                     ),
                     components.card(
                         "03  Does trade follow regional gravity?",
@@ -1090,7 +1108,7 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def reset(n):
-        return "CHN", None, 2023, "87", "export", 10, "map"
+        return "USA", None, 2023, "TOTAL", "export", 10, "map"
 
     @app.callback(
         Output(cid("selected"), "data", allow_duplicate=True),

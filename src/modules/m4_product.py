@@ -40,17 +40,17 @@ STEPS = {
         "metric": "share",
         "mode": "income",
         "focus": "CHN",
-        "product": "85",
+        "product": "87",
         "view": "world",
         "countries": DEFAULTS,
     },
     "specialization": {
-        "question": "Does a large export share mean stronger specialization?",
-        "action": "Inspect China’s electrical equipment (HS85) and toys/games (HS95). Compare their shares and RCA.",
+        "question": "Which economy specializes in vehicles and parts?",
+        "action": "Compare the HS87 export share in each economy with its share in world exports.",
         "metric": "rca",
         "mode": "income",
         "focus": "CHN",
-        "product": "95",
+        "product": "87",
         "view": "world",
         "countries": DEFAULTS,
     },
@@ -375,7 +375,7 @@ def layout():
                                             dcc.Dropdown(
                                                 id=cid("inspect"),
                                                 options=products,
-                                                value="85",
+                                                value="87",
                                                 clearable=False,
                                                 className="ctl-dropdown",
                                             ),
@@ -1356,16 +1356,12 @@ def register_callbacks(app):
         elif len(chosen) == 1:
             finding = f"{chosen[0]} is selected; add another economy for a cross-country finding."
         if guided and cases.get("step") == "specialization":
-            a = d[d.exporter.eq("CHN")].set_index("hs2")
-            if {"85", "95"} <= set(a.index) & set(products):
-                x = a.loc["85"]
-                y = a.loc["95"]
-                finding = f"CHN HS85: share {x.share:.2%}, RCA {x.rca:.2f}; HS95: share {y.share:.2%}, RCA {y.rca:.2f}."
-                implication = (
-                    "Toys, games and sports equipment (HS95) have a smaller export share but a higher RCA than electrical machinery (HS85) in this case. A large domestic share and strong relative specialization answer different questions."
-                    if y.share < x.share and y.rca > x.rca
-                    else "The current values do not support the preset share/RCA reversal; inspect the displayed evidence."
-                )
+            vehicle = d[d.hs2.eq("87")].set_index("exporter").reindex(chosen)
+            finding = "HS87 · " + "; ".join(
+                f"{c}: share {r.share:.2%}, RCA {r.rca:.2f}×"
+                for c, r in vehicle.dropna(subset=["share", "rca"]).iterrows()
+            )
+            implication = "An RCA above 1× means vehicles account for a larger share of this economy’s exports than of world exports."
         if guided and cases.get("step") == "change":
             evidence = []
             for c in chosen:
@@ -1471,9 +1467,9 @@ def register_callbacks(app):
                 return c, p, context
         if previous.get("step") != step or ctx.triggered_id == cid("case"):
             focus = case.get("focus")
-            product = case.get("product", "85")
+            product = case.get("product", "87")
         focus = focus if focus in valid else valid[0] if valid else None
-        return focus, product if transfer else product or "85", context
+        return focus, product if transfer else product or "87", context
 
     @app.callback(
         Output(cid("detail"), "figure"),
@@ -1502,7 +1498,7 @@ def register_callbacks(app):
                 [],
                 [],
             )
-        p = p or "85"
+        p = p or "87"
         d = metrics(year)
         a = d[d.exporter.eq(c)]
         if not c or c not in comparison.get("countries", []):

@@ -21,6 +21,8 @@ MODULE_ID = "M5"
 NAV_LABEL = "M5  Time Change"
 ORDER = 5
 YEARS = list(range(1995, 2025))
+VEHICLE_COUNTRIES = ["CHN", "MEX"]
+VEHICLE_WINDOW = (2019, 2023)
 CASE_COUNTRIES = ["CHN", "DEU", "MEX"]
 CASES = {
     "pandemic": (
@@ -36,10 +38,10 @@ CASES = {
         "87",
         2019,
         2020,
-        (2016, 2024),
+        VEHICLE_WINDOW,
         "product",
-        "Did vehicles and parts recover at the same pace as all goods?",
-        "Read the first return year, then compare HS87’s weight in each export basket.",
+        "How did vehicle exports change from 2019 to 2023?",
+        "Compare the two export value indices, then check the share of HS87 in each export basket.",
     ),
     "crisis": (
         "TOTAL",
@@ -118,7 +120,7 @@ def layout():
     return html.Div(
         className="module-inner m5 m5-fieldnotes",
         children=[
-            dcc.Store(id=cid("selected"), data=2024),
+            dcc.Store(id=cid("selected"), data=VEHICLE_WINDOW[1]),
             dcc.Store(id=cid("rows")),
             dcc.Store(id=cid("import-reset")),
             dcc.Download(id=cid("download")),
@@ -133,9 +135,9 @@ def layout():
                         dcc.Dropdown(
                             id=cid("inspect-year"),
                             options=[
-                                {"label": str(y), "value": y} for y in range(2016, 2025)
+                                {"label": str(y), "value": y} for y in range(VEHICLE_WINDOW[0], VEHICLE_WINDOW[1] + 1)
                             ],
-                            value=2024,
+                            value=VEHICLE_WINDOW[1],
                             clearable=False,
                             searchable=False,
                             className="ctl-dropdown",
@@ -182,7 +184,7 @@ def layout():
                                         {"label": f"{ns[c]} ({c})", "value": c}
                                         for c in FOCUS_COUNTRIES
                                     ],
-                                    value=["CHN", "DEU", "MEX"],
+                                    value=VEHICLE_COUNTRIES,
                                     multi=True,
                                 ),
                                 extra_class="comparison-wide",
@@ -193,7 +195,7 @@ def layout():
                                     id=cid("product"),
                                     options=[{"label": "All products", "value": "TOTAL"}]
                                     + [{"label": label(p), "value": p} for p in chapters()],
-                                    value="TOTAL",
+                                    value="87",
                                     clearable=False,
                                 ),
                                 extra_class="comparison-wide",
@@ -216,7 +218,7 @@ def layout():
                                     id=cid("window"),
                                     min=1995,
                                     max=2024,
-                                    value=[2016, 2024],
+                                    value=list(VEHICLE_WINDOW),
                                     step=1,
                                     marks={year: str(year) for year in (1995, 2000, 2005, 2010, 2015, 2020, 2024)},
                                     allowCross=False,
@@ -270,10 +272,10 @@ def layout():
                                     [],
                                     2019,
                                     2020,
-                                    [2016, 2024],
-                                    "intra",
-                                    "TOTAL",
-                                    2024,
+                                    list(VEHICLE_WINDOW),
+                                    "product",
+                                    "87",
+                                    VEHICLE_WINDOW[1],
                                     message="Loading the selected comparison…",
                                     show_graph=True,
                                 ),
@@ -303,7 +305,7 @@ def layout():
                                     "value": "intra",
                                 },
                             ],
-                            value="intra",
+                            value="product",
                             inline=True,
                             className="m5-radio",
                         ),
@@ -702,7 +704,7 @@ def compute_view(
         (
             name
             for name, case in CASES.items()
-            if signature == case[:5] and set(countries) == set(CASE_COUNTRIES)
+            if signature == case[:5] and set(countries) == set(VEHICLE_COUNTRIES if name == "vehicles" else CASE_COUNTRIES)
         ),
         None,
     )
@@ -933,7 +935,9 @@ def register_callbacks(app):
                     raise ValueError("Wait for M4 to finish applying the current selection.")
             except ValueError as exc:
                 return [no_update] * 6 + [str(exc)] + [no_update] * 4
-            if year >= 2020:
+            if year == VEHICLE_WINDOW[1] and scope == "87" and set(countries) == set(VEHICLE_COUNTRIES):
+                baseline, event, window = 2019, 2020, list(VEHICLE_WINDOW)
+            elif year >= 2020:
                 baseline, event, window = 2019, 2020, [2016, year]
             else:
                 # Historical imports use adjacent years. The earliest year
@@ -956,7 +960,7 @@ def register_callbacks(app):
         key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
         scope, baseline, event, window, measure = CASES[key][:5]
         return (
-            list(CASE_COUNTRIES),
+            list(VEHICLE_COUNTRIES if key == "vehicles" else CASE_COUNTRIES),
             scope,
             baseline,
             event,
