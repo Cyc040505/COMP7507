@@ -125,7 +125,6 @@ def layout():
             components.module_intro(
                 "Recovery & structural change",
                 "Export recovery can coincide with shifts in product and regional partner shares.",
-                actions=handoffs.actions(cid, "Use current M4 selection", apply_id="import", undo_id="undo-import"),
             ),
             html.Div(
                 [
@@ -170,6 +169,7 @@ def layout():
                         inline=True,
                         className="m5-major-tabs",
                     ),
+                    handoffs.actions(cid, "Use current M4 selection", apply_id="import", undo_id="undo-import"),
                     components.comparison_controls(
                         [
                             components.field(

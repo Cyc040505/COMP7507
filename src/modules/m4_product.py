@@ -106,6 +106,34 @@ def table(s, columns):
     )
 
 
+def m3_import_fields():
+    return html.Fieldset([
+        html.Legend("M3 selection options"),
+        html.Div([
+            components.field(
+                "Product",
+                dcc.Dropdown(
+                    id=cid("handoff-product"),
+                    options=[
+                        {"label": "M3 current product", "value": "current"},
+                        {"label": "Electrical equipment · HS85", "value": "85"},
+                        {"label": "Vehicles & parts · HS87", "value": "87"},
+                    ],
+                    value="current", clearable=False, className="handoff-choice",
+                ),
+            ),
+            components.field(
+                "Comparison economies (optional)",
+                dcc.Dropdown(
+                    id=cid("handoff-peers"),
+                    options=[{"label": names().get(c, c), "value": c} for c in FOCUS_COUNTRIES],
+                    value=[], multi=True, placeholder="Select economies", className="handoff-choice",
+                ),
+            ),
+        ], className="comparison-row"),
+    ], className="m4-import")
+
+
 def layout():
     products = [
         {"label": label(p), "value": p}
@@ -123,7 +151,6 @@ def layout():
             components.module_intro(
                 "Income, export baskets & specialization",
                 "Economies with similar incomes can have different export baskets and specializations.",
-                actions=handoffs.actions(cid, "Use current M3 selection"),
             ),
             html.Div(
                 [
@@ -161,102 +188,111 @@ def layout():
                             )
                         ],
                     ),
-                    components.comparison_controls(
-                        [
-                            components.field(
-                                "Comparison rule",
+                    html.Div([
+                        handoffs.actions(cid, "Use current M3 selection"),
+                        html.Button(
+                            html.Span("⚙", **{"aria-hidden": "true"}),
+                            id=cid("settings-toggle"), n_clicks=0,
+                            className="m4-settings-toggle", title="Customize this comparison",
+                            **{"aria-label": "Customize this comparison", "aria-expanded": "false",
+                               "aria-controls": cid("customize")},
+                        ),
+                    ], className="m4-toolbar-end"),
+                    html.Div(
+                        components.comparison_fields(
+                            [components.field(
+                                "Chart view",
                                 dcc.RadioItems(
-                                    id=cid("mode"),
+                                    id=cid("presentation-mode"),
                                     options=[
-                                        {"label": "Selected economies", "value": "selected"},
-                                        {"label": "Similar income", "value": "income"},
+                                        {"label": "Key findings", "value": "key"},
+                                        {"label": "Full analysis", "value": "full"},
                                     ],
-                                    value="income",
-                                    className="radio-row",
+                                    value="key", className="radio-row",
                                 ),
-                            ),
-                            components.field(
-                                "Economies (up to 6)",
-                                dcc.Dropdown(
-                                    id=cid("countries"),
-                                    multi=True,
-                                    value=DEFAULTS,
-                                    options=[],
-                                    placeholder="Search economies",
-                                    className="ctl-dropdown",
+                            )],
+                            [
+                                components.field(
+                                    "Comparison rule",
+                                    dcc.RadioItems(
+                                        id=cid("mode"),
+                                        options=[
+                                            {"label": "Selected economies", "value": "selected"},
+                                            {"label": "Similar income", "value": "income"},
+                                        ],
+                                        value="income",
+                                        className="radio-row",
+                                    ),
                                 ),
-                                extra_class="comparison-wide",
-                            ),
-                            components.field(
-                                "Products",
-                                dcc.Dropdown(
-                                    id=cid("products"),
-                                    multi=True,
-                                    options=products,
-                                    placeholder="Top 5 per economy",
-                                    className="ctl-dropdown",
+                                components.field(
+                                    "Economies (up to 6)",
+                                    dcc.Dropdown(
+                                        id=cid("countries"),
+                                        multi=True,
+                                        value=DEFAULTS,
+                                        options=[],
+                                        placeholder="Search economies",
+                                        className="ctl-dropdown",
+                                    ),
+                                    extra_class="comparison-wide",
                                 ),
-                                extra_class="comparison-wide",
-                            ),
-                        ],
-                        [
-                            components.field(
-                                "Income reference economy",
-                                dcc.Dropdown(
-                                    id=cid("anchor"),
-                                    options=[],
-                                    value="CHN",
-                                    clearable=False,
-                                    className="ctl-dropdown",
+                                components.field(
+                                    "Products",
+                                    dcc.Dropdown(
+                                        id=cid("products"),
+                                        multi=True,
+                                        options=products,
+                                        placeholder="Top 5 per economy",
+                                        className="ctl-dropdown",
+                                    ),
+                                    extra_class="comparison-wide",
                                 ),
-                            ),
-                            components.field(
-                                "Income candidates",
-                                dcc.Dropdown(
-                                    id=cid("pool"),
-                                    options=[{"label": "Six project case economies", "value": "focus"}],
-                                    value="focus",
-                                    clearable=False,
-                                    className="ctl-dropdown",
+                            ],
+                            [
+                                components.field(
+                                    "Income reference economy",
+                                    dcc.Dropdown(
+                                        id=cid("anchor"),
+                                        options=[],
+                                        value="CHN",
+                                        clearable=False,
+                                        className="ctl-dropdown",
+                                    ),
                                 ),
-                            ),
-                            components.field(
-                                "Income range",
-                                dcc.Dropdown(
-                                    id=cid("factor"),
-                                    options=[
-                                        {"label": "1.25 × (narrow)", "value": 1.25},
-                                        {"label": "1.5 ×", "value": 1.5},
-                                    ],
-                                    value=1.25,
-                                    clearable=False,
-                                    className="ctl-dropdown",
+                                components.field(
+                                    "Income candidates",
+                                    dcc.Dropdown(
+                                        id=cid("pool"),
+                                        options=[{"label": "Six project case economies", "value": "focus"}],
+                                        value="focus",
+                                        clearable=False,
+                                        className="ctl-dropdown",
+                                    ),
                                 ),
-                            ),
-                            html.Button("Reset guided case", id=cid("reset"), n_clicks=0),
-                        ],
-                        id=cid("customize"),
+                                components.field(
+                                    "Income range",
+                                    dcc.Dropdown(
+                                        id=cid("factor"),
+                                        options=[
+                                            {"label": "1.25 × (narrow)", "value": 1.25},
+                                            {"label": "1.5 ×", "value": 1.5},
+                                        ],
+                                        value=1.25,
+                                        clearable=False,
+                                        className="ctl-dropdown",
+                                    ),
+                                ),
+                                html.Button("Reset guided case", id=cid("reset"), n_clicks=0),
+                            ],
+                            [m3_import_fields()],
+                        ),
+                        id=cid("customize"), hidden=True,
                     ),
                 ],
                 className="m4-toolbar module-toolbar toolbar-row",
             ),
             handoffs.controls(
                 cid,
-                dcc.Dropdown(
-                    id=cid("handoff-product"),
-                    options=[
-                        {"label": "M3 current product", "value": "current"},
-                        {"label": "Electrical equipment · HS85", "value": "85"},
-                        {"label": "Vehicles & parts · HS87", "value": "87"},
-                    ],
-                    value="current", clearable=False, className="handoff-choice",
-                ),
-                dcc.Dropdown(
-                    id=cid("handoff-peers"),
-                    options=[{"label": names().get(c, c), "value": c} for c in FOCUS_COUNTRIES],
-                    value=[], multi=True, placeholder="Add comparison economies",
-                    className="handoff-choice",
-                ),
                 html.Button("Compare exports instead", id=cid("handoff-exports"), n_clicks=0, hidden=True),
             ),
             html.Div(
@@ -266,10 +302,6 @@ def layout():
                 ],
                 className="m4-context", id=cid("context-summary"),
             ),
-            dcc.RadioItems(id=cid("presentation-mode"), options=[
-                {"label": "Key findings", "value": "key"},
-                {"label": "Full analysis · all original charts", "value": "full"}],
-                value="key", className="radio-row"),
             html.Div([
                 html.P(id=cid("story-question"), className="m4-story-question"),
                 html.H3(id=cid("story-title"), className="m4-story-title"),
@@ -913,6 +945,15 @@ def rca_explainer():
 
 
 def register_callbacks(app):
+    app.clientside_callback(
+        """function(clicks) {
+            const open = Boolean(clicks % 2);
+            return [!open, String(open)];
+        }""",
+        Output(cid("customize"), "hidden"), Output(cid("settings-toggle"), "aria-expanded"),
+        Input(cid("settings-toggle"), "n_clicks"),
+    )
+
     source = [("M3-country", "value"), ("M3-year", "value"), ("M3-product", "value"),
               ("M3-direction", "value"), (cid("handoff-product"), "value"),
               (cid("handoff-peers"), "value")]

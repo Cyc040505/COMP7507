@@ -574,7 +574,6 @@ def layout():
             components.module_intro(
                 "Does distance shape trade?",
                 "Nearby partners often account for larger export shares, and rankings vary by product.",
-                actions=handoffs.actions(cid, "Use current M1 selection"),
             ),
             dcc.Store(id=cid("selected")),
             dcc.Store(id=cid("map-context")),
@@ -641,6 +640,7 @@ def layout():
                                 className="ctl-dropdown",
                             ),
                         ),
+                        handoffs.actions(cid, "Use current M1 selection"),
                         handoffs.controls(cid),
                     ],
                     className="chips toolbar-row",

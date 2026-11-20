@@ -194,14 +194,18 @@ def field(label, widget, *, extra_class=""):
     )
 
 
+def comparison_fields(*rows):
+    return html.Div(
+        [html.Div(fields, className="comparison-row") for fields in rows],
+        className="comparison-controls",
+    )
+
+
 def comparison_controls(*rows, id):
     return html.Details(
         [
             html.Summary("Customize this comparison"),
-            html.Div(
-                [html.Div(fields, className="comparison-row") for fields in rows],
-                className="comparison-controls",
-            ),
+            comparison_fields(*rows),
         ],
         id=id,
         className="toolbar-disclosure",

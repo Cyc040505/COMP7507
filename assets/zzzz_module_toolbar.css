@@ -245,3 +245,58 @@ html { scrollbar-gutter: stable; }
 @media (max-width: 700px) {
   .module-toolbar > .toolbar-disclosure { margin-inline-start: 0; }
 }
+
+/* Keep secondary settings in the comparison panel and the guided cases in view. */
+.m4 #M4-customize .comparison-controls {
+  padding: clamp(12px, 1.5vw, 20px);
+  background: var(--panel);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+}
+.m4 #M4-customize .comparison-row:first-child {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.m4 .m4-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+}
+/* Reserve Undo's slot so applying a selection never moves the apply button. */
+.module-toolbar .toolbar-actions { flex: none; flex-wrap: nowrap; }
+.module-toolbar .toolbar-actions button[hidden] { display: inline-block; visibility: hidden; }
+.toolbar-row > .toolbar-actions { margin-inline-start: auto; }
+.toolbar-row:has(#M1-year) > .toolbar-actions { margin-inline-start: 0; flex-direction: row-reverse; }
+.toolbar-row:has(#M5-import) > .toolbar-disclosure { margin-inline-start: 0; }
+.toolbar-row:has(> .toolbar-actions) > .handoff-controls { flex-basis: 100%; min-block-size: 0; }
+.toolbar-row:has(> .toolbar-actions) > .handoff-controls:not(:has(.handoff-note:not(:empty))) { display: none; }
+.m4 .m4-settings-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  width: var(--toolbar-height);
+  height: var(--toolbar-height);
+  font-family: system-ui, sans-serif;
+  color: var(--accent);
+  background: var(--panel);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.m4 .m4-settings-toggle > span {
+  display: block;
+  width: 24px;
+  height: 24px;
+  font-size: 0;
+  background-color: currentColor;
+  mask: url("./m4-settings.svg") center / contain no-repeat;
+}
+.m4 .m4-settings-toggle:is(:hover,[aria-expanded="true"]) { background: var(--toolbar-selected-fill); }
+.m4 #M4-customize { flex: 1 0 100%; min-width: 0; }
+.m4 #M4-customize[hidden] { display: none; }
+.m4 .m4-import { width: 100%; min-width: 0; border: 0; border-top: 1px solid var(--line); margin: 0; padding: 8px 0 0; }
+.m4 .m4-import legend { font-size: var(--toolbar-font); color: var(--toolbar-text); padding-right: 7px; }
+.m4 .m4-import .control-field { flex: 0 1 235px; min-width: 0; }
+.m4 .m4-import .handoff-choice { min-width: 0; }
+.m4.module-inner > .handoff-controls:has(#M4-handoff-exports:not([hidden])) { display: flex; }
