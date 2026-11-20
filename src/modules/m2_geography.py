@@ -202,6 +202,20 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             font=dict(size=12, color=theme.MUTED),
         )
 
+    if show == "nearest10":
+        # Connect only located neighbours. The country fills still encode distance.
+        coords = _country_locations()
+        if exporter in coords.index:
+            origin = coords.loc[exporter]
+            nearby = coords.reindex(subset["partner"]).dropna(subset=["lon", "lat"])
+            if not nearby.empty:
+                fig.add_trace(go.Scattergeo(
+                    lon=[v for dest in nearby.lon for v in (origin.lon, dest, None)],
+                    lat=[v for dest in nearby.lat for v in (origin.lat, dest, None)],
+                    mode="lines", line=dict(width=1.4, color="rgba(15,105,117,0.62)"),
+                    hoverinfo="skip", showlegend=False, name="Nearest partners",
+                ))
+
     # A text label identifies the exporter without covering country fills.
     fig.add_trace(
         go.Scattergeo(
@@ -215,7 +229,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             showlegend=False,
         )
     )
-    theme.style_figure(fig, height=520, uirevision=f"M2-map-{exporter}")
+    theme.style_figure(fig, height=400, uirevision=f"M2-map-{exporter}")
     fig.update_layout(
         dragmode="pan",
         margin=dict(l=5, r=5, t=5, b=5),
@@ -659,7 +673,7 @@ def layout():
                 ], className="m2-map-legend"),
                 html.Div([
                     html.Div([
-                        dcc.Graph(id=cid("map"), style={"height": "520px"},
+                        dcc.Graph(id=cid("map"), style={"height": "400px"},
                                   figure=theme.empty_figure("Loading partner geography…", height=520),
                                   className="graph-interactive", responsive=True,
                                   config={"displayModeBar": True, "displaylogo": False,

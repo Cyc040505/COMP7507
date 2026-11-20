@@ -12,49 +12,49 @@ import plotly.graph_objects as go
 import plotly.io as pio
 
 # --- Desktop palette ------------------------------------------------
-INK = "#1a2a38"
-MUTED = "#53677b"
-LINE = "#c8d5e0"
-BG = "#f0f3f8"
+INK = "#0f1b28"
+MUTED = "#425a72"
+LINE = "#c4d4e6"
+BG = "#f5f7fb"
 ACCENT = "#1e4d7b"
-ACCENT_SOFT = "#dce8f5"
+ACCENT_SOFT = "#e8f0f8"
 ACCENT_LINE = "#7fa3c1"
 
 # Narrative-stage accents.
-S1 = "#0d9488"
-S2 = "#7c3aed"
-S3 = "#c2410c"
-S4 = "#0369a1"
+S1 = "#0d8b9f"
+S2 = "#a86b2a"
+S3 = "#4a7c4e"
+S4 = "#1e3a52"
 
 STAGE_COLORS = {"stage0": MUTED, "stage1": S1, "stage2": S2, "stage3": S3}
 
 FONT = "Avenir Next, Segoe UI, Arial, sans-serif"
-MAP_BG = "#0a1f2e"
-MAP_LAND = "#1a3a50"
-MAP_TEXT = "#e0f0f7"
+MAP_BG = "#ecf1f5"
+MAP_LAND = "#c1d8dc"
+MAP_TEXT = "#0f1b28"
 PLOT_TEMPLATE = "trade_review"
 pio.templates[PLOT_TEMPLATE] = go.layout.Template(
     layout=dict(
         font=dict(family=FONT, size=14, color=INK),
-        title=dict(font=dict(size=18, color=INK), x=0, xanchor="left"),
+        title=dict(font=dict(size=19, color=INK, family="Georgia, serif"), x=0, xanchor="left"),
         paper_bgcolor="white",
         plot_bgcolor="white",
-        colorway=["#315c88", "#c48c36", "#738ba5", "#776592", "#4a8271"],
+        colorway=["#1e4d7b", "#a86b2a", "#0d8b9f", "#4a7c4e", "#1e3a52"],
         xaxis=dict(
-            gridcolor="#e9edf2",
+            gridcolor="#e4ecf3",
             gridwidth=1,
             zeroline=False,
             automargin=True,
-            tickfont=dict(size=13, color=MUTED),
-            title=dict(font=dict(size=13, color=MUTED), standoff=16),
+            tickfont=dict(size=14, color=MUTED),
+            title=dict(font=dict(size=14, color=MUTED), standoff=16),
         ),
         yaxis=dict(
-            gridcolor="#e9edf2",
+            gridcolor="#e4ecf3",
             gridwidth=1,
             zeroline=False,
             automargin=True,
-            tickfont=dict(size=13, color=MUTED),
-            title=dict(font=dict(size=13, color=MUTED), standoff=14),
+            tickfont=dict(size=14, color=MUTED),
+            title=dict(font=dict(size=14, color=MUTED), standoff=14),
         ),
         legend=dict(font=dict(size=13), bgcolor="rgba(0,0,0,0)", borderwidth=0),
         hoverlabel=dict(

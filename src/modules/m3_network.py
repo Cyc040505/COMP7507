@@ -439,6 +439,7 @@ def map_figure(country, d, direction, top, selected):
                 )
             )
         codes = [country] + [p for p in shown.partner if p in pos.index]
+        values = shown.set_index("partner").value
         fig.add_trace(
             go.Scattergeo(
                 lon=[pos.loc[p, "lon"] for p in codes],
@@ -454,6 +455,9 @@ def map_figure(country, d, direction, top, selected):
                             "CAN": "Canada",
                             "KOR": "Korea",
                             "SGP": "Singapore",
+                            "NGA": "Nigeria",
+                            "GEO": "Georgia",
+                            "ARE": "UAE",
                             "AUS": "Australia",
                             "THA": "Thailand",
                             "SAU": "Saudi Arabia",
@@ -476,7 +480,8 @@ def map_figure(country, d, direction, top, selected):
                 ],
                 textfont={"size": 13, "color": theme.MAP_TEXT},
                 marker={
-                    "size": [11] + [6] * (len(codes) - 1),
+                    "size": [12] + [5 + 5 * math.sqrt(values[p] / maxv) if maxv > 0 else 5 for p in codes[1:]],
+                    "symbol": ["diamond"] + ["circle"] * (len(codes) - 1),
                     "line": {"width": 1.2, "color": theme.MAP_BG},
                     # Same highlight as the arcs: the chosen partner and the focal
                     # economy stay amber, every other partner recedes with its flow.

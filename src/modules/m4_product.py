@@ -975,7 +975,7 @@ def register_callbacks(app):
         comparison = comparison or {}
         title, figure, note = presentation(comparison, metrics(comparison.get("year",2023)), trade(), names())
         question, evidence, rca = story_guide(comparison, metrics(comparison.get("year",2023)), names())
-        return title, figure, note, {"display":"none" if mode=="full" else "block"}, {"display":"grid" if mode=="full" else "none"}, {"display":"grid" if mode=="full" else "none"}, question, evidence, rca_explainer() if rca else ""
+        return title, figure, note, ({"display":"none"} if mode=="full" else {}), {"display":"grid" if mode=="full" else "none"}, {"display":"grid" if mode=="full" else "none"}, question, evidence, rca_explainer() if rca else ""
 
     @app.callback(Output(cid("presentation-mode"), "value"), Input(cid("story"), "clickData"), prevent_initial_call=True)
     def inspect_story(click):
