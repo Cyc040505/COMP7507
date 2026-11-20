@@ -34,6 +34,18 @@ def call(needle, values, changed):
 
 
 class FinalIntegration(unittest.TestCase):
+    def test_overview_pauses_on_navigation_and_ignores_background_ticks(self):
+        values = {"active-module.data": "M1", "M0-year.value": 2023,
+                  "M0-playing.data": True, "M0-auto-year.data": 2023}
+        for trigger in ("active-module.data", "M0-step.n_intervals"):
+            result = call("M0-playing.data", values, trigger).json["response"]
+            self.assertTrue(result["M0-step"]["disabled"])
+            self.assertFalse(result["M0-playing"]["data"])
+            self.assertNotIn("M0-year", result)
+        result = call("M0-playing.data", values | {"active-module.data": "M0"},
+                      "M0-step.n_intervals").json["response"]
+        self.assertEqual(result["M0-year"]["value"], 2024)
+
     def test_all_country_and_world_totals_reconcile_to_official_pairs(self):
         b = dl.load_country_pair_year().groupby(["year", "exporter"]).value.sum()
         c = dl.load_country_year().set_index(["year", "country"]).export_value

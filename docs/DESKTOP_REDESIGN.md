@@ -1,5 +1,7 @@
 # Desktop redesign direction
 
+> 历史材料：桌面设计提案。当前默认案例和操作见[现行说明](FINAL_REVIEW.md)。
+
 The previous visual pass preserved correctness but did not achieve a coherent desktop composition. This pass addresses that gap; it is not a change to analytical acceptance criteria.
 
 ## Visual system

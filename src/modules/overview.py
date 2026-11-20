@@ -395,13 +395,17 @@ def register_callbacks(app):
         Input(cid("play"), "n_clicks"),
         Input(cid("step"), "n_intervals"),
         Input(cid("year"), "value"),
+        Input(ACTIVE_MODULE, "data"),
         State(cid("playing"), "data"),
         State(cid("auto-year"), "data"),
         prevent_initial_call=True,
     )
-    def playback(n_clicks, ticks, year, playing, auto_year):
+    def playback(n_clicks, ticks, year, active, playing, auto_year):
         trigger = ctx.triggered_id
         idle = (no_update, False, no_update, PLAY_LABEL, "m0-play", True)
+
+        if active != MODULE_ID:
+            return idle
 
         if trigger == cid("play"):
             if playing:

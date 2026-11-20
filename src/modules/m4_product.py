@@ -1263,6 +1263,7 @@ def register_callbacks(app):
         )
         state = "Guided case" if guided else "Custom exploration"
         context = {
+            "source_controls": handoffs.product_comparison_inputs(mode, selected, requested, anchor, factor),
             "year": year,
             "baseline": baseline,
             "detail_view": detail_view,

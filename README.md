@@ -8,8 +8,7 @@ Stack: Plotly Dash single-page app + DuckDB offline pre-aggregation. One app, si
 modules (M0–M5) reached from a shared top navigation; each module owns its own controls.
 
 > Status: **M0–M5 integrated for final review.** All six modules run on real data in a single
-> `app.py`. See [final review & demo guide](docs/FINAL_REVIEW.md) for evidence, acceptance
-> records and the 6-minute demo path.
+> `app.py`. Start with the [current presentation route and acceptance guide](docs/FINAL_REVIEW.md) for the six opening views, presenter actions and checked values. Dated design notes and screenshots document earlier iterations.
 
 ## Quick start
 
@@ -40,7 +39,7 @@ One feature module per file under `src/modules/`, all registered in `src/modules
 |------|--------------------|-------|
 | M0   | Overview           | Global export growth, Top-10 world shares, six focal economies |
 | M1   | Economy            | GDP vs. export scale, matching by GDP or exports |
-| M2   | Geography          | Distance–share scatter, directed map, partner ranking |
+| M2   | Geography          | Partner choropleth, distance–share scatter, partner ranking |
 | M3   | Trade partners     | Bilateral flows, regions, partner matrix |
 | M4   | Product Structure  | Export baskets, specialization (RCA) and two-year comparisons |
 | M5   | Time Change        | Recovery index, product & regional-share change around events |
@@ -90,9 +89,9 @@ Every `src/modules/<mod>.py` exposes the same contract:
 
 The top navigation follows the presentation order **M0 → M1 → M2 → M3 → M4 → M5**.
 M1 is Economy and M2 is Geography. Each module owns its controls and renders them
-in a shared transparent toolbar. Navigation alone preserves each module's selection.
+in a shared transparent toolbar. Navigation alone preserves each module's selection. Overview starts in 1995 and pauses playback when the presenter leaves the module.
 
-M4 and M5 can import a selection from the preceding module. After an import, **Undo** restores the previous selection before further edits.
+Only M4 and M5 can import a selection from the preceding module. After an import, **Undo** restores the previous selection before further edits.
 
 Economy opens on US and German goods exports in 2023. German exports were 82.7%
 of US exports, while US GDP was 6.14 times Germany’s. Geography and Trade partners open on
@@ -107,10 +106,10 @@ product and economy choices for the M3 transfer.
 | Transfer | Settings applied |
 |---|---|
 | M3 → M4 | Focal economy and year, with a chapter and optional comparison economies selected in M4. An import view requires an explicit switch to comparing exports. |
-| M4 → M5 | One to six displayed economies, analysis year and selected HS2 chapter. For 2020–2024 the baseline is 2019 and the event is 2020. Earlier years use adjacent baseline and event years. See the [handoff rules](docs/M4_M5_handoff.md). |
+| M4 → M5 | One to six displayed economies, analysis year and selected HS2 chapter. The China–Mexico HS87 case in 2023 uses 2019–2023. Other 2020–2024 imports start in 2016 with baseline 2019 and event 2020. If M4 is still applying a selection, M5 keeps its previous settings and Undo history. See the [handoff rules](docs/M4_M5_handoff.md). |
 
 `dcc.Store(id="global-filters")` still exists in `src/layout.py` **only as a read-only
-compatibility snapshot** for unfinished placeholder modules — implemented modules do not write it.
+compatibility snapshot**. The six active modules use their own controls.
 
 ### Three hard rules
 
@@ -120,25 +119,22 @@ compatibility snapshot** for unfinished placeholder modules — implemented modu
 2. **Modules never write global state** — the nav buttons are the *sole writer* of
    `active-module`; modules only **read** it (and their own filter store) via `Input`/`State`,
    which makes circular callbacks structurally impossible.
-3. **Hidden modules do not recompute** — the first line of a module callback calls
-   `module_base.guard_active(MODULE_ID, active_module)`. Switching to the module triggers one
-   render; staying put is blocked by `PreventUpdate`.
+3. **Hidden modules do not recompute** — analytical render callbacks check the active module before loading data or drawing figures. The M0 playback callback also handles navigation so it can stop its timer when hidden.
 
 ## Data pipeline
 
-The app only ever reads the compact analysis tables under `data/processed/*.parquet` (shipped
-with the repo). The raw CEPII sources (~10 GB) and the full 23-million-row bilateral table are
+The app reads the shipped analysis tables in `data/processed/`, lookup files in `data/reference/` and local map assets. The raw CEPII sources (~10 GB) and the full 23-million-row bilateral table are
 **optional** — needed only for independent rebuild/audit, never for running or demoing the app.
 Missing tables raise an explicit `FileNotFoundError`; there is no synthetic fallback in
 production.
 
-| Loader in `src/data_loader.py` | Table |
+| Runtime reader | Table |
 |---|---|
 | `load_flow_year` | `flow_year.parquet` |
 | `load_country_year` | `country_year.parquet` |
 | `load_country_pair_year` | `country_pair_year.parquet` |
 | `load_exporter_hs2_year` | `exporter_hs2_year.parquet` |
-| `load_country_pair_hs2_year` | `country_pair_hs2_year.parquet` |
+| `src.analytics.partners.flows` (M2/M3 HS2) | `country_pair_hs2_focus_year.parquet` (shipped), or the optional full bilateral HS2 table |
 | `load_gdp_year` | `gdp_year.parquet` |
 | `load_geodist` | `geodist.parquet` |
 | `load_country_meta` | `country_meta.parquet` |
