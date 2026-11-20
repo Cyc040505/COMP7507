@@ -58,6 +58,28 @@ class TimeInterface(unittest.TestCase):
         self.assertIn("region_coverage", base)
         self.assertTrue(v["summary"])
 
+    def test_annual_detail_follows_the_selected_structure_metric(self):
+        cases = [
+            ("87", "product", ["CHN", "MEX"], "Product share"),
+            ("87", "intra", ["CHN"], "Same-region share"),
+            ("TOTAL", "intra", list(m.FOCUS_COUNTRIES), "Same-region share"),
+        ]
+        for product, metric, countries, primary_label in cases:
+            with self.subTest(product=product, metric=metric):
+                view = m.compute_view(countries, product, 2019, 2020, [2019, 2023], metric, 2023)
+                cards = view["detail"]
+                self.assertEqual(len(cards), len(countries))
+                for card in cards:
+                    lines = [child for child in card.children if child is not None]
+                    primary = [child for child in lines if getattr(child, "className", "") == "m5-detail-primary"]
+                    self.assertEqual(len(primary), 1)
+                    self.assertIs(primary[0], lines[1])
+                    self.assertTrue(primary[0].children.startswith(primary_label))
+                    self.assertEqual(sum(child.children.startswith("Product share") for child in lines),
+                                     int(product != "TOTAL"))
+                    self.assertEqual(sum(child.children.startswith("Same-region share") for child in lines), 1)
+                    self.assertTrue(lines[-1].children.startswith("Known-region coverage"))
+
     def test_invalid_and_empty_controls_are_readable(self):
         v = m.compute_view([], "TOTAL", 2019, 2020, [2016, 2024], "intra", 2024)
         self.assertEqual(v["rows"], [])

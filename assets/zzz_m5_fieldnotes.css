@@ -139,7 +139,9 @@
 .m5-structure-intro .m5-radio { margin-bottom:10px; }
 .m5-chart-eyebrow { color:var(--accent); font-size:13px; font-weight:600; margin:0 0 8px; }
 .m5-pair-title { color:var(--ink); font-size:23px; line-height:1.35; font-weight:700; margin:0 0 8px; }
-.m5-structure-detail .m5-detail { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.m5-structure-detail .m5-detail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.m5-structure-detail .m5-detail>div:only-child { grid-column:1/-1; }
+.m5-detail .m5-detail-primary { font-size:16px; color:#2c3e50; font-weight:600; }
 @media(max-width:1000px) { .m5-structure-pair { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:560px) { .m5-structure-pair>.card { padding:16px; } .m5-structure-detail .m5-detail { grid-template-columns:minmax(0,1fr); } }
 

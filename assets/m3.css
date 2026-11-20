@@ -33,10 +33,11 @@
 .selection-detail { font-size:12px; padding:10px 14px; border-left:2px solid var(--accent); background:var(--accent-soft); color:var(--accent); }
 @media(max-width:1250px) { .m3-primary { gap:16px; grid-template-columns:minmax(0,2.2fr) minmax(275px,1fr); } .m3-controls { gap:10px; } }
 .m3-flow-detail { display:flex; flex-wrap:wrap; align-items:baseline; gap:7px 16px; }
-.m3-flow-name { color:#cbd8e2; font-size:13px; }
+.m3-flow-name { color:#cbd8e2; font-size:14px; }
 .m3-flow-value { font-size:22px; font-weight:600; letter-spacing:-.4px; }
-.m3-flow-share { font-size:12px; color:#b8c8d5; }
-.m3-matrix-card .m3-flow-name { color:var(--muted); }
+.m3-flow-share { font-size:14px; color:#b8c8d5; }
+.m3-matrix-card .m3-flow-name, .m3-matrix-card .m3-flow-share { color:var(--muted); }
+.m3-light-card .m3-flow-share { color:#425569; }
 
 .card.m3-light-card { background:white; border-color:var(--line); color:var(--ink); }
 .m3-light-card .card-title-text { color:var(--ink); }

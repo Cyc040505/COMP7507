@@ -687,12 +687,20 @@ def compute_view(
             if pd.notna(row.region_coverage)
             else None
         )
+
+        if metric == 'product' and product != 'TOTAL':
+            primary_span = html.Span(product_txt, className="m5-detail-primary")
+            secondary_span = html.Span(intra_txt)
+        else:
+            primary_span = html.Span(intra_txt, className="m5-detail-primary")
+            secondary_span = html.Span(product_txt) if product != "TOTAL" else None
+
         details.append(
             html.Div(
                 [
                     html.Strong(f"{row.country} · {selected} · {value}"),
-                    html.Span(product_txt) if product != "TOTAL" else None,
-                    html.Span(intra_txt),
+                    primary_span,
+                    secondary_span,
                     html.Span(coverage_txt) if coverage_txt else None,
                 ],
                 style={"--country-color": colors[row.country]},

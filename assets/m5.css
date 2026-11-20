@@ -22,7 +22,7 @@
 .m5-radio { display:flex; gap:20px; font-size:12px; margin:6px 0; }
 .m5-radio input { margin-right:6px; }
 .m5-detail { display:flex; flex-direction:column; gap:8px; }
-.m5-detail>div { border:1px solid var(--line); border-inline-start:3px solid var(--country-color,var(--accent)); border-radius:5px; padding:9px 11px; background:#f8fafc; display:flex; flex-direction:column; gap:2px; font-size:12px; }
+.m5-detail>div { border:1px solid var(--line); border-inline-start:3px solid var(--country-color,var(--accent)); border-radius:5px; padding:9px 11px; background:#f8fafc; display:flex; flex-direction:column; gap:2px; font-size:13px; }
 .m5-detail span { color:var(--muted); line-height:1.6; }
 .m5 .dash-graph,.m5 .dash-table-container { min-width:0; max-width:100%; }
 .m5-intro-row { display:grid; grid-template-columns:1.1fr 1fr; gap:32px; align-items:center; }
