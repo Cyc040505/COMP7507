@@ -135,7 +135,13 @@ def presentation(context, current, trade, names):
         fig.update_layout(height=max(420,100+len(products)*max(50,len(countries)*20)),barmode='group',
                           xaxis_title='Share of all-product exports (%)' if metric=='share' else 'Country share ÷ world share (×)',yaxis_autorange='reversed')
     fig.update_layout(template=theme.PLOT_TEMPLATE, margin=dict(l=20,r=70,t=75,b=60),
-                      font=dict(size=13,color=theme.INK),legend=dict(orientation='h',y=1.12,x=0),bargap=.32)
+                      font=dict(size=14,color=theme.INK),legend=dict(orientation='h',y=1.12,x=0),bargap=.32)
+    if step == 'structure':
+        fig.update_layout(margin=dict(t=42), legend=dict(y=1.02, yanchor='bottom'))
+        fig.update_traces(textfont=dict(
+            size=[16 if code == '87' else 14 for code in products],
+            weight=[700 if code == '87' else 400 for code in products],
+        ))
     if step == 'change':
         fig.update_layout(legend=dict(orientation='h', y=1.3, x=0), margin=dict(t=80))
     fig.update_xaxes(rangemode='tozero',fixedrange=True)

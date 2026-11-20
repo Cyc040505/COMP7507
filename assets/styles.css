@@ -36,20 +36,20 @@ h1,h2,h3,h4 { color:var(--ink); }
 .panel-hidden { display:none!important; }
 .module-inner { display:flex; flex-direction:column; gap:16px; min-width:0; }
 .module-inner>* { min-width:0; }
-.module-intro h2,.m1-intro h2,.m4-intro h2,.m5-heading h2 { font-size:28px; line-height:1.2; font-weight:600; letter-spacing:-.9px; margin:0 0 6px; }
-.module-intro p,.m1-intro p,.m4-intro p,.m5-heading p { color:var(--muted); font-size:13px; margin:0; max-width:110ch; }
+.module-intro h2,.m1-intro h2,.m4-intro h2,.m5-heading h2 { font-size:32px; line-height:1.25; font-weight:600; letter-spacing:-.95px; margin:0 0 8px; }
+.module-intro p,.m1-intro p,.m4-intro p,.m5-heading p { color:var(--muted); font-size:14px; margin:0; max-width:110ch; line-height:1.6; }
 .module-intro .module-conclusion { color:var(--accent); font-size:clamp(18px, 1.8vw, 24px); font-weight:650; line-height:1.35; }
 .m1-eyebrow,.m4-eyebrow,.m5-eyebrow { display:none; }
 .app-footer { border-top:1px solid var(--line); padding-top:14px; margin-top:24px; color:var(--muted); font-size:11px; }
-.card { min-width:0; background:#fff; border:1px solid var(--line); border-radius:8px; padding:20px; box-shadow:none; }
-.card-title-text { margin:0 0 12px; font-size:17px; line-height:1.35; letter-spacing:-.3px; font-weight:600; }
+.card { min-width:0; background:#fff; border:1px solid var(--line); border-radius:8px; padding:22px; box-shadow:none; }
+.card-title-text { margin:0 0 14px; font-size:18px; line-height:1.4; letter-spacing:-.3px; font-weight:600; color:var(--ink); }
 .card .dash-graph { width:100%; min-width:0; }
 .module-controls,.control-strip { min-width:0; padding:0; border:0; background:transparent; }
 .chips,.control-strip { display:flex; align-items:end; gap:14px; }
 .lbl { color:var(--muted); font-size:12px; }
 .control-field,.m1-field,.m3-field,.m4-field { min-width:0; }
-.control-field>label,.m1-field>label,.m3-field>label,.m4-field>label { display:block; color:var(--muted); font-size:12px; font-weight:500; margin-bottom:5px; }
-.dash-dropdown { font-size:13px!important; border-color:#ccd5df!important; border-radius:5px!important; min-height:36px!important; background:white!important; color:var(--ink)!important; box-shadow:none!important; text-align:left; }
+.control-field>label,.m1-field>label,.m3-field>label,.m4-field>label { display:block; color:var(--muted); font-size:13px; font-weight:500; margin-bottom:6px; letter-spacing:-.2px; }
+.dash-dropdown { font-size:14px!important; border-color:#ccd5df!important; border-radius:5px!important; min-height:38px!important; background:white!important; color:var(--ink)!important; box-shadow:none!important; text-align:left; }
 .dash-dropdown-trigger { padding:4px 10px!important; min-height:34px!important; }
 .dash-dropdown-value { min-width:0; }
 .dash-dropdown-value-item,.dash-dropdown-option { font-size:12px!important; }
