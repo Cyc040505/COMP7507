@@ -126,6 +126,31 @@ class M3Views(unittest.TestCase):
             self.assertEqual(fills(picked).get(partner), m.HIGHLIGHT)
             self.assertEqual(fills(picked)['CHN'], m.FOCAL_FILL)
 
+    def test_partner_outside_top_five_stays_on_map_only(self):
+        fig, rank, _, _, _, detail, rows = m.figures('USA', 2023, 'TOTAL', 'export', 5, 'map', 'SGP')
+        self.assertEqual(list(rank.data[0].y), [r['partner'] for r in rows[:5]])
+        self.assertNotIn('SGP', rank.data[0].y)
+        arcs = [t for t in fig.data if t.type == 'scattergeo' and t.mode == 'lines' and t.customdata is not None and len(t.lon) == 40]
+        self.assertEqual([t.customdata[0] for t in arcs], list(rank.data[0].y) + ['SGP'])
+        self.assertEqual(arcs[-1].line.color, m.HIGHLIGHT)
+        dots = next(
+            t for t in fig.data if t.type == 'scattergeo' and t.mode == 'markers+text')
+        self.assertEqual(dict(zip(dots.customdata, dots.text))['SGP'], 'Singapore')
+        self.assertIn('Outside Top 5', str(detail))
+
+    def test_mapped_country_and_unlocated_aggregate_remain_in_rankings(self):
+        fig, rank, *_ = m.figures('ITA', 2024, '05', 'export', 5, 'map', 'ROU')
+        self.assertEqual(rank.data[0].y[0], 'ROU')
+        dots = next(t for t in fig.data if t.type == 'scattergeo' and t.mode == 'markers+text')
+        i = list(dots.customdata).index('ROU')
+        self.assertAlmostEqual(dots.lat[i], 44.41667)
+        self.assertAlmostEqual(dots.lon[i], 26.11667)
+        fig, rank, _, status, _, detail, rows = m.figures('CHN', 2024, '85', 'import', 5, 'map', 'S19')
+        self.assertIn('S19', rank.data[0].y)
+        self.assertIn('S19', status)
+        self.assertIn('Map coordinates unavailable', str(detail))
+        self.assertAlmostEqual(sum(r['share'] for r in rows), 1)
+
     def test_flow_animation_targets_the_live_graph_id(self):
         from pathlib import Path
         source = (Path(__file__).resolve().parents[1] / 'assets' / 'm3_flow.js').read_text(

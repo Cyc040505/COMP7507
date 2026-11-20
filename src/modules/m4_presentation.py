@@ -45,9 +45,12 @@ def story_guide(context, current, names):
         income_text = (f"{year} GDP per person: China ${incomes['CHN']:,.0f}, Mexico ${incomes['MEX']:,.0f}. "
                        if has_income_evidence(context) else "GDP per person unavailable; income similarity cannot be verified. ")
         a = current[current.hs2.eq('87')].set_index('exporter')
-        evidence = ''
-        if {'CHN', 'MEX'} <= set(a.index):
-            evidence = f"Vehicles & parts: {a.loc['CHN','share']:.1%} of China's exports, {a.loc['MEX','share']:.1%} of Mexico's."
+        shares = a['share'].reindex(['CHN', 'MEX'])
+        if shares.notna().all():
+            evidence = f"Vehicles & parts: {shares['CHN']:.1%} of China's exports, {shares['MEX']:.1%} of Mexico's."
+        else:
+            values = [f"{names.get(c, c)} {v:.1%}" if pd.notna(v) else f"{names.get(c, c)} —" for c, v in shares.items()]
+            evidence = "Vehicles & parts, share of exports: " + ", ".join(values) + ". A dash indicates missing data."
         return '01 / Do similar incomes mean similar export baskets?', income_text + evidence, explanation
     if step == 'specialization':
         return ('02 / Which economy specializes in vehicles and parts?',
@@ -123,8 +126,8 @@ def presentation(context, current, trade, names):
             bars(fig, (a[metric]*factor).tolist(), [product_name(p) for p in products],names.get(c,c),theme.country_color(c),[[c,p] for p in products],suffix=suffix)
         title = 'Compare the selected export baskets'
         if step == 'structure' and '87' in products and {'CHN','MEX'} <= set(countries):
-            a = selected[selected.hs2.eq('87')].set_index('exporter')
-            if a.loc['MEX','share'] > a.loc['CHN','share']:
+            shares = selected[selected.hs2.eq('87')].set_index('exporter')['share'].reindex(['CHN', 'MEX'])
+            if shares.notna().all() and shares['MEX'] > shares['CHN']:
                 title = "Similar incomes, different export baskets" if has_income_evidence(context) else "Different export baskets: compare China and Mexico"
             idx = products.index('87')
             fig.add_shape(type='rect',xref='paper',x0=0,x1=1,y0=idx-.46,y1=idx+.46,line_width=0,fillcolor='rgba(212,161,91,.14)',layer='below')

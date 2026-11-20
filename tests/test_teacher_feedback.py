@@ -1,5 +1,6 @@
 """Presentation must remain faithful when the user leaves the guided presets."""
 import unittest
+from unittest.mock import patch
 import numpy as np
 from src.modules import m4_product as m4, m3_network as m3
 from src.modules.m4_presentation import presentation, story_guide
@@ -26,6 +27,23 @@ class TeacherFeedback(unittest.TestCase):
             np.testing.assert_allclose(trace.x,expected)
             self.assertEqual(trace.customdata[0][0],country)
         self.assertEqual(note, 'Click a bar to inspect the product in Full analysis.')
+
+    def test_structure_with_missing_vehicle_record_keeps_other_values(self):
+        values = {'active-module.data': 'M4', 'M4-comparison.data': self.context('structure'),
+                  'M4-presentation-mode.value': 'key'}
+        frame = m4.metrics(2023)
+        partial = frame.loc[~(frame.exporter.eq('CHN') & frame.hs2.eq('87'))]
+        with patch.object(m4, 'metrics', return_value=partial):
+            response = call('M4-story-title.children', values, 'M4-comparison.data')
+        self.assertEqual(response.status_code, 200)
+        body = response.json['response']
+        self.assertIn('China —', body['M4-story-evidence']['children'])
+        self.assertIn('Mexico 26.1%', body['M4-story-evidence']['children'])
+        self.assertNotIn('Similar incomes', body['M4-story-title']['children'])
+        china, mexico = body['M4-story']['figure']['data']
+        self.assertIsNone(china['x'][0])
+        self.assertTrue(any(v is not None for v in china['x'][1:]))
+        self.assertAlmostEqual(mexico['x'][0], 26.12, places=2)
 
     def test_specialization_retains_ratio_and_its_baseline(self):
         title,fig,note=self.render(self.context('specialization'))

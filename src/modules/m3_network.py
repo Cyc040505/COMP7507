@@ -366,7 +366,9 @@ def map_figure(country, d, direction, top, selected):
     maxv = float(shown.value.max()) if len(shown) else 1
     # A selection isolates one partner: fade the other arcs and draw the chosen
     # one last, so no wider or later link can cover the highlighted path.
-    focus = selected if selected in set(shown.partner) else None
+    focus = selected if selected in pos.index and d.partner.eq(selected).any() else None
+    if focus and not shown.partner.eq(focus).any():
+        shown = pd.concat([shown, d.loc[d.partner.eq(focus)]])
     show_label = set()
     if country in pos.index:
         for r in sorted(shown.itertuples(), key=lambda row: row.partner == focus):
@@ -668,12 +670,17 @@ def figures(country, year, product, direction, top, view, selected):
                 if direction == "export"
                 else f"{selected} → {country}"
             )
+            qualifiers = [f"{row.share:.2%} of all partners", str(row.region)]
+            if not shown.partner.eq(selected).any():
+                qualifiers.append(f"Outside Top {top}")
+            if view == "map" and selected not in positions().index:
+                qualifiers.append("Map coordinates unavailable")
             detail = html.Div(
                 [
                     html.Span(f"{route} / {row['name']}", className="m3-flow-name"),
                     html.Strong(f"${row.value/1e6:.3f}bn", className="m3-flow-value"),
                     html.Span(
-                        f"{row.share:.2%} of all partners · {row.region}",
+                        " · ".join(qualifiers),
                         className="m3-flow-share",
                     ),
                 ],
@@ -689,6 +696,10 @@ def figures(country, year, product, direction, top, view, selected):
         unit="thousand current USD",
     ).to_dict("records")
     status = "No recorded trade for this selection." if total <= 0 else ""
+    if total > 0 and view == "map":
+        unlocated = shown.loc[~shown.partner.isin(positions().index), "partner"]
+        if not unlocated.empty:
+            status = f"Map coordinates unavailable for {', '.join(unlocated)}. The ranking and totals include these partners."
     return fig, rank, reg, status, finding, detail, records
 
 
