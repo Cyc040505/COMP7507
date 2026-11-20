@@ -78,7 +78,8 @@ def main():
         boxes = [dropdown.bounding_box() for dropdown in dropdowns]
         assert [round(box["height"]) for box in boxes] == [36, 36, 36]
         assert len({round(box["y"]) for box in boxes}) == 1
-        assert page.locator("#M1-mode").bounding_box()["y"] > boxes[0]["y"] + boxes[0]["height"]
+        mode = page.locator("#M1-mode").bounding_box()
+        assert abs(mode["y"] + mode["height"] - boxes[0]["y"] - boxes[0]["height"]) < 4
         expect(page.locator("#M1-data-details")).not_to_have_attribute("open", "")
         expect(page.locator("#M1-relative-graph")).to_be_visible()
         expect(page.locator("#M1-relative + #M1-amounts")).to_be_visible()
@@ -320,29 +321,19 @@ def main():
         expect(page.locator("#M0-panel").get_by_text("Focus economy", exact=True)).to_have_count(0)
         page.locator("#nav-M1").click()
         expect(page.locator("#M1-year")).to_be_visible()
-        page.locator("#M1-handoff").click()
-        expect(page.locator("#M1-year")).to_contain_text("1995")
-        page.wait_for_function("""() => document.querySelector('#M1-graph .js-plotly-plot')
-            ?._fullLayout?.uirevision === 'M1-1995-DEU-gdp-1.25'""")
-        expect(page.locator("#M1-anchor")).to_contain_text("Germany (DEU)")
-        page.locator("#M1-handoff").click()
+        for module in ("M1", "M2", "M3"):
+            expect(page.locator(f"#{module}-handoff")).to_have_count(0)
+            expect(page.locator(f"#{module}-handoff-undo")).to_have_count(0)
         page.locator("#nav-M2").click()
-        page.locator("#M2-handoff").click()
-        expect(page.locator("#M2-exporter")).to_contain_text("Germany")
-        expect(page.locator("#M2-year")).to_contain_text("1995")
-        expect(page.locator("#M2-map-title")).to_contain_text("Germany")
-        expect(page.locator("#M2-handoff-preview")).to_have_count(0)
-        expect(page.locator("#M2-handoff-status")).to_be_empty()
         expect(page.locator("#M2-stats")).not_to_contain_text("have no distance record")
         expect(page.locator("#M2-stats")).not_to_contain_text("Top partner:")
         page.locator("#nav-M1").click()
-        page.locator("#M1-handoff-undo").click()
         expect(page.locator("#M1-year")).to_contain_text("2023")
         expect(finding).to_contain_text("Germany")
         expect(finding).to_contain_text("India")
         expect(page.locator("#M1-anchor")).to_contain_text("Germany (DEU)")
         expect(page.locator("#M1-comparator")).to_contain_text("India")
-        checks.append("Overview transfers the year only; Geography receives the M1 economy and year; Undo restores the previous comparison")
+        checks.append("M1–M3 have independent controls and navigation preserves the Economy comparison")
         assert not errors, errors
         browser.close()
     report = {"checks_passed": checks, "browser_errors": errors}
