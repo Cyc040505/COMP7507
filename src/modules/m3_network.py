@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from dash import Input, Output, State, ctx, dcc, html, no_update, dash_table
-from src import config, theme, components, data_loader, handoffs
+from src import config, theme, components, data_loader
 from src.analytics.partners import FOCUS, REGIONS, partners, regional, matrix
 from src.analytics.product import chapters, label
 from src.ids import ACTIVE_MODULE, mid
@@ -106,21 +106,13 @@ def layout():
                             clearable=False,
                         ),
                     ),
-                    handoffs.actions(cid, "Use current M2 selection"),
-                    handoffs.controls(cid),
+                    html.Div([
+                        html.Button("Reset case", id=cid("reset"), className="quiet-button"),
+                    ], className="toolbar-actions"),
                 ],
                 className="m3-controls module-toolbar toolbar-row",
             ),
-            html.Div(
-                [
-                    html.Div(id=cid("kpis")),
-                    html.Div(
-                        html.Button("Reset case", id=cid("reset")),
-                        className="m3-actions",
-                    ),
-                ],
-                className="m3-summary",
-            ),
+            html.Div(html.Div(id=cid("kpis")), className="m3-summary"),
             html.Div(
                 [
                     html.Div(
@@ -950,21 +942,6 @@ def gravity_takeaway(country, year, direction):
     return lead
 
 
-def register_geography_transfer(app):
-    def from_geography(country, year, product, _current):
-        country, year, product = handoffs.scope(country, year, product)
-        handoffs.require_trade(country, year, product)
-        return [country, year, product, "export", None]
-
-    handoffs.register_transfer(
-        app, MODULE_ID, cid,
-        [("country", "value", True), ("year", "value", True), ("product", "value", True),
-         ("direction", "value", True), ("selected", "data", True)],
-        [("M2-exporter", "value"), ("M2-year", "value"), ("M2-product", "value")],
-        from_geography,
-    )
-
-
 def register_callbacks(app):
     @app.callback(Output(cid("regional-takeaway"), "children"),
                   Input(cid("country"), "value"), Input(cid("year"), "value"),
@@ -1136,5 +1113,3 @@ def register_callbacks(app):
         return dcc.send_data_frame(
             pd.DataFrame(rows).to_csv, "M3_partners.csv", index=False
         )
-
-    register_geography_transfer(app)

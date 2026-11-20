@@ -92,9 +92,7 @@ The top navigation follows the presentation order **M0 → M1 → M2 → M3 → 
 M1 is Economy and M2 is Geography. Each module owns its controls and renders them
 in a shared transparent toolbar. Navigation alone preserves each module's selection.
 
-In M1, **Use Overview year** sits beside **Analysis year**. In M2–M5, use the
-**Use current … selection** button in the filter toolbar. After a transfer changes
-the destination settings, **Undo** restores the previous selection before further edits.
+M4 and M5 can import a selection from the preceding module. After an import, **Undo** restores the previous selection before further edits.
 
 M4 opens in **Key findings**. The gear beside **Use current M3 selection** opens
 **Customize this comparison**, including the **Full analysis** view and optional
@@ -102,9 +100,6 @@ product and economy choices for the M3 transfer.
 
 | Transfer | Settings applied |
 |---|---|
-| M0 → M1 | Analysis year. The starting economy is selected in M1. The preview shows 2023 as the latest comparable year for an Overview selection of 2024. |
-| M1 → M2 | Starting economy and year. Geography starts at all products. |
-| M2 → M3 | Exporter, year and product. Trade direction is exports. |
 | M3 → M4 | Focal economy and year, with a chapter and optional comparison economies selected in M4. An import view requires an explicit switch to comparing exports. |
 | M4 → M5 | One to six displayed economies, analysis year and selected HS2 chapter. For 2020–2024 the baseline is 2019 and the event is 2020. Earlier years use adjacent baseline and event years. See the [handoff rules](docs/M4_M5_handoff.md). |
 

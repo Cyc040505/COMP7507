@@ -18,7 +18,7 @@ from dash import ALL, ClientsideFunction, Input, Output, State, dcc, html, dash_
 from flask import Response, request
 import plotly.colors as pc
 
-from src import components, config, data_loader, handoffs, theme
+from src import components, config, data_loader, theme
 from src.analytics.partners import FOCUS, flows
 from src.analytics.geography import METRIC_LABELS, analyze, distance_profile
 from src.analytics.product import chapters, label
@@ -640,8 +640,6 @@ def layout():
                                 className="ctl-dropdown",
                             ),
                         ),
-                        handoffs.actions(cid, "Use current M1 selection"),
-                        handoffs.controls(cid),
                     ],
                     className="chips toolbar-row",
                 ),
@@ -763,21 +761,6 @@ def layout():
 
 
 def register_callbacks(app):
-    def from_economy(country, year, context, _current):
-        country, year, product = handoffs.scope(country, year, last_year=2023)
-        if not context or context.get("anchor") != country or context.get("year") != year:
-            raise ValueError("Open M1 and wait for the current economy and year to finish loading.")
-        if not context.get("anchor_valid"):
-            raise ValueError("The selected M1 economy does not have comparable source data.")
-        handoffs.require_trade(country, year, product)
-        return [country, year, product]
-
-    handoffs.register_transfer(
-        app, MODULE_ID, cid,
-        [("exporter", "value", False), ("year", "value", False), ("product", "value", False)],
-        [("M1-anchor", "value"), ("M1-year", "value"), ("M1-context", "data")],
-        from_economy,
-    )
     @app.server.route("/m2-map-assets/<version>/world_50m.json", endpoint="m2_topology")
     def m2_topology(version):
         response = Response(optimized_world(), mimetype="application/json")

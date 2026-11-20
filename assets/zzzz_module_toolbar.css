@@ -267,7 +267,6 @@ html { scrollbar-gutter: stable; }
 .module-toolbar .toolbar-actions { flex: none; flex-wrap: nowrap; }
 .module-toolbar .toolbar-actions button[hidden] { display: inline-block; visibility: hidden; }
 .toolbar-row > .toolbar-actions { margin-inline-start: auto; }
-.toolbar-row:has(#M1-year) > .toolbar-actions { margin-inline-start: 0; flex-direction: row-reverse; }
 .toolbar-row:has(> .toolbar-actions) > .handoff-controls { flex-basis: 100%; min-block-size: 0; }
 .toolbar-row:has(> .toolbar-actions) > .handoff-controls:not(:has(.handoff-note:not(:empty))) { display: none; }
 .module-toolbar .comparison-settings-toggle {

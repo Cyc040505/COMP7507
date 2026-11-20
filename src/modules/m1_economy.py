@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, State, ctx, dcc, html, dash_table, ClientsideFunction
 from dash.exceptions import PreventUpdate
 
-from src import components, config, data_loader, handoffs, theme
+from src import components, config, data_loader, theme
 from src.analytics.economy import (
     FOCUS_COUNTRIES, MODES, country_names, prepare_year,
     match_candidates, evidence_frame, display_candidates,
@@ -74,7 +74,6 @@ def layout():
                         value=2023, clearable=False, className="ctl-dropdown",
                     ),
                 ),
-                handoffs.actions(cid, "Use Overview year"),
                 components.field("Starting economy", dcc.Dropdown(
                     id=cid("anchor"), options=anchor_options(), value="DEU",
                     clearable=False, className="ctl-dropdown",
@@ -84,14 +83,11 @@ def layout():
                     options=[{"label": "1.25×", "value": 1.25}, {"label": "1.5×", "value": 1.5}],
                     value=1.25, clearable=False, className="ctl-dropdown",
                 )),
-            ], className="toolbar-row"),
-            html.Div([
                 components.field("Match by", dcc.RadioItems(
                     id=cid("mode"),
                     options=[{"label": "Similar GDP", "value": "gdp"}, {"label": "Similar exports", "value": "export_value"}],
                     value="gdp", className="radio-row",
                 )),
-                handoffs.controls(cid, preview=True),
             ], className="toolbar-row"),
         ], className="module-toolbar"),
         html.Div([
@@ -272,27 +268,6 @@ def relative_comparison(a, b, year):
 
 
 def register_callbacks(app):
-    def overview_preview(year, _rendered, _playing):
-        return "Latest comparable year: 2023." if year == 2024 else ""
-
-    def from_overview(year, rendered, playing, current):
-        if playing or year is None or rendered != year:
-            raise ValueError("Pause Overview and wait for the selected year to finish loading.")
-        # The preview explicitly advertises 2023 before the user applies 2024.
-        year = 2023 if year == 2024 else year
-        country, year, _ = handoffs.scope(current[0], year, last_year=2023)
-        rows = data_for_year(year)
-        if not rows.loc[rows.country.eq(country), "valid"].any():
-            raise ValueError("Comparable GDP and exports are unavailable for that economy and year.")
-        return [country, year]
-
-    handoffs.register_transfer(
-        app, MODULE_ID, cid,
-        [("anchor", "value", False), ("year", "value", False)],
-        [("M0-year", "value"), ("M0-rendered-year", "data"), ("M0-playing", "data")],
-        from_overview, preview=overview_preview,
-        restore_on_undo=(("comparator", "value"),),
-    )
     app.clientside_callback(
         ClientsideFunction(namespace="m1", function_name="extendReferenceLines"),
         Output(cid("reference-lines-ready"), "data"),
@@ -312,10 +287,9 @@ def register_callbacks(app):
         Input(cid("anchor"), "value"), Input(cid("mode"), "value"),
         Input(cid("factor"), "value"), Input(cid("comparator"), "value"),
         Input(cid("graph"), "clickData"),
-        Input(cid("handoff-history"), "data"),
         State(cid("graph"), "relayoutData"), State(cid("context"), "data"),
     )
-    def _render(active, year, anchor, mode, factor, comparator, click, handoff, viewport, previous):
+    def _render(active, year, anchor, mode, factor, comparator, click, viewport, previous):
         guard_active(MODULE_ID, active)
         try:
             if anchor not in FOCUS_COUNTRIES:
@@ -330,11 +304,7 @@ def register_callbacks(app):
                     [], message, None, True, [])
         valid = rows[rows.valid]
         pool = peers.country.tolist()
-        restored = (handoff or {}).get("restored")
-        if restored and f"{cid('handoff-history')}.data" in ctx.triggered_prop_ids:
-            # Restore the selection together with its options so the dropdown accepts it.
-            comparator = restored.get("comparator")
-        elif ctx.triggered_id == cid("graph") and click:
+        if ctx.triggered_id == cid("graph") and click:
             points = click.get("points") or []
             custom = points[0].get("customdata") if points else None
             if custom and custom[0] in pool:
