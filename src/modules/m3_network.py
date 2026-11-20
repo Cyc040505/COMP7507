@@ -16,12 +16,14 @@ MODULE_ID = "M3"
 NAV_LABEL = "M3  Network & Partners"
 ORDER = 3
 # Unselected flows recede once a partner is chosen, so the amber path stays readable.
-DIM_ARC = "rgba(117,181,199,0.22)"
-DIM_ARC_LIGHT = "rgba(39,140,150,0.22)"
+DIM_ARC = "rgba(63, 179, 200, 0.18)"
+DIM_ARC_LIGHT = "rgba(39, 140, 150, 0.22)"
 # Amber marks everything that belongs to the selected partner: arc, moving
 # arrowhead, capital dot and country fill. light_map() restyles it in light mode.
-HIGHLIGHT = "#e5b878"
-HIGHLIGHT_LIGHT = "#b27a2a"
+FLOW_COLOR = "#3fb3c8"
+FOCAL_FILL = "#3a6a7e"
+HIGHLIGHT = "#d4a96a"
+HIGHLIGHT_LIGHT = "#a0601a"
 
 
 def cid(k):
@@ -316,30 +318,33 @@ def map_figure(country, d, direction, top, selected):
         go.Choropleth(
             locations=codes,
             z=[0] * len(codes),
-            colorscale=[[0, theme.MAP_LAND], [1, theme.MAP_LAND]],
+            colorscale=[[0, "#1a3a50"], [1, "#1a3a50"]],
             showscale=False,
             hovertemplate="%{location}<extra>Partner</extra>",
             marker_line_color=theme.MAP_BG,
+            marker_line_width=0.8,
         )
     )
     fig.add_trace(
         go.Choropleth(
             locations=FOCUS,
             z=[1] * 6,
-            colorscale=[[0, "#3a5a6e"], [1, "#3a5a6e"]],
+            colorscale=[[0, "#2a4a60"], [1, "#2a4a60"]],
             showscale=False,
             customdata=FOCUS,
             hovertemplate="%{location}<extra>Focal economy</extra>",
             marker_line_color=theme.MAP_BG,
+            marker_line_width=0.8,
         )
     )
     fig.add_trace(
         go.Choropleth(
             locations=[country],
             z=[1],
-            colorscale=[[0, "#bd955c"], [1, "#bd955c"]],
+            colorscale=[[0, FOCAL_FILL], [1, FOCAL_FILL]],
             showscale=False,
             marker_line_color=theme.MAP_BG,
+            marker_line_width=0.8,
             hovertemplate="%{location}<extra>Selected focal economy</extra>",
         )
     )
@@ -394,7 +399,7 @@ def map_figure(country, d, direction, top, selected):
             elif focus is not None:
                 color = DIM_ARC
             else:
-                color = "#75b5c7"
+                color = FLOW_COLOR
             width = 1 + 5 * math.sqrt(r.value / maxv)
             text = f"{a} → {b}<br>{r.value:,.0f} thousand USD<br>{r.share:.2%} of all partners"
             fig.add_trace(
@@ -474,7 +479,7 @@ def map_figure(country, d, direction, top, selected):
                     # economy stay amber, every other partner recedes with its flow.
                     "color": [HIGHLIGHT]
                     + [
-                        HIGHLIGHT if p == selected else (DIM_ARC if focus else "#75b5c7")
+                        HIGHLIGHT if p == selected else (DIM_ARC if focus else FLOW_COLOR)
                         for p in codes[1:]
                     ],
                 },
@@ -500,7 +505,7 @@ def map_figure(country, d, direction, top, selected):
                 text=["", name],
                 textposition=placement,
                 textfont=dict(size=12, color=theme.MAP_TEXT),
-                line=dict(width=1, color="#9cb0c0"),
+                line=dict(width=1, color="#6a8fa3"),
                 customdata=[partner, partner],
                 hoverinfo="skip",
                 showlegend=False,
@@ -512,7 +517,7 @@ def map_figure(country, d, direction, top, selected):
                 lon=[None],
                 lat=[None],
                 mode="lines",
-                line={"width": 1 + 5 * math.sqrt(fraction), "color": "#75b5c7"},
+                line={"width": 1 + 5 * math.sqrt(fraction), "color": FLOW_COLOR},
                 name=f"${maxv*fraction/1e6:.1f}bn",
             )
         )
@@ -524,11 +529,12 @@ def map_figure(country, d, direction, top, selected):
         lonaxis=dict(range=[-180, 180]),
         lataxis=dict(range=[-60, 85]),
         showland=True,
-        landcolor=theme.MAP_LAND,
+        landcolor="#1a3a50",
         showocean=True,
         oceancolor=theme.MAP_BG,
         showcountries=True,
         countrycolor=theme.MAP_BG,
+        countrywidth=0.8,
         bgcolor=theme.MAP_BG,
         showcoastlines=False,
         showframe=False,
@@ -697,9 +703,9 @@ def figures(country, year, product, direction, top, view, selected):
 def light_map(fig):
     """Restyle an existing geographic figure without changing its data or geometry."""
     fig = go.Figure(fig)
-    palette = {theme.MAP_LAND: "#e0e9ed", theme.MAP_BG: "#f2f7f9",
-               theme.MAP_TEXT: theme.INK, "#3a5a6e": "#c1d8dc",
-               "#bd955c": "#147d87", HIGHLIGHT: HIGHLIGHT_LIGHT, "#75b5c7": "#278c96",
+    palette = {theme.MAP_LAND: "#c1d8dc", theme.MAP_BG: "#ecf1f5",
+               theme.MAP_TEXT: theme.INK, "#2a4a60": "#b8cfe0", FOCAL_FILL: "#28768a",
+               "#1a3a50": "#d0e0eb", HIGHLIGHT: HIGHLIGHT_LIGHT, FLOW_COLOR: "#0f7a88",
                DIM_ARC: DIM_ARC_LIGHT}
     for trace in fig.data:
         if trace.type == "choropleth":
@@ -715,8 +721,8 @@ def light_map(fig):
                 trace.marker.color = ([palette.get(c, c) for c in colors]
                                       if not isinstance(colors, str) else palette.get(colors, colors))
                 trace.marker.line.color = "#ffffff"
-    fig.update_geos(landcolor="#e0e9ed", oceancolor="#f2f7f9", bgcolor="#f2f7f9", countrycolor="#ffffff")
-    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#f2f7f9", font_color=theme.INK,
+    fig.update_geos(landcolor="#c1d8dc", oceancolor="#ecf1f5", bgcolor="#ecf1f5", countrycolor="#ffffff", countrywidth=0.8)
+    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ecf1f5", font_color=theme.INK,
                       legend_font_color=theme.INK)
     return fig
 

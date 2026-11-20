@@ -71,8 +71,8 @@ def _focus_subset(frame, show) -> "pd.DataFrame":
 
 
 # Sequential, high-contrast palette shared by the map and partner ranking.
-_MAP_SCALE = [[0, "#c8e8eb"], [.35, "#8acdd4"], [.7, "#49acb8"], [1, "#168493"]]
-_EXPORTER_COLOR = "#b27a2a"
+_MAP_SCALE = [[0, "#98d5df"], [.35, "#2ba3ad"], [.7, "#0f7a88"], [1, "#065670"]]
+_EXPORTER_COLOR = "#8b5e00"
 
 
 @lru_cache(maxsize=1)
@@ -127,10 +127,10 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             locations=[exporter],
             locationmode="ISO-3",
             z=[1],
-            colorscale=[[0, "#e6c28d"], [1, "#e6c28d"]],
+            colorscale=[[0, "#a0601a"], [1, "#a0601a"]],
             showscale=False,
             marker_line_color=_EXPORTER_COLOR,
-            marker_line_width=1.2,
+            marker_line_width=1.5,
             hovertemplate=f"<b>{exporter_name} ({exporter})</b><br>Selected exporter<extra></extra>",
             showlegend=False,
         )
@@ -174,7 +174,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
                     title=dict(
                         text="Distance (km)" if by_distance else "Export share (%)",
                         side="top",
-                        font=dict(size=11),
+                        font=dict(size=11, color=theme.MUTED),
                     ),
                     orientation="h",
                     x=0.03,
@@ -210,7 +210,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             name="Exporter",
             text=[exporter_name],
             textposition="bottom center",
-            textfont=dict(size=11, color="#9b5b1b"),
+            textfont=dict(size=11, color="#6b3d0a"),
             hoverinfo="skip",
             showlegend=False,
         )
@@ -219,9 +219,9 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
     fig.update_layout(
         dragmode="pan",
         margin=dict(l=5, r=5, t=5, b=5),
-        paper_bgcolor="#f2f7f9",
+        paper_bgcolor="#ecf1f5",
         font=dict(family="Segoe UI, sans-serif", color=theme.INK),
-        hoverlabel=dict(bgcolor="white", bordercolor="#b4c3d2",
+        hoverlabel=dict(bgcolor="white", bordercolor="#a8c0d0",
                         font=dict(size=13, color=theme.INK, family=theme.FONT), align="left"),
         geo=dict(
             projection=dict(type="natural earth", scale=1, rotation=dict(lon=0, lat=0)),
@@ -229,17 +229,17 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             uirevision=f"M2-map-{exporter}",
             resolution=50,
             showframe=False,
-            bgcolor="#f2f7f9",
+            bgcolor="#ecf1f5",
             showland=True,
-            landcolor="#e0e9ed",
+            landcolor="#c8d9e8",
             showcountries=True,
             countrycolor="#ffffff",
-            countrywidth=0.65,
+            countrywidth=0.8,
             showcoastlines=False,
-            coastlinecolor="#ccd9e0",
-            coastlinewidth=0.5,
+            coastlinecolor="#b0bfcc",
+            coastlinewidth=0.6,
             showocean=True,
-            oceancolor="#f2f7f9",
+            oceancolor="#ecf1f5",
             showlakes=False,
             lataxis=dict(range=[-58, 85]),
             lonaxis=dict(range=[-180, 180]),

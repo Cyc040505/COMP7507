@@ -1,16 +1,30 @@
-/* Appearance-only finishing pass over 82ab3f5.
-   Preserve chart geometry, semantic colors, data, layout and interaction logic. */
-:root { --line: #dce3eb; --muted: #596b7d; }
-.app-chrome { border-bottom-color: #d4dee8; }
-.nav-item { border-radius: 6px 6px 0 0; }
-.nav-code { opacity: 1; color: #627488; }
-.nav-item.on { background: #edf3f9; border-bottom-color: #315c88; }
-.nav-item.on .nav-code { color: #315c88; }
-.nav-item:hover { background: #f0f5fa; }
-.card, .m5-analysis-rail { border-color: #dce3eb; box-shadow: 0 2px 6px #1b355008; }
-.card-title-text { color: #24394f; letter-spacing: -.2px; }
-.card.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) { border-color: #132b3e; box-shadow: 0 3px 9px #102a3b12; }
-.m3-map-card:not(.m3-matrix-card):not(.m3-light-card) .card-title-text { color: #eef5fa; }
+/* Trade atlas presentation palette. Map and scale stops mirror the Plotly traces. */
+:root {
+  --ink: #1a2a38; --muted: #53677b; --line: #c8d5e0; --bg: #f0f3f8;
+  --accent: #1e4d7b; --accent-soft: #dce8f5; --accent-line: #7fa3c1;
+  --ocean: #ecf1f5; --exporter: #a0601a; --selection: #8b5e00;
+}
+
+.app-chrome {
+  background: linear-gradient(to bottom, #102c41 55px, white 55px);
+  border-bottom-color: var(--line);
+}
+.app-header { color: white; }
+.brand-name {
+  color: white;
+  font: bold 26px/1 Georgia, serif;
+  letter-spacing: -.8px;
+}
+.brand-caption, .header-source { color: #c5d7e0; }
+.header-period { font-variant-numeric: tabular-nums; }
+.nav-item { border-radius: 0; }
+.nav-code { opacity: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nav-item.on, .nav-item.on .nav-code { color: var(--accent); }
+.nav-item.on { background: #edf4f8; border-bottom-color: var(--accent); }
+.nav-item:hover { background: #f1f6fa; }
+.card, .m5-analysis-rail { border-color: var(--line); box-shadow: 0 2px 8px #1a2a3810; }
+.card-title-text { color: var(--ink); letter-spacing: -.35px; }
+
 .control-field > label, .m1-field > label, .m3-field > label,
 .m4-field > label, .m5-field, .lbl { color: #53677b; font-weight: 550; }
 .m4-chart .m4-field > label { font-size: 12px; }
@@ -45,5 +59,35 @@ details { border-color: #dce3eb; }
 details > summary { color: #315c88; font-weight: 550; }
 details > summary:hover { color: #173e67; }
 :focus-visible { outline: 3px solid #4777a7; outline-offset: 3px; }
-/* Intentionally no chart size/order/axis/trace/fill overrides, fonts to download,
-   DOM changes, sticky navigation, animation, new rows or new columns. */
+
+
+.m0-play:not(.on) { color: white; background: var(--accent); border-color: var(--accent); }
+.m0-play:not(.on):hover { background: #163b5e; }
+.m0-pattern-label { color: var(--ink); }
+.m1-economy { padding: 10px; background: #f5f8fb; }
+.m1-economy dd { font-weight: 600; }
+
+.m2-map-stage { background: var(--ocean); border-color: #cdd9e3; }
+.m2-map-rail { border-left-color: var(--accent-line); }
+.m2-key-exporter { background: var(--exporter); border-color: var(--selection); }
+.m2-key-partner { background: #0f7a88; }
+.m2-key-selected { border-color: var(--selection); }
+.m2-scale-gradient { background: linear-gradient(90deg,#98d5df,#2ba3ad 35%,#0f7a88 70%,#065670); }
+.m2-scale-gradient.reverse { background: linear-gradient(90deg,#065670,#0f7a88 30%,#2ba3ad 65%,#98d5df); }
+.m2-detail-strip { border-left: 3px solid var(--selection); }
+.m2-rail-heading strong, .m2-rail-total strong { color: var(--selection); font-weight: 600; }
+.m2-partner-row.active { box-shadow: inset 3px 0 var(--selection); }
+#M2-map .scattergeo text { stroke: var(--ocean); font-weight: 600; }
+
+.m3-light-card .m3-selection { background: #f6f4ed; border-left-color: var(--exporter); }
+#M3-graph .scattergeo text { paint-order: stroke fill; stroke: var(--ocean); stroke-width: 2.5px; stroke-linejoin: round; }
+.m3-flow-value { font-size: 21px; }
+.m4-story .m4-story-title, .m5-fieldnotes .m5-story .m5-story-title {
+  font-family: Georgia, serif; font-size: clamp(22px, 2vw, 29px); line-height: 1.22;
+}
+.m4-story-question, .m5-fieldnotes .m5-story-question { color: var(--accent); font-weight: 600; }
+.m4-story-evidence { font-variant-numeric: tabular-nums; }
+.m5-fieldnotes .m5-analysis-rail { background-color: #f5f8fb; border-color: var(--line); }
+
+/* Plotly rescales its SVG after a hidden tab opens or the projector changes size. */
+.module-panel .dash-graph { overflow-x: clip; }

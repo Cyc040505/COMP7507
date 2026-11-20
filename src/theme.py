@@ -12,13 +12,13 @@ import plotly.graph_objects as go
 import plotly.io as pio
 
 # --- Desktop palette ------------------------------------------------
-INK = "#202d40"
-MUTED = "#657185"
-LINE = "#e0e5eb"
-BG = "#f5f6f8"
-ACCENT = "#315c88"
-ACCENT_SOFT = "#edf2f7"
-ACCENT_LINE = "#b7c9db"
+INK = "#1a2a38"
+MUTED = "#53677b"
+LINE = "#c8d5e0"
+BG = "#f0f3f8"
+ACCENT = "#1e4d7b"
+ACCENT_SOFT = "#dce8f5"
+ACCENT_LINE = "#7fa3c1"
 
 # Narrative-stage accents.
 S1 = "#0d9488"
@@ -29,9 +29,9 @@ S4 = "#0369a1"
 STAGE_COLORS = {"stage0": MUTED, "stage1": S1, "stage2": S2, "stage3": S3}
 
 FONT = "Avenir Next, Segoe UI, Arial, sans-serif"
-MAP_BG = "#132b3e"
-MAP_LAND = "#304a60"
-MAP_TEXT = "#eaf3f8"
+MAP_BG = "#0a1f2e"
+MAP_LAND = "#1a3a50"
+MAP_TEXT = "#e0f0f7"
 PLOT_TEMPLATE = "trade_review"
 pio.templates[PLOT_TEMPLATE] = go.layout.Template(
     layout=dict(

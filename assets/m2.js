@@ -23,7 +23,7 @@
         const outside = code && !codes.includes(code) ? code : null;
         rendered.set(gd, {signature, outside});
         Plotly.restyle(gd, {
-            'marker.line.color': [codes.map(p => p === code ? '#b27a2a' : '#ffffff')],
+            'marker.line.color': [codes.map(p => p === code ? '#8b5e00' : '#ffffff')],
             'marker.line.width': [codes.map(p => p === code ? 2.4 : .7)]
         }, [index]);
         if (outside !== (previous?.outside || null)) {

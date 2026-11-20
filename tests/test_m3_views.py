@@ -85,28 +85,28 @@ class M3Views(unittest.TestCase):
                         if t.type == 'scattergeo' and 'markers' in (t.mode or ''))
 
         d = m.partners('CHN', 2023, '87', 'export')
-        self.assertTrue(all(t.line.color == '#75b5c7'
+        self.assertTrue(all(t.line.color == m.FLOW_COLOR
                             for t in arcs(m.map_figure('CHN', d, 'export', 10, None))))
         fig = m.map_figure('CHN', d, 'export', 10, 'RUS')
         flows = arcs(fig)
-        self.assertEqual([t.line.color for t in flows].count('#e5b878'), 1)
-        self.assertEqual(flows[-1].line.color, '#e5b878')
+        self.assertEqual([t.line.color for t in flows].count(m.HIGHLIGHT), 1)
+        self.assertEqual(flows[-1].line.color, m.HIGHLIGHT)
         self.assertTrue(all(t.line.color == m.DIM_ARC for t in flows[:-1]))
         # Every partner dot carries the same colour as its own arc.
         codes = list(markers(fig).customdata)
         dot = dict(zip(codes, markers(fig).marker.color))
         arc = {t.customdata[0]: t.line.color for t in flows}
-        self.assertEqual(dot['CHN'], '#e5b878')  # focal economy
+        self.assertEqual(dot['CHN'], m.HIGHLIGHT)  # focal economy
         for code in codes[1:]:
             self.assertEqual(dot[code], arc[code])
-        self.assertEqual(dot['RUS'], '#e5b878')
+        self.assertEqual(dot['RUS'], m.HIGHLIGHT)
         self.assertEqual(dot['USA'], m.DIM_ARC)
         light = m.light_map(fig)
         self.assertTrue(all(t.line.color == m.DIM_ARC_LIGHT
                             for t in arcs(light)[:-1]))
-        self.assertEqual(arcs(light)[-1].line.color, '#b27a2a')
+        self.assertEqual(arcs(light)[-1].line.color, m.HIGHLIGHT_LIGHT)
         light_dot = dict(zip(markers(light).customdata, markers(light).marker.color))
-        self.assertEqual(light_dot['RUS'], '#b27a2a')
+        self.assertEqual(light_dot['RUS'], m.HIGHLIGHT_LIGHT)
         self.assertEqual(light_dot['USA'], m.DIM_ARC_LIGHT)
 
     def test_selected_partner_country_is_filled_in_the_arrow_amber(self):
@@ -115,16 +115,16 @@ class M3Views(unittest.TestCase):
                     for t in fig.data if t.type == 'choropleth' and len(t.locations) == 1}
 
         d = m.partners('CHN', 2023, '87', 'export')
-        self.assertEqual(fills(m.map_figure('CHN', d, 'export', 10, None)), {'CHN': '#bd955c'})
+        self.assertEqual(fills(m.map_figure('CHN', d, 'export', 10, None)), {'CHN': m.FOCAL_FILL})
         fig = m.map_figure('CHN', d, 'export', 10, 'RUS')
-        self.assertEqual(fills(fig), {'CHN': '#bd955c', 'RUS': m.HIGHLIGHT})
+        self.assertEqual(fills(fig), {'CHN': m.FOCAL_FILL, 'RUS': m.HIGHLIGHT})
         self.assertEqual(fills(m.light_map(fig))['RUS'], m.HIGHLIGHT_LIGHT)
         # A focal economy acting as a partner is filled the same way, otherwise
         # the highlight would depend on which row the partner came from.
         for partner in ['USA', 'DEU', 'MEX', 'NLD', 'ITA']:
             picked = m.map_figure('CHN', d, 'export', 10, partner)
             self.assertEqual(fills(picked).get(partner), m.HIGHLIGHT)
-            self.assertEqual(fills(picked)['CHN'], '#bd955c')
+            self.assertEqual(fills(picked)['CHN'], m.FOCAL_FILL)
 
     def test_flow_animation_targets_the_live_graph_id(self):
         from pathlib import Path
