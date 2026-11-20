@@ -11,6 +11,7 @@
         const gd = document.querySelector('#M2-map .js-plotly-plot');
         if (!gd || !gd.offsetParent || !window.Plotly) return;
         const index = gd.data.findIndex(t => t.name === 'Trade partners');
+        const dotIndex = gd.data.findIndex(t => t.name === 'Partner locations');
         if (index < 0) return;
         const codes = context.mapCodes;
         if (JSON.stringify(gd.data[index].locations) !== JSON.stringify(codes)) {
@@ -26,6 +27,13 @@
             'marker.line.color': [codes.map(p => p === code ? '#8b5e00' : '#ffffff')],
             'marker.line.width': [codes.map(p => p === code ? 2.4 : .7)]
         }, [index]);
+        if (dotIndex >= 0) {
+            const dotCodes = gd.data[dotIndex].customdata?.map(cd => cd[0]) || [];
+            Plotly.restyle(gd, {
+                'marker.color': [dotCodes.map(p => p === code ? '#d97706' : '#0f6975')],
+                'marker.size': [dotCodes.map(p => p === code ? 9 : 7)]
+            }, [dotIndex]);
+        }
         if (outside !== (previous?.outside || null)) {
             const overlay = gd.data.findIndex(t => t.name === 'Selected outside scope');
             const row = context.rows[outside];

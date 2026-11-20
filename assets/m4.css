@@ -39,20 +39,20 @@
 .m4-detail-controls>.m4-field:last-child label { white-space:nowrap; }
 .m4-heat-controls { min-height:120px; }
 .m4-heat-controls .m4-note { max-width:78ch; }
-.m4-story-title { font-size:clamp(21px, 1.65vw, 24px); line-height:1.3; margin:0 0 8px; color:var(--ink); max-width:90ch; }
+.m4-story-title { font-size:clamp(22px, 1.8vw, 27px); line-height:1.25; margin:0 0 9px; color:var(--ink); max-width:88ch; font-family:Georgia,serif; font-weight:600; }
 .m4-story .m4-note { font-size:13px; max-width:110ch; }
 .m4-story .m4-note:empty { display:none; }
 .m4-story { border-top:3px solid var(--accent); }
-.m4-story-question { margin:0 0 6px; color:var(--muted); font-size:13px; }
-.m4-story-evidence { margin:0 0 8px; font-size:15px; line-height:1.6; color:var(--ink); max-width:110ch; }
-.m4-story-rca { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:28px; row-gap:8px; padding:14px 20px 12px; background:var(--accent-soft); border:1px solid var(--line); border-radius:6px; color:var(--ink); font-size:13px; line-height:1.5; }
+.m4-story-question { margin:0 0 7px; color:var(--accent); font-size:13px; font-weight:600; letter-spacing:.2px; }
+.m4-story-evidence { margin:0 0 10px; font-size:15px; line-height:1.65; color:var(--text-secondary); max-width:108ch; font-variant-numeric:tabular-nums; }
+.m4-story-rca { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:26px; row-gap:9px; padding:13px 18px 11px; background:#f6f4ed; border:1px solid #e0d6c4; border-radius:6px; color:var(--ink); font-size:13px; line-height:1.55; }
 .m4-story-rca:empty { display:none; }
-.m4-rca-formula { display:flex; align-items:center; justify-content:center; gap:18px; }
-.m4-rca-symbol { font-size:20px; font-weight:600; letter-spacing:.02em; color:var(--accent); }
-.m4-rca-equals { font-size:20px; color:var(--muted); }
-.m4-rca-fraction { display:grid; gap:4px; text-align:center; }
-.m4-rca-numerator { padding-bottom:4px; border-bottom:1px solid var(--accent-line); }
-.m4-rca-reading { display:grid; align-content:center; gap:5px; padding-left:28px; border-left:1px solid var(--line); }
-.m4-rca-reading>div { display:grid; grid-template-columns:80px minmax(0,1fr); gap:12px; }
-.m4-rca-reading strong { font-weight:600; color:var(--accent); font-variant-numeric:tabular-nums; }
-.m4-story .m4-rca-boundary { grid-column:1/-1; margin:0; text-align:center; color:var(--muted); font-size:12px; }
+.m4-rca-formula { display:flex; align-items:center; justify-content:center; gap:16px; }
+.m4-rca-symbol { font-size:19px; font-weight:700; letter-spacing:.02em; color:#a0601a; }
+.m4-rca-equals { font-size:19px; color:#7a8a99; }
+.m4-rca-fraction { display:grid; gap:5px; text-align:center; }
+.m4-rca-numerator { padding-bottom:5px; border-bottom:1.5px solid #b8926a; }
+.m4-rca-reading { display:grid; align-content:center; gap:6px; padding-left:26px; border-left:1.5px solid #d4d0c8; }
+.m4-rca-reading>div { display:grid; grid-template-columns:78px minmax(0,1fr); gap:11px; }
+.m4-rca-reading strong { font-weight:700; color:#a0601a; font-variant-numeric:tabular-nums; font-size:13px; }
+.m4-story .m4-rca-boundary { grid-column:1/-1; margin:0; text-align:center; color:#6a7d8a; font-size:12px; font-style:italic; }

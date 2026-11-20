@@ -163,9 +163,8 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
                 showlegend=False,
                 customdata=customdata,
                 hovertemplate=(
-                    "<b>%{customdata[0]}</b> · %{customdata[1]}"
-                    "<br>Export share  <b>%{customdata[2]:.2f}%</b>"
-                    "<br>Exports  %{customdata[4]}"
+                    "<b>%{customdata[0]}</b> (%{customdata[1]})"
+                    "<br>Share  <b>%{customdata[2]:.2f}%</b>  ·  %{customdata[4]}"
                     "<br>Distance  %{customdata[3]:,.0f} km<extra></extra>"
                 ),
                 marker=dict(line=dict(color="white", width=0.7)),
@@ -202,9 +201,19 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             font=dict(size=12, color=theme.MUTED),
         )
 
+    coords = _country_locations()
     if show == "nearest10":
-        # Connect only located neighbours. The country fills still encode distance.
-        coords = _country_locations()
+        small_locs = coords.reindex(subset["partner"]).dropna(subset=["lon", "lat"])
+        if not small_locs.empty:
+            small_custom = [[r.partner, r.name, float(r.share_pct), float(r.distance), theme.fmt_usd(r.value)]
+                            for r in subset[subset.partner.isin(small_locs.index)].itertuples(index=False)]
+            fig.add_trace(go.Scattergeo(
+                lon=small_locs.lon.tolist(), lat=small_locs.lat.tolist(),
+                mode="markers", marker=dict(size=7, color="#0f6975", line=dict(width=0.7, color="#ffffff")),
+                name="Partner locations", showlegend=False, customdata=small_custom,
+                hovertemplate="<b>%{customdata[1]}</b> (%{customdata[0]})<br>Share <b>%{customdata[2]:.2f}%</b> · Distance %{customdata[3]:.0f} km · %{customdata[4]}<extra></extra>",
+            ))
+    if show == "nearest10":
         if exporter in coords.index:
             origin = coords.loc[exporter]
             nearby = coords.reindex(subset["partner"]).dropna(subset=["lon", "lat"])
@@ -224,7 +233,7 @@ def _map_figure(res, exporter, show, selected=None) -> go.Figure:
             name="Exporter",
             text=[exporter_name],
             textposition="bottom center",
-            textfont=dict(size=11, color="#6b3d0a"),
+            textfont=dict(size=10, color="#5a3208", weight=600),
             hoverinfo="skip",
             showlegend=False,
         )
@@ -388,10 +397,10 @@ def _scale_view(res, show):
     near = show == "nearest10"
     maximum = float(subset["distance" if near else "share_pct"].max()) if not subset.empty else 0
     return [
-        html.Div([html.Strong("Distance / km" if near else "Export share / %"),
-                  html.Span("Darker = nearer" if near else "Darker = larger share")], className="m2-scale-title"),
+        html.Div([html.Strong("Distance (km)" if near else "Export share (%)"),
+                  html.Span("darker = closer" if near else "darker = larger")], className="m2-scale-title"),
         html.Div(className="m2-scale-gradient" + (" reverse" if near else "")),
-        html.Div([html.Span("0"), html.Span(f"{maximum:,.0f}" if near else f"{maximum:.2f}%")], className="m2-scale-ticks"),
+        html.Div([html.Span("0"), html.Span(f"{maximum:,.0f}" if near else f"{maximum:.1f}")], className="m2-scale-ticks"),
     ]
 
 
@@ -927,7 +936,7 @@ def register_callbacks(app):
         evidence = _evidence(res, product)
         conclusion = _conclusion(res)
         encoding = (
-            "Darker = nearer partner"
+            "Darker = nearer partner; dots mark partner locations"
             if show == "nearest10"
             else "Darker = larger export share"
         )

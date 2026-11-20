@@ -367,6 +367,7 @@ def map_figure(country, d, direction, top, selected):
     # A selection isolates one partner: fade the other arcs and draw the chosen
     # one last, so no wider or later link can cover the highlighted path.
     focus = selected if selected in set(shown.partner) else None
+    show_label = set()
     if country in pos.index:
         for r in sorted(shown.itertuples(), key=lambda row: row.partner == focus):
             if r.partner not in pos.index:
@@ -440,45 +441,28 @@ def map_figure(country, d, direction, top, selected):
             )
         codes = [country] + [p for p in shown.partner if p in pos.index]
         values = shown.set_index("partner").value
+        ranked = shown.sort_values("value", ascending=False).partner.tolist()
+        top3 = [p for p in ranked[:3] if p in pos.index]
+        show_label = set([country] + top3 + ([selected] if selected and selected in pos.index else []))
+        meta = data_loader.load_country_meta().drop_duplicates("iso3").set_index("iso3")["name"].to_dict()
+        euro_callouts = {"GBR", "DEU", "FRA", "NLD", "BEL"}
         fig.add_trace(
             go.Scattergeo(
                 lon=[pos.loc[p, "lon"] for p in codes],
                 lat=[pos.loc[p, "lat"] for p in codes],
-                text=[
-                    (
-                        {
-                            "CHN": "China",
-                            "USA": "United States",
-                            "MEX": "Mexico",
-                            "RUS": "Russia",
-                            "JPN": "Japan",
-                            "CAN": "Canada",
-                            "KOR": "Korea",
-                            "SGP": "Singapore",
-                            "NGA": "Nigeria",
-                            "GEO": "Georgia",
-                            "ARE": "UAE",
-                            "AUS": "Australia",
-                            "THA": "Thailand",
-                            "SAU": "Saudi Arabia",
-                        }.get(c, c)
-                        if c not in {"GBR", "DEU", "FRA", "NLD", "BEL"}
-                        else ""
-                    )
-                    for c in codes
-                ],
-                hovertext=codes,
+                text=[meta.get(c, c) if c in show_label and c not in euro_callouts else "" for c in codes],
+                hovertext=[meta.get(c, c) + " (" + c + ")" for c in codes],
                 customdata=codes,
                 mode="markers+text",
                 textposition=[
                     {
                         "CAN": "top left", "USA": "bottom right",
                         "KOR": "bottom left", "JPN": "middle right",
-                        "THA": "bottom left", "SGP": "bottom right",
+                        "MEX": "bottom center", "CHN": "middle right",
                     }.get(c, "top center")
                     for c in codes
                 ],
-                textfont={"size": 13, "color": theme.MAP_TEXT},
+                textfont={"size": 12, "color": theme.MAP_TEXT, "weight": 500},
                 marker={
                     "size": [12] + [5 + 5 * math.sqrt(values[p] / maxv) if maxv > 0 else 5 for p in codes[1:]],
                     "symbol": ["diamond"] + ["circle"] * (len(codes) - 1),
@@ -503,7 +487,7 @@ def map_figure(country, d, direction, top, selected):
         "BEL": (29, 34, "Belgium", "bottom right"),
     }
     for partner, (lon, lat, name, placement) in callouts.items():
-        if partner not in codes or partner not in pos.index:
+        if partner not in codes or partner not in pos.index or partner not in show_label:
             continue
         fig.add_trace(
             go.Scattergeo(
@@ -548,7 +532,7 @@ def map_figure(country, d, direction, top, selected):
         showframe=False,
     )
     fig.update_layout(
-        height=max(480, top * 26),
+        height=max(495, top * 27),
         paper_bgcolor=theme.MAP_BG,
         plot_bgcolor=theme.MAP_BG,
         font=dict(color=theme.MAP_TEXT),

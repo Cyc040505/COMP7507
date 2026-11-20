@@ -240,14 +240,16 @@ def figures(year, view):
         line_color="#9aabbc",
         line_width=1.5,
         annotation_text=str(year),
-        annotation_position="top left",
+        annotation_position="top right" if year <= 2000 else "top left",
+        annotation_xshift=8 if year <= 2000 else -8,
+        annotation_yshift=0,
     )
     total.update_layout(
         height=420,
         yaxis_title="Trillion current USD",
         xaxis_title="Year",
-        margin=dict(t=20, b=90),
-        xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024], range=[1995, 2024], fixedrange=True),
+        margin=dict(t=32, b=90),
+        xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024], range=[1994.7, 2024.3], fixedrange=True),
         yaxis=dict(
             range=[
                 math.floor(float(w.export_value.min()) / 1e9) - 0.6,
@@ -303,18 +305,20 @@ def figures(year, view):
             line_color="#9aabbc",
             line_width=1.5,
             annotation_text=str(year),
-            annotation_position="top left",
+            annotation_position="top right" if year <= 2000 else "top left",
+            annotation_xshift=8 if year <= 2000 else -8,
+            annotation_yshift=0,
         )
         fig.update_layout(
             yaxis_title="World export share (%)",
             xaxis_title="Year",
-            xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024], range=[1995, 2024], fixedrange=True),
+            xaxis=dict(tickmode="array", tickvals=[1995, 2000, 2010, 2020, 2024], range=[1994.7, 2024.3], fixedrange=True),
             yaxis=dict(fixedrange=True),
             dragmode=False,
         )
     fig.update_layout(
         height=420,
-        margin=dict(t=20, b=90),
+        margin=dict(t=32, b=90),
         legend={"orientation": "h", "y": -0.22, "yanchor": "top", "x": 0},
     )
     ever = (

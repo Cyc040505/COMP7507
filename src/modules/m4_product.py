@@ -1337,23 +1337,21 @@ def register_callbacks(app):
                         income_candidates="|".join(qualified),
                     )
                 )
-        finding = "No valid comparison selected."
-        implication = "Select a comparison to inspect its composition and relative specialization."
+        finding = "No comparison selected."
+        implication = "Choose economies and products to compare structure."
         spread = spread_finding(d, chosen, products)
         if spread:
             f = spread
-            finding = f'Within the displayed chapters recorded for every shown economy, HS{f["hs2"]} has the largest share difference: {f["high"]} {f["high_share"]:.1%} vs {f["low"]} {f["low_share"]:.1%} ({f["spread_pp"]:.1f} pp).'
-            implication = "The displayed export baskets differ. Compare Share with RCA to separate domestic importance from specialization against the world."
+            finding = f'Largest displayed share difference: HS{f["hs2"]} spans {f["high"]} {f["high_share"]:.1%} to {f["low"]} {f["low_share"]:.1%} ({f["spread_pp"]:.1f} pp).'
+            implication = "Export baskets differ. Share reflects domestic importance; compare with RCA to assess specialization."
             if mode == "income":
-                implication = "Within this income-matched sample, similar nominal GDP per person does not imply the same export basket. Product structure adds information beyond this income comparison."
+                implication = "In this sample, similar nominal GDP per person accompanies different export baskets."
         if spread and spread["spread_pp"] < 0.05:
-            finding = "Displayed chapters show a maximum share difference below 0.05 percentage points."
-            implication = "This selected scope does not show a material composition difference at the displayed precision; inspect other chapters or a different comparison before generalizing."
+            finding = "Maximum share difference below 0.05 pp."
+            implication = "No material difference at this precision; inspect other chapters."
         elif not spread and len(chosen) > 1:
-            finding = (
-                "No displayed chapter has recorded shares for every selected economy."
-            )
-            implication = "Missing records do not establish similarity or difference. Review coverage or select chapters with comparable observations."
+            finding = "No displayed chapter has data for all selected economies."
+            implication = "Missing records prevent comparison. Review coverage."
         elif len(chosen) == 1:
             finding = f"{chosen[0]} is selected; add another economy for a cross-country finding."
         if guided and cases.get("step") == "specialization":
@@ -1369,15 +1367,15 @@ def register_callbacks(app):
                 r = two_year_metrics(trade(), c, year, baseline, ["87"]).iloc[0]
                 if not r.missing_endpoint:
                     evidence.append(
-                        f"{c} HS87 share {r.share_base:.2%} → {r.share_current:.2%}; RCA {r.rca_base:.3f} → {r.rca_current:.3f}"
+                        f"{c} share {r.share_base:.2%} → {r.share_current:.2%}; RCA {r.rca_base:.3f} → {r.rca_current:.3f}"
                     )
-            finding = f"{baseline} → {year}: " + "; ".join(evidence) + "."
-            implication = "Compare both the share change and RCA = 1. A rising share need not mean specialization above the world benchmark; check each economy in the two-year detail view."
-        limits = "Descriptive evidence for this sample and displayed chapters, not a causal or population-wide test. HS2 is broad; nominal goods values include price, exchange-rate and re-export effects."
+            finding = (f"{baseline}–{year}: " + "; ".join(evidence) + ".") if evidence else f"{baseline}–{year}: No change evidence available."
+            implication = "Rising share does not guarantee RCA above 1×. Check both metrics."
+        limits = "Descriptive evidence only. HS2 aggregates diverse products; nominal values reflect prices, exchange rates, re-exports."
         if mode == "income":
-            limits += " Income matching is a heuristic using current USD/person; historical estimates may remain. Peers can change by year."
+            limits += " Income peers may shift by year."
         if guided and cases.get("step") == "change":
-            limits += " The 2010 sample is fixed, not asserted to have similar incomes then. Two endpoints do not establish a continuous trend or event effect."
+            limits += " Two endpoints do not establish trends."
         if demo:
             finding = "Synthetic demonstration only. " + finding
         question = html.Div(

@@ -42,19 +42,19 @@ def story_guide(context, current, names):
     explanation = RCA_GUIDE if step in ['specialization', 'change'] or context.get('metric') == 'rca' else ''
     if step == 'structure':
         incomes = context.get('gdp', {})
-        income_text = (f"{year} GDP per person: China ${incomes['CHN']:,.0f} · Mexico ${incomes['MEX']:,.0f}. "
-                       if has_income_evidence(context) else "GDP per person unavailable; income similarity cannot be verified here. ")
+        income_text = (f"{year} GDP per person: China ${incomes['CHN']:,.0f}, Mexico ${incomes['MEX']:,.0f}. "
+                       if has_income_evidence(context) else "GDP per person unavailable; income similarity cannot be verified. ")
         a = current[current.hs2.eq('87')].set_index('exporter')
         evidence = ''
         if {'CHN', 'MEX'} <= set(a.index):
-            evidence = f"Vehicles & parts: {a.loc['CHN','share']:.1%} of China’s exports vs {a.loc['MEX','share']:.1%} of Mexico’s."
+            evidence = f"Vehicles & parts: {a.loc['CHN','share']:.1%} of China's exports, {a.loc['MEX','share']:.1%} of Mexico's."
         return '01 / Do similar incomes mean similar export baskets?', income_text + evidence, explanation
     if step == 'specialization':
         return ('02 / Which economy specializes in vehicles and parts?',
-                f'HS87 · {year} · Compare each economy with the same world export share.', explanation)
+                f'HS87, {year}. Compare each economy against the world export share.', explanation)
     if step == 'change':
         return ('03 / If export share rises, is specialization above the world benchmark?',
-                f'Vehicles & parts · {baseline} → {year} · China and Mexico',
+                f'Vehicles & parts, {baseline}→{year}, China and Mexico.',
                 explanation)
     return ('Explore / How do export baskets compare?', '', explanation)
 
@@ -70,8 +70,8 @@ def presentation(context, current, trade, names):
     note = ''
     if step == 'specialization':
         a = selected[selected.hs2.eq('87')].set_index('exporter').reindex(countries)
-        fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.13,
-                            subplot_titles=['Share of each economy’s exports', 'Specialization relative to the world'])
+        fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.14,
+                            subplot_titles=['Share of total exports', 'Specialization vs world'])
         labels = [names.get(c, c) for c in countries]
         colors = [theme.country_color(c) for c in countries]
         for col, vals, suffix in [(1, a.share * 100, '%'), (2, a.rca, '×')]:
@@ -85,10 +85,11 @@ def presentation(context, current, trade, names):
         title = 'Vehicles and parts in national and world exports'
         if a.rca.get('MEX', 0) > 1 > a.rca.get('CHN', float('nan')):
             title = 'Vehicles exceed the world benchmark in Mexico and fall below it in China'
-        fig.update_layout(showlegend=False, height=365)
+        conclusion = 'Similar nominal GDP per person does not guarantee similar export structure.'
+        fig.update_layout(showlegend=False, height=378)
     elif step == 'change':
-        fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.13,
-                            subplot_titles=['Share of each country’s exports', 'Specialization against the world benchmark'])
+        fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=.14,
+                            subplot_titles=['Share of total exports', 'Specialization vs world'])
         data = [two_year_metrics(trade,c,year,baseline,['87']).iloc[0] for c in countries]
         ys = [names.get(c,c) for c in countries]
         for col, measure, suffix in [(1, 'share', '%'), (2, 'rca', '×')]:
@@ -110,7 +111,7 @@ def presentation(context, current, trade, names):
         title = (f'China’s vehicle export share rose; RCA was below 1× in {year}' if supported else 'Vehicles and parts: compare share and specialization in two years')
         if any(row.missing_endpoint for row in data):
             note = 'Missing endpoints prevent a comparison for some economies.'
-        fig.update_layout(height=375,barmode='group')
+        fig.update_layout(height=388,barmode='group')
     else:
         if step == 'structure' and '87' in products:
             products = ['87'] + [p for p in products if p != '87']
@@ -132,18 +133,18 @@ def presentation(context, current, trade, names):
             fig.add_vline(x=1,line_dash='dot',line_color=theme.INK)
         if len(countries)<2:
             title = 'One economy selected — no cross-country comparison'
-        fig.update_layout(height=max(420,100+len(products)*max(50,len(countries)*20)),barmode='group',
+        fig.update_layout(height=max(435,105+len(products)*max(52,len(countries)*21)),barmode='group',
                           xaxis_title='Share of all-product exports (%)' if metric=='share' else 'Country share ÷ world share (×)',yaxis_autorange='reversed')
-    fig.update_layout(template=theme.PLOT_TEMPLATE, margin=dict(l=20,r=70,t=75,b=60),
-                      font=dict(size=14,color=theme.INK),legend=dict(orientation='h',y=1.12,x=0),bargap=.32)
+    fig.update_layout(template=theme.PLOT_TEMPLATE, margin=dict(l=20,r=72,t=78,b=62),
+                      font=dict(size=14,color=theme.INK),legend=dict(orientation='h',y=1.14,x=0),bargap=.3)
     if step == 'structure':
-        fig.update_layout(margin=dict(t=42), legend=dict(y=1.02, yanchor='bottom'))
+        fig.update_layout(margin=dict(t=44), legend=dict(y=1.03, yanchor='bottom'))
         fig.update_traces(textfont=dict(
             size=[16 if code == '87' else 14 for code in products],
             weight=[700 if code == '87' else 400 for code in products],
         ))
     if step == 'change':
-        fig.update_layout(legend=dict(orientation='h', y=1.3, x=0), margin=dict(t=80))
+        fig.update_layout(legend=dict(orientation='h', y=1.32, x=0), margin=dict(t=82))
     fig.update_xaxes(rangemode='tozero',fixedrange=True)
     fig.update_yaxes(automargin=True,fixedrange=True)
     return title, fig, note
