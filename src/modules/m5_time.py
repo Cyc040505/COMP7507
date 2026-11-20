@@ -169,8 +169,10 @@ def layout():
                         inline=True,
                         className="m5-major-tabs",
                     ),
-                    handoffs.actions(cid, "Use current M4 selection", apply_id="import", undo_id="undo-import"),
-                    components.comparison_controls(
+                    components.comparison_actions(
+                        cid, handoffs.actions(cid, "Use current M4 selection", apply_id="import", undo_id="undo-import"),
+                    ),
+                    html.Div(components.comparison_fields(
                         [
                             components.field(
                                 "Economies (up to 6)",
@@ -223,8 +225,7 @@ def layout():
                                 extra_class="comparison-range",
                             ),
                         ],
-                        id=cid("customize"),
-                    ),
+                    ), id=cid("customize"), hidden=True),
                 ],
                 className="m5-toolbar module-toolbar toolbar-row",
             ),
@@ -838,6 +839,7 @@ def validate_import(comparison, product):
 
 
 def register_callbacks(app):
+    components.register_comparison_toggle(app, cid)
     import_fields = ("countries", "product", "baseline", "event", "window", "metric")
 
     @app.callback(

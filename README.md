@@ -39,10 +39,10 @@ One feature module per file under `src/modules/`, all registered in `src/modules
 | Id   | Nav label          | Focus |
 |------|--------------------|-------|
 | M0   | Overview           | Global export growth, Top-10 world shares, six focal economies |
-| M1   | Economy            | GDP vs. export scale, similar-income matching |
+| M1   | Economy            | GDP vs. export scale, matching by GDP or exports |
 | M2   | Geography          | Distance–share scatter, directed map, partner ranking |
-| M3   | Network & Partners | Bilateral flows, regions, partner matrix |
-| M4   | Product Structure  | Composition & RCA heatmaps, linked product detail |
+| M3   | Trade partners     | Bilateral flows, regions, partner matrix |
+| M4   | Product Structure  | Export baskets, specialization (RCA) and two-year comparisons |
 | M5   | Time Change        | Recovery index, product & regional-share change around events |
 
 Each module reads the compact `data/processed/*.parquet` tables produced by the pipeline and
@@ -92,9 +92,13 @@ The top navigation follows the presentation order **M0 → M1 → M2 → M3 → 
 M1 is Economy and M2 is Geography. Each module owns its controls and renders them
 in a shared transparent toolbar. Navigation alone preserves each module's selection.
 
-Select **Use current … selection** at the upper right of the destination module to
-apply the preceding module's compatible settings. The button preserves the source
-module's selection and offers **Undo** in the destination before further edits.
+In M1, **Use Overview year** sits beside **Analysis year**. In M2–M5, use the
+**Use current … selection** button in the filter toolbar. After a transfer changes
+the destination settings, **Undo** restores the previous selection before further edits.
+
+M4 opens in **Key findings**. The gear beside **Use current M3 selection** opens
+**Customize this comparison**, including the **Full analysis** view and optional
+product and economy choices for the M3 transfer.
 
 | Transfer | Settings applied |
 |---|---|
@@ -102,7 +106,7 @@ module's selection and offers **Undo** in the destination before further edits.
 | M1 → M2 | Starting economy and year. Geography starts at all products. |
 | M2 → M3 | Exporter, year and product. Trade direction is exports. |
 | M3 → M4 | Focal economy and year, with a chapter and optional comparison economies selected in M4. An import view requires an explicit switch to comparing exports. |
-| M4 → M5 | Comparison economies and inspected chapter. The recovery window uses a 2019 baseline and 2020 event, with an analysis year from 2020 to 2024. |
+| M4 → M5 | One to six displayed economies, analysis year and selected HS2 chapter. For 2020–2024 the baseline is 2019 and the event is 2020. Earlier years use adjacent baseline and event years. See the [handoff rules](docs/M4_M5_handoff.md). |
 
 `dcc.Store(id="global-filters")` still exists in `src/layout.py` **only as a read-only
 compatibility snapshot** for unfinished placeholder modules — implemented modules do not write it.
@@ -182,5 +186,5 @@ re-shipped as scripts.
 - Final review & demo guide: [docs/FINAL_REVIEW.md](docs/FINAL_REVIEW.md)
 - Data sources & layout: [docs/DATA.md](docs/DATA.md)
 - Module handoffs: `docs/M*_README.md`, `docs/M*_validation.md`, `docs/M*_source_audit.json`
-- Report page structure: `documents/COMP7507_报告_Group7.html`, section 4
-- Proposal: `documents/proposal_Group7.pdf`
+- Presentation walkthrough: [M0–M5 demo sequence](docs/USER_WALKTHROUGH.html)
+- Report findings: [report addendum](docs/REPORT_ADDENDUM.md)
