@@ -28,7 +28,6 @@ def main():
         page.on("console", lambda msg: errors.append(msg.text) if msg.type == "error" else None)
         page.goto(args.url, wait_until="networkidle")
         page.locator("#nav-M1").click()
-        expect(page.locator("#M1-finding")).to_contain_text("Japan")
 
         def choose(control, option):
             page.locator(f"#M1-{control}").click()
@@ -41,6 +40,17 @@ def main():
                     ?.filter(trace => ['Matches', 'Comparison'].includes(trace.name))
                     .reduce((n, trace) => n + trace.customdata.length, 0) === count;
             }""", arg=count)
+
+        expect(page.locator("#M1-anchor")).to_contain_text("United States (USA)")
+        expect(page.locator("#M1-comparator")).to_contain_text("Germany")
+        expect(page.locator("#M1-question")).to_have_text("Similar exports. Similar GDP?")
+        expect(page.locator("#M1-finding")).to_contain_text("6.14 times")
+        expect_match_count(1)
+        checks.append("US/Germany default, export match and GDP comparison")
+        choose("anchor", "Germany (DEU)")
+        page.locator("#M1-mode").get_by_text("Similar GDP", exact=True).click()
+        expect(page.locator("#M1-question")).to_have_text("Similar GDP. Similar exports?")
+        expect(page.locator("#M1-finding")).to_contain_text("Japan")
 
         scope = page.locator("#M1-scope")
         finding = page.locator("#M1-finding")
@@ -70,7 +80,7 @@ def main():
             }""")
         check_reference_edges()
         page.screenshot(path=str(screenshots / "M1_desktop.png"), full_page=True)
-        checks.append("Default Germany/Japan cards, finding and desktop screenshot")
+        checks.append("Alternate Germany/Japan cards, finding and desktop screenshot")
         expect(page.locator("#M1-customize")).to_have_count(0)
         dropdowns = [page.locator(f"#M1-{control}") for control in ("year", "anchor", "factor")]
         for dropdown in dropdowns:

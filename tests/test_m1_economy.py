@@ -173,7 +173,20 @@ class EconomyCallbacks(unittest.TestCase):
         self.assertEqual(response.status_code, expect, response.data.decode()[:1500])
         return response.json["response"] if expect == 200 else None
 
-    def test_default_cards_table_finding_and_context_agree(self):
+    def test_presentation_defaults_match_live_comparison(self):
+        controls = {c.id: c.value for c in m.layout()._traverse()
+                    if getattr(c, "id", None) in {"M1-year", "M1-anchor", "M1-mode", "M1-factor", "M1-comparator"}}
+        self.assertEqual(controls, {"M1-year": 2023, "M1-anchor": "USA", "M1-mode": "export_value",
+                                    "M1-factor": 1.25, "M1-comparator": "DEU"})
+        result = self.request(changes={f"{key}.value": value for key, value in controls.items()})
+        self.assertEqual(result["M1-comparator"]["value"], "DEU")
+        self.assertIn("82.7%", result["M1-finding"]["children"])
+        self.assertIn("6.14 times", result["M1-finding"]["children"])
+        for mode, title in (("export_value", "Similar exports. Similar GDP?"), ("gdp", "Similar GDP. Similar exports?")):
+            intro = self.request("M1-question.children", changes={"M1-mode.value": mode})
+            self.assertEqual(intro["M1-question"]["children"], title)
+
+    def test_gdp_match_cards_table_finding_and_context_agree(self):
         z = self.request()
         self.assertEqual(z["M1-comparator"]["value"], "JPN")
         self.assertEqual(len(z["M1-cards"]["children"]), 2)
