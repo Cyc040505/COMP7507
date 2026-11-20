@@ -903,12 +903,17 @@ def register_callbacks(app):
         State("M4-year", "value"),
         State("M4-case", "data"),
         State("M4-detail-context", "data"),
+        State("M4-mode", "value"),
+        State("M4-countries", "value"),
+        State("M4-anchor", "value"),
+        State("M4-factor", "value"),
         *[State(cid(key), "value") for key in (*import_fields, "inspect-year")],
         State(cid("import-history"), "data"),
         prevent_initial_call=True,
     )
     def presets(pandemic, vehicles, crisis, imported, undo, comparison, product, products,
-                active, source_year, source_case, source_detail, *values):
+                active, source_year, source_case, source_detail, source_mode,
+                source_countries, source_anchor, source_factor, *values):
         guard_active(MODULE_ID, active)
         trigger = ctx.triggered_id
         *local, history = values
@@ -930,6 +935,11 @@ def register_callbacks(app):
                     raise ValueError("Wait for M4 to finish loading the current year.")
                 if products and not set(products).issubset(comparison.get("products", [])):
                     raise ValueError("Wait for M4 to finish applying the current products.")
+                current_controls = handoffs.product_comparison_inputs(
+                    source_mode, source_countries, products, source_anchor, source_factor
+                )
+                if comparison.get("source_controls") != current_controls:
+                    raise ValueError("Return to Product structure, wait for the comparison to update, then import again.")
                 request_id = (source_case or {}).get("transfer_request")
                 if request_id and (source_detail or {}).get("transfer_request") != request_id:
                     raise ValueError("Wait for M4 to finish applying the current selection.")

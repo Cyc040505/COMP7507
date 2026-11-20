@@ -2,7 +2,7 @@
 
 ## 运行与演示
 安装项目 requirements.txt，运行 `python app.py`，打开页面后选择 M4。
-默认进入 **Key findings**，可依次演示下面三个问题。工具栏右端的 **Use current M3 selection** 沿用 M3 的经济体和年份。点它右侧的齿轮（**Customize this comparison**）可选带入的商品及比较经济体，再点导入按钮应用。齿轮内也可切换 **Full analysis**，查看商品份额／RCA 热图与联动详情条形图。
+默认进入 **Key findings**，主讲前两步，第三步按时间选讲。工具栏右端的 **Use current M3 selection** 沿用 M3 的经济体和年份。点它右侧的齿轮（**Customize this comparison**）可选带入的商品及比较经济体，再点导入按钮应用。齿轮内也可切换 **Full analysis**，查看商品份额／RCA 热图与联动详情条形图。
 
 1. **Compare structure**：2023年，以中国为收入锚点，在六国中按1.25倍范围匹配，得到中墨。HS87占比约为中国5.40%、墨西哥26.12%。
 2. **Test specialization**：保留中墨和 HS87。左图比较本国出口份额，右图比较 RCA，中国约 0.65×、墨西哥约 3.14×。虚线 1× 代表同年世界基准。
@@ -17,7 +17,7 @@
 - 控件仅影响M4。自定义条件后结论重新计算；CSV包含当前条件、来源、单位与参考范围。
 
 ## M5接入
-见 [M4_M5_handoff.md](M4_M5_handoff.md)。现有 `M4-comparison.data` 与 `M4-inspect.value` 接口保持不变，无需等待公共数据重建。
+见 [M4_M5_handoff.md](M4_M5_handoff.md)。M5 使用 M4 的已完成比较、商品焦点和当前筛选进行一致性检查；快速改选时等待 M4 更新后再导入。
 
 ## 检查
 `python -m unittest discover -s tests -v`。覆盖全球分母、30年总额对账、缺失/重复/零值、收入匹配、六国范围、旧状态过滤、商品高亮、真实Dash回调、CSV及M5所需状态。

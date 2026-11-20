@@ -1,24 +1,16 @@
-# Final implementation and evidence addendum
+# Evidence for the presentation
 
-The final dashboard follows a six-stage narrative: global context, geographic distance, economic scale, partner regions, product structure, and changes over time. The focal economies are the United States, Germany, China, Mexico, the Netherlands and Italy. Their trading partners remain worldwide. BACI HS92 V202601 supplies merchandise trade for 1995–2024; CHELEM V202502 supplies economic indicators, with GDP-based comparisons restricted to the common 1995–2023 period. GEODIST supplies distance, locations and fixed region definitions.
+The dashboard follows six stages: global exports, economic scale, distance, partners, product structure and change over time. The focal economies are the United States, Germany, China, Mexico, the Netherlands and Italy. Their partners are worldwide. BACI HS92 V202601 covers 1995–2024. Income and GDP comparisons use CHELEM V202502 through 2023. GeoDist supplies the distance measures.
 
-We changed the proposal’s global filters to independent module controls so that navigating the narrative preserves each analysis. The abstract partner network became a directed geographic map. Capitals locate economies; curved links represent bilateral relationships, not transport routes. A fixed-column six-economy partner matrix remains available as an alternative view. M5 explicitly imports the current M4 sample, product and analysis year on request; subsequent M4 changes do not silently change M5.
+| Module | Current presentation evidence |
+|---|---|
+| M0 | From the Top 10 ranking, compare changes in global nominal merchandise exports with changes in the six economies’ world shares over 1995–2024. |
+| M1 | In 2023 Germany exported 82.7% as much as the United States while US GDP was 6.14 times Germany’s. This comparison motivates following US exports to their destinations. |
+| M2 | Compare the top US destinations by export share with the nearest partners. The scatter and rank correlation use all positive-share partners with valid distance. The display filter affects only the highlighted subset. |
+| M3 | Across 180 observed economy-years, each focal economy’s home region ranked first among known destinations for all goods combined. For US exports in 2023 the leading known region for HS85 was Asia and for HS87 it was America. At the country level Canada and Mexico received 35.58% and 17.18% of US HS87 exports respectively. |
+| M4 | Switching perspective to Mexico’s own exports, China provides a similar-income comparison in 2023. HS87 accounted for 5.40% of Chinese and 26.12% of Mexican goods exports. Relative to the same world share, RCA was 0.65 and 3.14 respectively. |
+| M5 | Keeping the same economies and chapter, 2023 export values reached indices of 251.26 and 130.73 for China and Mexico (2019=100). From 2019 to 2023 the corresponding product shares moved from 2.74% to 5.40% and from 24.85% to 26.12%. |
 
-In M2, China’s 2023 all-product partner shares show a negative descriptive association with distance (Spearman approximately −0.33). The distance–share scatter uses all positive-trade partners with valid distances; missing distances remain in share denominators. The map and ranking help locate partners that differ from the overall pattern. This is not evidence that distance alone causes trade differences.
+The country ranking uses all partners as the denominator. Unknown regions stay in regional totals and uncertainty bounds. Each RCA uses the entire world as its reference. Nominal values can reflect prices and exchange rates. The six cases support descriptive comparisons; they do not identify causal effects.
 
-M1 compares US and German merchandise exports in 2023. Germany exported 82.7% as much as the United States, while US GDP was 6.14 times Germany’s. M2 follows US exports to their destinations. Similarity in one scale measure therefore leaves substantial variation in the other. This ratio compares gross merchandise trade with value added; it is neither a GDP contribution rate nor a measure of efficiency.
-
-M3 distinguishes export destinations from import suppliers. China’s 2023 HS87 exports totalled US$184.49 billion; the ten largest destinations represented 50.55%. HS87 imports totalled US$64.93 billion, with the ten largest suppliers representing 90.22%. All shares use complete partner totals. For China’s exports, the same-region share was approximately 48.3–51.8% for HS85 and 40.7–42.0% for HS87, with intervals allowing unknown destinations to be inside the region. These descriptive differences do not establish preferences after controlling for region size.
-
-M4 shows why a leading export product and relative specialization are different ideas. In China in 2023, HS85 represented 31.36% of exports with RCA 2.14, whereas HS95 represented only 2.60% with RCA 4.12. Among the income-matched China/Mexico case, HS87 represented approximately 5.40% of China’s exports and 26.12% of Mexico’s. The full world, not the six-country sample, supplies the RCA reference. The 2010 comparison holds the displayed economies fixed and does not claim that they were income-matched in 2010.
-
-M5 separates a return in nominal export value from structural changes. For the default 2019 baseline and pandemic comparison, China, Germany and Mexico first returned to baseline after an observed loss in 2021. Mexico’s 2024 same-region share exceeded baseline by at least 0.73 percentage points even after allowing for unknown regions. For China and Germany, the uncertainty bounds leave the direction unresolved at the displayed precision. China’s HS87 export index in 2024 was 280.62 (2019=100), while its share of the entire export basket was 5.74%. Event markers support comparison rather than causal attribution.
-
-All findings derive from real data. Official annual bilateral files were reaggregated and reconciled to the shared product, country and world totals. Unknown regions are retained, absent observations are not silently filled, and regional change intervals combine both endpoints’ uncertainty. The six cases are not a representative global sample. Monetary values are nominal, and HS2 chapters are broad categories. See FINAL_REVIEW.md and final_example_audit.json for reproducible values, screenshots and validation.
-
-
-## 2026-11-06 电脑端视觉重构
-
-六模块改用顶部导航与完整电脑宽度。M1、M4将关联比较图并列，M5将发现与指标放到右侧并保持两图横轴对齐；M3保留深色地图，扩大地理视图，加入欧洲标签引线和清晰的选中金额。字体改为Avenir Next及系统后备字体，界面以白、灰蓝、单一蓝色强调为主，金色标记焦点和选择，国家颜色跨模块保持一致。
-
-图表类型、真实坐标、金额、分母、样本范围和验收目标不变；35组绘图场景与22个数据/分析文件均通过前后比对，91项检查通过。此次仅优化电脑端。完整评价与真实页面设计稿见 [VISUAL_REVIEW.md](VISUAL_REVIEW.md)。
+For presenter actions and additional independently recalculated examples, see the [current demo guide](FINAL_REVIEW.md) and [source audit](final_example_audit.json). The [November 6 visual review](VISUAL_REVIEW.md) records that iteration’s screenshots and test results.

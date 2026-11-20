@@ -22,6 +22,16 @@ def require_trade(country, year, product):
         raise ValueError("No recorded exports for the selected economy, year and product.")
 
 
+def product_comparison_inputs(mode, countries, products, anchor, factor):
+    """Controls that determine which economies and chapters M4 resolves."""
+    inputs = {"mode": mode, "products": products or []}
+    if mode == "income":
+        inputs.update(anchor=anchor, factor=factor)
+    else:
+        inputs["countries"] = countries or []
+    return inputs
+
+
 def actions(cid, label, *, apply_id="handoff", undo_id="handoff-undo"):
     return html.Div(
         [

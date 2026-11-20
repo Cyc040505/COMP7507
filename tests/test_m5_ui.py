@@ -94,6 +94,13 @@ class TimeInterface(unittest.TestCase):
                                 for shape in v["structure"].layout.shapes))
 
     def call(self, needle, values, changed):
+        # Older import fixtures describe a completed manual comparison.
+        comparison = values.get("M4-comparison.data")
+        if comparison and "source_controls" not in comparison:
+            controls = {"mode": "selected", "countries": comparison["countries"],
+                        "products": values.get("M4-products.value") or []}
+            values = {"M4-mode.value": "selected", "M4-countries.value": comparison["countries"],
+                      **values, "M4-comparison.data": {**comparison, "source_controls": controls}}
         key = next(k for k in app.app.callback_map if needle in k)
         meta = app.app.callback_map[key]
 
@@ -172,6 +179,25 @@ class TimeInterface(unittest.TestCase):
                     "M4-inspect.value": product}, "M5-import.n_clicks")
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(set(res.json["response"]), {"M5-import-note"})
+
+    def test_import_requires_current_m4_comparison(self):
+        controls = {"mode": "selected", "countries": ["USA", "MEX"], "products": ["87"]}
+        source = {"active-module.data": "M5", "M4-mode.value": "selected",
+                  "M4-countries.value": controls["countries"], "M4-products.value": ["87"],
+                  "M4-year.value": 2023, "M5-import.n_clicks": 1,
+                  "M4-comparison.data": {"year": 2023, "products": ["87"], "countries": controls["countries"],
+                                         "source_controls": controls}}
+        for change in ({"M4-countries.value": ["DEU", "MEX"]}, {"M4-mode.value": "income"},
+                       {"M4-products.value": []}):
+            with self.subTest(change=change):
+                response = self.call("M5-countries.value", source | change, "M5-import.n_clicks")
+                self.assertEqual(set(response.json["response"]), {"M5-import-note"})
+        countries = ["DEU", "MEX"]
+        refreshed = source | {"M4-countries.value": countries, "M4-comparison.data": {
+            **source["M4-comparison.data"], "countries": countries,
+            "source_controls": controls | {"countries": countries}}}
+        response = self.call("M5-countries.value", refreshed, "M5-import.n_clicks")
+        self.assertEqual(response.json["response"]["M5-countries"]["value"], countries)
 
     def test_import_order_total_and_reset_even_same_window(self):
         for product, expected, metric in [(None, "TOTAL", "intra"), ("87", "87", "product")]:

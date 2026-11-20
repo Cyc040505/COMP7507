@@ -2,7 +2,7 @@
 
 The M2 view fills partner countries using a sequential teal palette and highlights the exporter in amber. Top 10 by share and Top 40 partners encode export share (darker = larger share); Nearest 10 encodes the selected GeoDist distance in kilometres using the reversed palette (darker = nearer). Both scales start at zero and end at the largest displayed value. Grey countries are outside the displayed selection. The legend, colour bar and side ranking change with the mode. Hover over a country for share, export value and distance. No partner circles are drawn.
 
-The side ranking shows six partners: descending share in share modes and ascending distance in Nearest 10. Bars represent the displayed measure. The headline always gives the displayed partners’ combined share of the selected export scope. Display filters never change the share denominator or full-scope correlation.
+The scrollable side ranking shows all partners in the selected display range: descending share in share modes and ascending distance in Nearest 10. Bars show export share in every mode, with share and distance printed alongside. The headline always gives the displayed partners’ combined share of the selected export scope. Display filters never change the share denominator or full-scope correlation.
 
 Plotly’s 50m country boundaries provide the territorial fills, including more detail for small economies. Very small territories can still be difficult to see at world scale; their values remain in the ranking and comparison table. `data/processed/country_locations.csv` (225 GeoDist main-city coordinates) is now used only to position the exporter’s text label, with an ISO country-centre fallback. Bilateral distances continue to come from the chosen GeoDist metric.
 
