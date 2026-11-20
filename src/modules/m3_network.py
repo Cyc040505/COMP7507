@@ -451,6 +451,9 @@ def map_figure(country, d, direction, top, selected):
                             "MEX": "Mexico",
                             "RUS": "Russia",
                             "JPN": "Japan",
+                            "CAN": "Canada",
+                            "KOR": "Korea",
+                            "SGP": "Singapore",
                             "AUS": "Australia",
                             "THA": "Thailand",
                             "SAU": "Saudi Arabia",
@@ -464,11 +467,11 @@ def map_figure(country, d, direction, top, selected):
                 customdata=codes,
                 mode="markers+text",
                 textposition=[
-                    (
-                        "middle right"
-                        if c == "JPN"
-                        else "bottom left" if c == "THA" else "top center"
-                    )
+                    {
+                        "CAN": "top left", "USA": "bottom right",
+                        "KOR": "bottom left", "JPN": "middle right",
+                        "THA": "bottom left", "SGP": "bottom right",
+                    }.get(c, "top center")
                     for c in codes
                 ],
                 textfont={"size": 13, "color": theme.MAP_TEXT},
