@@ -245,3 +245,45 @@ html { scrollbar-gutter: stable; }
 @media (max-width: 700px) {
   .module-toolbar > .toolbar-disclosure { margin-inline-start: 0; }
 }
+
+/* Keep secondary settings in the comparison panel and the guided cases in view. */
+.m4 #M4-customize .comparison-controls {
+  padding: clamp(12px, 1.5vw, 20px);
+  background: var(--panel);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+}
+.m4 #M4-customize .comparison-row:first-child {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.m4 .m4-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+}
+.m4 .m4-toolbar-end .toolbar-actions { flex-wrap: nowrap; }
+.m4 .m4-toolbar-end #M4-handoff-undo[hidden] { display: inline-block; visibility: hidden; }
+.m4 .m4-settings-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  width: var(--toolbar-height);
+  height: var(--toolbar-height);
+  font-family: system-ui, sans-serif;
+  color: var(--accent);
+  background: var(--panel);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.m4 .m4-settings-toggle > span { font-size: 26px; line-height: 1; }
+.m4 .m4-settings-toggle:is(:hover,[aria-expanded="true"]) { background: var(--toolbar-selected-fill); }
+.m4 #M4-customize { flex: 1 0 100%; min-width: 0; }
+.m4 #M4-customize[hidden] { display: none; }
+.m4 .m4-import { width: 100%; min-width: 0; border: 0; border-top: 1px solid var(--line); margin: 0; padding: 8px 0 0; }
+.m4 .m4-import legend { font-size: var(--toolbar-font); color: var(--toolbar-text); padding-right: 7px; }
+.m4 .m4-import .control-field { flex: 0 1 235px; min-width: 0; }
+.m4 .m4-import .handoff-choice { min-width: 0; }
+.m4.module-inner > .handoff-controls:has(#M4-handoff-exports:not([hidden])) { display: flex; }
