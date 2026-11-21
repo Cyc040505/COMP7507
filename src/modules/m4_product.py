@@ -977,11 +977,6 @@ def register_callbacks(app):
         question, evidence, rca = story_guide(comparison, metrics(comparison.get("year",2023)), names())
         return title, figure, note, ({"display":"none"} if mode=="full" else {}), {"display":"grid" if mode=="full" else "none"}, {"display":"grid" if mode=="full" else "none"}, question, evidence, rca_explainer() if rca else ""
 
-    @app.callback(Output(cid("presentation-mode"), "value"), Input(cid("story"), "clickData"), prevent_initial_call=True)
-    def inspect_story(click):
-        return "full" if click else no_update
-
-
     @app.callback(Output(cid("change-style-controls"), "style"), Input(cid("detail-view"), "value"))
     def change_style_visibility(view):
         return {"display": "block" if view == "change" else "none"}
@@ -1432,12 +1427,11 @@ def register_callbacks(app):
         Input(cid("comparison"), "data"),
         Input(cid("case"), "data"),
         Input(ACTIVE_MODULE, "data"),
-        Input(cid("story"), "clickData"),
         State(cid("focus"), "value"),
         State(cid("inspect"), "value"),
         State(cid("detail-context"), "data"),
     )
-    def select(click, comparison, case, active, story_click, focus, product, previous):
+    def select(click, comparison, case, active, focus, product, previous):
         guard_active(MODULE_ID, active)
         comparison = comparison or {}
         case = case or {}
@@ -1452,10 +1446,6 @@ def register_callbacks(app):
                     return no_update, no_update, no_update
                 return case.get("focus"), case.get("product"), dict(context, transfer_request=transfer)
             context["transfer_request"] = transfer
-        if ctx.triggered_id == cid("story") and story_click:
-            point = story_click["points"][0].get("customdata", [])
-            if len(point) == 2 and point[0] in valid and point[1] in chapters():
-                return point[0], point[1], context
         if ctx.triggered_id == cid("graph") and click:
             pt = click["points"][0]
             c, p = pt.get("x"), pt.get("y")

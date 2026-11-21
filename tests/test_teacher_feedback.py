@@ -26,7 +26,7 @@ class TeacherFeedback(unittest.TestCase):
             expected=m4.metrics(2023).query('exporter == @country').set_index('hs2').reindex([v[1] for v in trace.customdata]).share*100
             np.testing.assert_allclose(trace.x,expected)
             self.assertEqual(trace.customdata[0][0],country)
-        self.assertEqual(note, 'Click a bar to inspect the product in Full analysis.')
+        self.assertEqual(note, '')
 
     def test_structure_with_missing_vehicle_record_keeps_other_values(self):
         values = {'active-module.data': 'M4', 'M4-comparison.data': self.context('structure'),
@@ -63,15 +63,16 @@ class TeacherFeedback(unittest.TestCase):
         self.assertEqual(len(fig.data),0)
         self.assertIn('No valid comparison',title)
 
-    def test_change_uses_real_endpoints_and_click_drills_into_original(self):
+    def test_change_uses_real_endpoints(self):
         c=self.context('change');title,fig,note=self.render(c)
         self.assertIn('below 1',title)
         self.assertEqual(fig.data[0].name,'2010');self.assertEqual(fig.data[1].name,'2023')
-        r=call('M4-inspect.value',{'active-module.data':'M4','M4-comparison.data':c,
-              'M4-case.data':m4.recipe('change'),'M4-story.clickData':{'points':[{'customdata':['MEX','87']}] }},'M4-story.clickData')
-        self.assertEqual(r.status_code,200)
-        self.assertEqual(r.json['response']['M4-focus']['value'],'MEX')
-        self.assertEqual(r.json['response']['M4-inspect']['value'],'87')
+
+    def test_presentation_chart_click_cannot_change_view_or_detail_selection(self):
+        from app import server
+        callbacks = server.test_client().get('/_dash-dependencies').get_json()
+        for callback in callbacks:
+            self.assertNotIn({'id': 'M4-story', 'property': 'clickData'}, callback['inputs'])
 
     def test_m3_direction_and_country_are_not_stale(self):
         self.assertIn('home region Asia',m3.gravity_takeaway('CHN',2023,'export'))

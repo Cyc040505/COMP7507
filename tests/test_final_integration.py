@@ -173,6 +173,16 @@ class FinalIntegration(unittest.TestCase):
                     response["M3-selected"]["data"],
                     point.get("location") or point["customdata"],
                 )
+        for view, points in [
+            ("matrix", [{"x": "MEX", "y": "USA", "z": 12.5}]),
+            ("map", [{"customdata": "CHN"}]),
+            ("map", []),
+        ]:
+            r = call("M3-country.value", values | {
+                "M3-view.value": view, "M3-graph.clickData": {"points": points},
+            }, "M3-graph.clickData")
+            self.assertEqual(r.get_json()["response"], {})
+
         values["active-module.data"] = "M1"
         self.assertEqual(
             call("M3-graph.figure", values, "active-module.data").status_code, 204

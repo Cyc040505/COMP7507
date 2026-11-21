@@ -131,7 +131,6 @@ def presentation(context, current, trade, names):
                 title = "Similar incomes, different export baskets" if has_income_evidence(context) else "Different export baskets: compare China and Mexico"
             idx = products.index('87')
             fig.add_shape(type='rect',xref='paper',x0=0,x1=1,y0=idx-.46,y1=idx+.46,line_width=0,fillcolor='rgba(212,161,91,.14)',layer='below')
-        note = 'Click a bar to inspect the product in Full analysis.'
         if metric == 'rca':
             fig.add_vline(x=1,line_dash='dot',line_color=theme.INK)
         if len(countries)<2:

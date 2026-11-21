@@ -991,23 +991,26 @@ def register_callbacks(app):
         Input(cid("graph"), "clickData"),
         Input(cid("ranking"), "clickData"),
         State(cid("view"), "value"),
+        State(cid("country"), "value"),
         State(ACTIVE_MODULE, "data"),
         prevent_initial_call=True,
     )
-    def select(a, b, view, active):
+    def select(a, b, view, country, active):
         guard_active(MODULE_ID, active)
         click = a if ctx.triggered_id == cid("graph") else b
-        if not click:
+        if not click or not click.get("points"):
             return no_update, no_update
         p = click["points"][0]
         code = p.get("location") or p.get("customdata")
+        if not isinstance(code, str) or code == country:
+            return no_update, no_update
         if (
             ctx.triggered_id == cid("graph")
             and view == "map"
             and p.get("location") in FOCUS
         ):
             return code, None
-        return no_update, code if isinstance(code, str) else None
+        return no_update, code
 
     @app.callback(
         *[
