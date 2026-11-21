@@ -402,7 +402,7 @@ class CountryPortraits(unittest.TestCase):
         self.assertLess(ids.index("M5-structure-panel"), ids.index("M5-summary-finding"))
         self.assertLess(ids.index("M5-summary-implication"), ids.index("M5-data-details"))
         self.assertEqual(len(ids), len(set(ids)))
-        # Three cases share a single selection across the two major chart views.
+        # The two cases share a single selection across the major chart views.
         for key in m.CASES:
             self.assertEqual(ids.count(m.cid(key)), 1)
 

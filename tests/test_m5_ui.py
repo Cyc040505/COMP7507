@@ -7,12 +7,12 @@ import app
 
 
 class TimeInterface(unittest.TestCase):
-    def test_guided_and_custom_selection_follow_actual_inputs(self):
-        guided = m.compute_view(
+    def test_demo_and_custom_selection_follow_actual_inputs(self):
+        demo = m.compute_view(
             ["CHN", "MEX"], "87", 2019, 2020, [2019, 2023], "product", 2023
         )
-        self.assertEqual(guided["preset_class"], "m5-presets vehicles")
-        self.assertIn("2.66 percentage points", guided["implication"])
+        self.assertEqual(demo["preset_class"], "m5-presets custom")
+        self.assertIn("2.66 percentage points", demo["implication"])
         custom = m.compute_view(
             ["DEU"], "87", 2019, 2020, [2016, 2024], "product", 2024
         )
@@ -336,25 +336,33 @@ class TimeInterface(unittest.TestCase):
         self.assertEqual(data["M5-window"]["value"], [2016, 2023])
         self.assertNotIn("paused", data["M5-import-note"]["children"])
         self.assertTrue(all(key.startswith("M5-") for key in data))
-        for case, (scope, baseline, event, window, measure, *_) in m.CASES.items():
+        for case, baseline, event, window in [
+            ("pandemic", 2019, 2020, (2016, 2024)),
+            ("crisis", 2007, 2008, (2004, 2013)),
+        ]:
             values[f"M5-{case}.n_clicks"] = 1
             res = self.call("M5-countries.value", values, f"M5-{case}.n_clicks")
             updated = res.json["response"]
-            self.assertEqual(updated["M5-countries"]["value"], ["CHN", "MEX"] if case == "vehicles" else m.CASE_COUNTRIES)
-            self.assertEqual(updated["M5-product"]["value"], scope)
+            self.assertEqual(updated["M5-countries"]["value"], ["CHN", "DEU", "MEX"])
+            self.assertEqual(updated["M5-product"]["value"], "87")
+            self.assertEqual(updated["M5-metric"]["value"], "product")
             self.assertEqual(updated["M5-baseline"]["value"], baseline)
             self.assertEqual(updated["M5-event"]["value"], event)
             self.assertEqual(updated["M5-window"]["value"], list(window))
             self.assertEqual(updated["M5-import-note"]["children"], "")
             self.assertTrue(all(key.startswith("M5-") for key in updated))
+            view = m.compute_view(["CHN", "DEU", "MEX"], "87", baseline, event, window, "product", window[-1])
+            self.assertEqual(view["preset_class"], f"m5-presets {case}")
+            self.assertTrue(any(row["product_share"] is not None for row in view["rows"]))
+            self.assertTrue(view["structure"].data and view["structure_change"].data)
 
     def test_preset_resets_inspection_even_when_window_is_unchanged(self):
         res = self.call("M5-countries.value", {
-            "active-module.data": "M5", "M5-vehicles.n_clicks": 2},
-            "M5-vehicles.n_clicks")
+            "active-module.data": "M5", "M5-pandemic.n_clicks": 2},
+            "M5-pandemic.n_clicks")
         data = res.json["response"]
         self.assertEqual(data["M5-import-reset"]["data"],
-                         {"source": "vehicles", "click": 2})
+                         {"source": "pandemic", "click": 2})
         year = self.call("M5-selected.data", {
             "active-module.data": "M5", "M5-window.value": [2016, 2024],
             "M5-selected.data": 2021, "M5-inspect-year.value": 2021,
@@ -373,6 +381,7 @@ class TimeInterface(unittest.TestCase):
         items = {getattr(node, "id", None): node for node in components(m.layout())}
         for case in m.CASES:
             self.assertFalse(getattr(items[f"M5-{case}"], "disabled", False))
+        self.assertEqual([node.id for node in items["M5-presets"].children], ["M5-pandemic", "M5-crisis"])
         self.assertNotIn("M5-guided", items)
         self.assertNotIn("M5-comparison-mode", items)
 

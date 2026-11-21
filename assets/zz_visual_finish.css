@@ -38,7 +38,6 @@
 .m4-step-number { opacity: 1; color: #627488; }
 .m4-step.on .m4-step-number { color: #315c88; }
 .m5-presets.pandemic #M5-pandemic,
-.m5-presets.vehicles #M5-vehicles,
 .m5-presets.crisis #M5-crisis {
   background: #eaf1f8; border-color: #97b0c9; color: #274f77; font-weight: 600;
 }

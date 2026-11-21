@@ -17,7 +17,7 @@ M5 会把已完成比较与 M4 当前年份、商品、模式以及对应的国�
 
 1. 在 M4 选择 **02 Test specialization**，核对中国、墨西哥、2023 年及 HS87。
 2. 打开 M5，点 **Use current M4 selection**。展开 **Customize this comparison**，核对两国顺序、HS87、2019 基期、2020 事件年及 2019–2023 窗口。
-3. 初始条件相同时导入无变化。要验收 **Undo**，先点 **Pandemic recovery**，再导入并撤销；应恢复此前的中德墨、全商品及 2016–2024 窗口。
+3. 初始条件相同时导入无变化。要验收 **Undo**，先点 **Pandemic recovery**，再导入并撤销。应恢复此前的中德墨、HS87 及 2016–2024 窗口。
 
 完整案例和验证记录见 [M5 使用说明](M5_README.md) 和 [M5 验收记录](M5_validation.md)。
 

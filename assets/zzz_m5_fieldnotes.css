@@ -13,9 +13,9 @@
 .m5-fieldnotes .m5-presets { flex-wrap:wrap; gap:8px; }
 .m5-fieldnotes button { font-family:inherit; line-height:1.35; transition:background-color .15s,border-color .15s; }
 .m5-fieldnotes .m5-presets button { display:inline-flex; align-items:center; gap:7px; padding:7px 10px; min-height:34px; font-size:12px; line-height:1.3; color:#53677b; white-space:nowrap; }
-.m5-fieldnotes .m5-presets.pandemic #M5-pandemic,.m5-fieldnotes .m5-presets.vehicles #M5-vehicles,.m5-fieldnotes .m5-presets.crisis #M5-crisis { color:#274f77; background:#eaf1f8; border-color:#97b0c9; font-weight:600; }
+.m5-fieldnotes .m5-presets.pandemic #M5-pandemic,.m5-fieldnotes .m5-presets.crisis #M5-crisis { color:#274f77; background:#eaf1f8; border-color:#97b0c9; font-weight:600; }
 .m5-fieldnotes .m5-presets button::before { content:""; width:10px; height:10px; flex-shrink:0; border:1px solid var(--accent-line); border-radius:50%; background:var(--panel); }
-.m5-presets.pandemic #M5-pandemic::before,.m5-presets.vehicles #M5-vehicles::before,.m5-presets.crisis #M5-crisis::before { border-color:var(--accent); background:var(--accent); box-shadow:inset 0 0 0 2px var(--panel); }
+.m5-presets.pandemic #M5-pandemic::before,.m5-presets.crisis #M5-crisis::before { border-color:var(--accent); background:var(--accent); box-shadow:inset 0 0 0 2px var(--panel); }
 .m5-fieldnotes button:hover { border-color:var(--accent-line); background:var(--accent-soft); }
 .m5-fieldnotes #M5-import-note:empty { display:none; }
 .m5-section-heading { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin:3px 0 -5px; }
