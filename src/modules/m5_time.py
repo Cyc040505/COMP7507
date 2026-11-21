@@ -21,36 +21,24 @@ MODULE_ID = "M5"
 NAV_LABEL = "M5  Time Change"
 ORDER = 5
 YEARS = list(range(1995, 2025))
+VEHICLE_PRODUCT = "87"
 VEHICLE_COUNTRIES = ["CHN", "MEX"]
 VEHICLE_WINDOW = (2019, 2023)
 CASE_COUNTRIES = ["CHN", "DEU", "MEX"]
 CASES = {
     "pandemic": (
-        "TOTAL",
+        VEHICLE_PRODUCT,
         2019,
         2020,
         (2016, 2024),
-        "intra",
-        "When did exports regain their 2019 value?",
-        "Compare each line with 100, then check where its exports went.",
-    ),
-    "vehicles": (
-        "87",
-        2019,
-        2020,
-        VEHICLE_WINDOW,
         "product",
-        "How did vehicle exports change from 2019 to 2023?",
-        "Compare the two export value indices, then check the share of HS87 in each export basket.",
     ),
     "crisis": (
-        "TOTAL",
+        VEHICLE_PRODUCT,
         2007,
         2008,
         (2004, 2013),
-        "intra",
-        "Where did trade go after the financial crisis?",
-        "Compare 2007 with 2013. Use the regional bounds to judge which shifts have a clear direction.",
+        "product",
     ),
 }
 STATUS = {
@@ -195,7 +183,7 @@ def layout():
                                     id=cid("product"),
                                     options=[{"label": "All products", "value": "TOTAL"}]
                                     + [{"label": label(p), "value": p} for p in chapters()],
-                                    value="87",
+                                    value=VEHICLE_PRODUCT,
                                     clearable=False,
                                 ),
                                 extra_class="comparison-wide",
@@ -237,7 +225,6 @@ def layout():
                     html.Div(
                         [
                             html.Button("Pandemic recovery", id=cid("pandemic"), n_clicks=0),
-                            html.Button("Vehicles & parts", id=cid("vehicles"), n_clicks=0),
                             html.Button("Financial crisis", id=cid("crisis"), n_clicks=0),
                         ],
                         id=cid("presets"), className="m5-presets",
@@ -274,7 +261,7 @@ def layout():
                                     2020,
                                     list(VEHICLE_WINDOW),
                                     "product",
-                                    "87",
+                                    VEHICLE_PRODUCT,
                                     VEHICLE_WINDOW[1],
                                     message="Loading the selected comparison…",
                                     show_graph=True,
@@ -712,7 +699,7 @@ def compute_view(
         (
             name
             for name, case in CASES.items()
-            if signature == case[:5] and set(countries) == set(VEHICLE_COUNTRIES if name == "vehicles" else CASE_COUNTRIES)
+            if signature == case and set(countries) == set(CASE_COUNTRIES)
         ),
         None,
     )
@@ -900,7 +887,6 @@ def register_callbacks(app):
         Output(cid("structure"), "clickData"),
         Output(cid("import-history"), "data"),
         Input(cid("pandemic"), "n_clicks"),
-        Input(cid("vehicles"), "n_clicks"),
         Input(cid("crisis"), "n_clicks"),
         Input(cid("import"), "n_clicks"),
         Input(cid("undo-import"), "n_clicks"),
@@ -919,7 +905,7 @@ def register_callbacks(app):
         State(cid("import-history"), "data"),
         prevent_initial_call=True,
     )
-    def presets(pandemic, vehicles, crisis, imported, undo, comparison, product, products,
+    def presets(pandemic, crisis, imported, undo, comparison, product, products,
                 active, source_year, source_case, source_detail, source_mode,
                 source_countries, source_anchor, source_factor, *values):
         guard_active(MODULE_ID, active)
@@ -953,7 +939,7 @@ def register_callbacks(app):
                     raise ValueError("Wait for M4 to finish applying the current selection.")
             except ValueError as exc:
                 return [no_update] * 6 + [str(exc)] + [no_update] * 4
-            if year == VEHICLE_WINDOW[1] and scope == "87" and set(countries) == set(VEHICLE_COUNTRIES):
+            if year == VEHICLE_WINDOW[1] and scope == VEHICLE_PRODUCT and set(countries) == set(VEHICLE_COUNTRIES):
                 baseline, event, window = 2019, 2020, list(VEHICLE_WINDOW)
             elif year >= 2020:
                 baseline, event, window = 2019, 2020, [2016, year]
@@ -975,17 +961,17 @@ def register_callbacks(app):
                 None,
                 {"before": local, "applied": applied + [year]},
             )
-        key = {cid(name): name for name in CASES}.get(trigger, "pandemic")
-        scope, baseline, event, window, measure = CASES[key][:5]
+        key = "pandemic" if trigger == cid("pandemic") else "crisis"
+        scope, baseline, event, window, measure = CASES[key]
         return (
-            list(VEHICLE_COUNTRIES if key == "vehicles" else CASE_COUNTRIES),
+            list(CASE_COUNTRIES),
             scope,
             baseline,
             event,
             list(window),
             measure,
             "",
-            {"source": key, "click": dict(zip(CASES, (pandemic, vehicles, crisis)))[key]},
+            {"source": key, "click": pandemic if key == "pandemic" else crisis},
             None,
             None,
             None,
